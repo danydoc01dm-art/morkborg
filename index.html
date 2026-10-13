@@ -633,6 +633,14 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <div><h2 class="font-glitch text-2xl text-mbYellow">EXPORT</h2><p class="font-mono text-xs text-gray-300">Scarica una copia aggiornata della tua app.</p></div>
 <button onclick="downloadExportCode()" class="px-4 py-2 bg-mbPink text-black font-mono font-bold text-xs hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-download"></i><span>SCARICA index.html</span></button>
 </div>
+ <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+  <button onclick="exportAllData()" class="px-4 py-2 bg-green-600 text-white font-mono font-bold text-xs hover:bg-green-500 flex items-center justify-center space-x-1">
+    <i class="fa-solid fa-file-export"></i><span>💾 ESPORTA DATI</span>
+  </button>
+  <button onclick="importAllData()" class="px-4 py-2 bg-blue-600 text-white font-mono font-bold text-xs hover:bg-blue-500 flex items-center justify-center space-x-1">
+    <i class="fa-solid fa-file-import"></i><span>📥 IMPORTA DATI</span>
+  </button>
+</div>
 <div class="bg-black p-3 border border-mbYellow space-y-3 font-mono text-xs">
 <span class="text-mbYellow font-bold block uppercase"><i class="fa-solid fa-circle-info mr-1"></i> COSA FA</span>
 <p class="text-gray-300 leading-relaxed">Crea una copia del file <code class="text-mbPink">index.html</code> con tutte le modifiche apportate al codice (fix, funzionalità, ecc.), ma <strong class="text-mbYellow">senza i tuoi dati</strong> (scheda, rotte, mostri, mappe, appunti).</p>
@@ -2435,7 +2443,77 @@ function resizeARRenderer(){
   camera.updateProjectionMatrix();
 }
 function animateThree(){requestAnimationFrame(animateThree);if(markerMesh)markerMesh.rotation.z+=.003;if(renderer&&scene&&camera)renderer.render(scene,camera);}
+function exportAllData(){
+  const payload={
+    version:1,
+    timestamp:Date.now(),
+    charData:safeGetItem('morkborg_char_data'),
+    savedJourneys:safeGetItem('morkborg_saved_journeys'),
+    travel3D:safeGetItem('morkborg_travel_3d_active'),
+    maps:safeGetItem('morkborg_maps'),
+    monsters:safeGetItem('morkborg_monsters'),
+    notes:safeGetItem('morkborg_notes_store'),
+    dungeonState:safeGetItem('morkborg_dungeon_state'),
+    localToken:safeGetItem('morkborg_local_token')
+  };
+  const json=JSON.stringify(payload);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  const ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  a.href=url;
+  a.download='morkborg-backup-'+ds+'.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  triggerProphecyFlash('💾 DATI ESPORTATI','fa-file-export',2000);
+}
 
+function importAllData(){
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='.json,application/json';
+  input.onchange=e=>{
+    const f=e.target.files[0];
+    if(!f)return;
+    if(!confirm('⚠️ Questo sovrascriverà TUTTI i dati attuali (scheda, mappe, mostri, appunti, rotte). Continuare?'))return;
+    const r=new FileReader();
+    r.onload=evt=>{
+      try{
+        const p=JSON.parse(evt.target.result);
+        if(!p||typeof p!=='object'||p.version===undefined){
+          alert('File non valido.');
+          return;
+        }
+        const map={
+          'morkborg_char_data':p.charData,
+          'morkborg_saved_journeys':p.savedJourneys,
+          'morkborg_travel_3d_active':p.travel3D,
+          'morkborg_maps':p.maps,
+          'morkborg_monsters':p.monsters,
+          'morkborg_notes_store':p.notes,
+          'morkborg_dungeon_state':p.dungeonState,
+          'morkborg_local_token':p.localToken
+        };
+        Object.keys(map).forEach(k=>{
+          if(map[k]!==null&&map[k]!==undefined){
+            safeSetItem(k,map[k]);
+          }else{
+            try{localStorage.removeItem(k);}catch(e){}
+          }
+        });
+        triggerProphecyFlash('📥 DATI IMPORTATI — ricarico...','fa-file-import',2000);
+        setTimeout(()=>location.reload(),1200);
+      }catch(err){
+        alert('Errore lettura file: '+err.message);
+      }
+    };
+    r.readAsText(f);
+  };
+  input.click();
+}
 function downloadExportCode(){
   const clone=document.documentElement.cloneNode(true);
   clone.querySelectorAll('textarea').forEach(el=>{el.textContent='';});
