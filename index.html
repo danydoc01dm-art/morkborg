@@ -608,7 +608,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
       <span class="text-green-400 font-bold uppercase"><i class="fa-solid fa-feather-pointed mr-1"></i> NUOVO APPUNTO</span>
       <span class="text-gray-500 text-[10px]" id="newNoteTimestamp">—</span>
     </div>
-    <textarea id="journeyNoteInput" onfocus="updateNewNoteTimestamp()" placeholder="Scrivi qui il tuo appunto per questo viaggio..." class="w-full h-32 p-3 bg-black border border-green-900 font-mono text-sm text-green-400 leading-relaxed"></textarea>
+   <textarea id="journeyNoteInput" oninput="saveJourneyNoteDraft()" onfocus="updateNewNoteTimestamp()" placeholder="Scrivi qui il tuo appunto per questo viaggio..." class="w-full h-32 p-3 bg-black border border-green-900 font-mono text-sm text-green-400 leading-relaxed"></textarea>
     <div class="flex justify-end gap-2">
       <button onclick="clearJourneyNoteDraft()" class="px-3 py-1.5 bg-gray-900 text-gray-300 font-mono font-bold text-xs border border-gray-700 hover:bg-gray-700">PULISCI</button>
       <button onclick="saveJourneyNote()" class="px-4 py-1.5 bg-green-600 text-black font-mono font-bold text-xs hover:bg-white uppercase"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVA APPUNTO</button>
@@ -1579,7 +1579,22 @@ function updateNewNoteTimestamp(){
   if(!el)return;
   el.innerText=new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
-
+function draftKeyForJourney(){
+  return 'morkborg_note_draft_'+(travel3DState.id||'default_journey');
+}
+function saveJourneyNoteDraft(){
+  const t=document.getElementById('journeyNoteInput');
+  if(!t)return;
+  const v=t.value;
+  if(v.trim())safeSetItem(draftKeyForJourney(),v);
+  else safeSetItem(draftKeyForJourney(),'');
+}
+function loadJourneyNoteDraft(){
+  const t=document.getElementById('journeyNoteInput');
+  if(!t)return;
+  const v=safeGetItem(draftKeyForJourney())||'';
+  if(document.activeElement!==t)t.value=v;
+}
 function saveJourneyNote(){
   const t=document.getElementById('journeyNoteInput');
   if(!t)return;
@@ -1589,7 +1604,8 @@ function saveJourneyNote(){
   const arr=getJourneyNotes(jid);
   arr.push({id:uid(),author:getMyAuthorName(),ts:Date.now(),text});
   safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
-  t.value='';
+    t.value='';
+  safeSetItem(draftKeyForJourney(),'');
   renderJourneyNotesList();
   updateNewNoteTimestamp();
   triggerProphecyFlash('📝 APPUNTO SALVATO','fa-feather-pointed',1500);
@@ -1676,8 +1692,9 @@ function syncNotesViewUI(){
     if(sc)sc.classList.remove('hidden');
     if(ac)ac.classList.add('hidden');
     if(hl)hl.innerText=`📖 DIARIO: ${jt}`;
-    renderJourneyNotesList();
+        renderJourneyNotesList();
     updateNewNoteTimestamp();
+    loadJourneyNoteDraft();
   }else{
     if(bc)bc.className="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs";
     if(ba)ba.className="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs";
