@@ -976,6 +976,62 @@ const MORNING_PHRASES=[
   "🌅 UN'ALTRA ALBA. UN ALTRO DEBITO DA PAGARE."
 ];
 
+const AFTERNOON_PHRASES=[
+  "☀️ IL SOLE È ALTO. NON SCALDA NESSUNO.",
+  "☀️ MEZZOGIORNO PASSA. LA FAME RESTA.",
+  "☀️ LA POLVERE SI ALZA. LE OSSA SI STANCANO.",
+  "☀️ UN ALTRO PEZZO DI MONDO LASCIATO INDIETRO.",
+  "☀️ IL SUDORE SA DI PAURA.",
+  "☀️ IL CIELO È BIANCO. COME UN OCCHIO MORTO.",
+  "☀️ CAMMINATE. NIENTE VI GUARDA. FORSE.",
+  "☀️ LE OMBRE SI ACCORCIANO. IL TEMPO NO.",
+  "☀️ OGNI PASSO È UN DEBITO.",
+  "☀️ LA STRADA È LUNGA. CHI LA PERCORRE, MENO.",
+  "☀️ UN'ORA COME TANTE. NESSUNA BUONA.",
+  "☀️ LE MOSCHE VI SEGUONO. SANNO QUALCOSA.",
+  "☀️ IL CALORE È UN RICORDO DI UN MONDO MORTO.",
+  "☀️ QUESTO SOLE NON ILLUMINA. ACceca.",
+  "☀️ CONTINUATE. LA META NON VI VUOLE.",
+  "☀️ QUALCOSA È MORTE OGGI. FORSE NON ANCORA VOI.",
+  "☀️ IL POMERIGGIO È UN LUNGO ADDIO.",
+  "☀️ LE VOSTRE URLA NON ARRIVANO IN CIELO.",
+  "☀️ UN GIOCO DI LUCI. NULLA DI PIÙ.",
+  "☀️ BEVETE. SE AVETE QUALCOSA DA BERE.",
+  "☀️ I PENSIERI SI FANNO PESANTI A QUEST'ORA.",
+  "☀️ LA VIA È ANCORA LUNGA. E IN SALITA.",
+  "☀️ NESSUNO VI RICORDERÀ. NEPPURE IL SOLE.",
+  "☀️ IL DESTINO NON DORME. VOI NON DOVRESTE.",
+  "☀️ UNA PAUSA. UN RESPIRO. POI DI NUOVO."
+];
+
+const EVENING_PHRASES=[
+  "🌇 IL SOLE TRAMONTA. UN PO' ALLA VOLTA.",
+  "🌇 LA LUCE MUORE. LE PAURE NO.",
+  "🌇 L'ULTIMO RESPIRO DEL GIORNO.",
+  "🌇 PREPARATE IL FUOCO. SE TROVATE LEGNA.",
+  "🌇 IL CREPUSCOLO È UN AVVERTIMENTO.",
+  "🌇 LE OMBRE DIVENTANO LUNGHE. LE UNGHIE ANCHE.",
+  "🌇 UNA SERA COME TANTE. NESSUNA PIÙ BELLA.",
+  "🌇 IL MONDO SI TINGE DI SANGUE. COME AL SOLITO.",
+  "🌇 NESSUNA LUCE VI SCALDERÀ STANOTTE.",
+  "🌇 CHI NON TROVA RIPARO, NON TROVA PACE.",
+  "🌇 LE STELLE SONO POCHE. LE SPERANZE MENO.",
+  "🌇 LA SERA È UN CONFINE. OLTRE, IL BUIO.",
+  "🌇 I VOSTRI NEMICI HANNO GIÀ CENATO.",
+  "🌇 L'ARIA SI FA FREDDA. IL SANGUE ANCHE.",
+  "🌇 UN FUOCO VI SEPARA DAL NULLA.",
+  "🌇 RINGRAZIATE SE SIETE ANCORA VIVI.",
+  "🌇 IL GIORNO SE NE VA. LA PAURA RIMANE.",
+  "🌇 LA NOTTE È UN ANIMALE CHE SI SVEGLIA.",
+  "🌇 CHI ARRIVA A SERA, ARRIVA A UN ALTRO GIORNO.",
+  "🌇 IL CREPUSCOLO NON PERDONA.",
+  "🌇 LE VOSTRE OSSA RINGRAZIANO IL RIPOSO.",
+  "🌇 UN'OMBRA VI SORVEGLIA. LO SAPETE.",
+  "🌇 LA SERA È UN'ATTESA. DI COSA, LO SCOPRIREte.",
+  "🌇 SI AVVICINA L'ORA DEI LUPI. E NON SOLO.",
+  "🌇 UN'ALTRA SERA. UN ALTRO CONTO DA PAGARE."
+];
+
 const NIGHT_PHRASES=[
   "🌙 LA NOTTE È LUNGA. LA TUA VITA FORSE NO.",
   "🌙 LE STELLE SONO SPENTE. NON ASPETTARE AIUTO.",
@@ -1006,19 +1062,24 @@ const NIGHT_PHRASES=[
 
 function triggerCelestialArcFX(ph){
   if(!state.visualSettings.sunMoonCycle||!fxCtx)return;
-  let m='',ic='fa-sun',dur=2500;
+  let m='',ic='fa-sun',dur=7000;
   if(ph===1){
     m=MORNING_PHRASES[Math.floor(Math.random()*MORNING_PHRASES.length)];
-    ic='fa-sun';dur=3800;
-  }else if(ph===2){m="☀️ POMERIGGIO";}
-  else if(ph===3){m='🌇 SERA';}
-  else{
+    ic='fa-sun';dur=7000;
+  }else if(ph===2){
+    m=AFTERNOON_PHRASES[Math.floor(Math.random()*AFTERNOON_PHRASES.length)];
+    ic='fa-sun';dur=7000;
+  }else if(ph===3){
+    m=EVENING_PHRASES[Math.floor(Math.random()*EVENING_PHRASES.length)];
+    ic='fa-sun';dur=7000;
+  }else{
     m=NIGHT_PHRASES[Math.floor(Math.random()*NIGHT_PHRASES.length)];
-    ic='fa-moon';dur=3800;
+    ic='fa-moon';dur=7000;
   }
   triggerProphecyFlash(m,ic,dur);
   celestialParticles.push({phase:ph,progress:0,life:1});
   if(ph===4&&state.visualSettings.autoNightDarkness){state.darknessActive=true;updateDarknessUI();}
+}
 }
 
 function triggerDamageFX(){playSynthSound('damage');if(state.visualSettings.screenShake){const b=document.getElementById('appBody');b.classList.add('apply-shake');setTimeout(()=>b.classList.remove('apply-shake'),350);}if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++)fxParticles.push({type:'bloodDrop',x:Math.random()*fxCanvas.width,y:Math.random()*fxCanvas.height,vx:(Math.random()-.5)*.2,vy:Math.random()*.25+.05,size:Math.random()*4+2,color:Math.random()>.3?'rgba(255,0,85,.5)':'rgba(136,0,34,.5)',life:1,decay:.005});}
