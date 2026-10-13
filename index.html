@@ -2093,11 +2093,12 @@ function selectMapAsDungeon(mapId){
     dungeonSaveToActiveMap();
   }
 
-  m.isDungeon=true;
+   m.isDungeon=true;
+  /* FIX: cancella SEMPRE il completamento → nuova sessione = mappa nascosta da MAPPE */
+  delete m.dungeonCompletedAt;
 
   if(!m.dungeonData){
     m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
-    delete m.dungeonCompletedAt;
   }
   safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
 
@@ -2200,10 +2201,24 @@ function revealAllDungeon(){
       renderMapsGallery();
     }
   }
+   redrawFog();
+  saveDungeonState();
+  if(mpIsHost()&&mpIsConnected()){
+    /* FIX: manda il "rivelato tutto" ai client */
+    mpBroadcastToRoom({type:'dungeonRevealAll'});
+  }
+  if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
+}function resetDungeonFog(){
+  if(mpIsConnected()&&!mpIsHost()){alert('Solo il Master può resettare la nebbia.');return;}
+  if(!confirm("Reset nebbia?"))return;
+  dungeonState.revealedPoints=[];
   redrawFog();
   saveDungeonState();
-  if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
-}function resetDungeonFog(){if(mpIsConnected()&&!mpIsHost()){alert('Solo il Master può resettare la nebbia.');return;}if(!confirm("Reset nebbia?"))return;dungeonState.revealedPoints=[];redrawFog();saveDungeonState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
+  if(mpIsHost()&&mpIsConnected()){
+    /* FIX: manda il reset a tutti i client */
+    mpBroadcastToRoom({type:'dungeonReset'});
+  }
+}
 function saveDungeonNotes(){
   const t=document.getElementById('dungeonFreeNotes');
   if(!t)return;
@@ -2498,7 +2513,20 @@ function mpOnWsMessage(raw){
     return;
   }
   if(payload.type==='playerUpdate'&&payload.player){const p=payload.player;if(p.id){mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);if(mpIsHost())mpHostBroadcast();else{mpUpdateRoomUI();renderMapTokens();}}return;}
-if(payload.type==='dungeonReveal'){/* FIX: nebbia locale, ignora */return;}
+if(payload.type==='dungeonRevealAll'){
+  /* FIX: il master ha rivelato tutto → mostra tutto anche sul client */
+  dungeonState.revealedPoints=[{x:.5,y:.5,r:2}];
+  redrawFog();
+  saveDungeonState();
+  return;
+}
+ if(payload.type==='dungeonReset'){
+  /* FIX: il master ha resettato la nebbia → azzera anche sul client */
+  dungeonState.revealedPoints=[];
+  redrawFog();
+  saveDungeonState();
+  return;
+}
 if(payload.type==='dungeonEncounter'&&payload.encounter){const e=payload.encounter;if(!dungeonState.encounters.some(x=>String(x.id)===String(e.id))){dungeonState.encounters.push(e);saveDungeonState();renderDungeonEncountersList();renderMapTokens();triggerProphecyFlash('📝 NUOVO INCONTRO: '+(e.author||'?'),'fa-pen',1500);if(mpIsHost())mpHostBroadcast();}return;}
 if(payload.type==='dungeonEncounterUpdate'&&payload.encounter){
   const inc=payload.encounter;
@@ -2666,11 +2694,17 @@ if(!__ok){
   triggerProphecyFlash('⚠️ SPAZIO ESAURITO: MAPPA NON SALVATA','fa-triangle-exclamation',3000);
 }
       updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();
-    }else{
+     }else{
       const m=savedMaps.find(x=>String(x.id)===String(mapId));
       if(m){
         m.url=url;
-        if(isDun){m.isDungeon=true;m.ghost=true;}
+        if(isDun){
+          m.isDungeon=true;
+          m.ghost=true;
+          /* FIX: sul client, ogni volta che arriva una mappa dungeon è "nuova sessione"
+             → cancella eventuale completamento da sessioni passate */
+          if(!mpIsHost()) delete m.dungeonCompletedAt;
+        }
         safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
         renderMapsGallery();renderDungeonMapGallery();
       }
