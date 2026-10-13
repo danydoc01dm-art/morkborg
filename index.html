@@ -834,8 +834,7 @@ let __prophecyTimer=null;
 function triggerProphecyFlash(t,ic='fa-scroll',ms=2500){const b=document.getElementById('prophecyBanner'),e=document.getElementById('prophecyText'),i=document.getElementById('prophecyIcon');if(!b||!e)return;if(i)i.className=`fa-solid ${ic} text-mbYellow text-xl`;e.innerText=t;b.classList.remove('hidden');if(__prophecyTimer)clearTimeout(__prophecyTimer);__prophecyTimer=setTimeout(hideProphecyFlash,ms);}
 function hideProphecyFlash(){const b=document.getElementById('prophecyBanner');if(b)b.classList.add('hidden');if(__prophecyTimer){clearTimeout(__prophecyTimer);__prophecyTimer=null;}}
 
-function setWeather(w){state.currentWeather=w;const s=document.getElementById('weatherQuickSelect');if(s)s.value=w;saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange('travel');
-}
+function setWeather(w){state.currentWeather=w;const s=document.getElementById('weatherQuickSelect');if(s)s.value=w;saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange('travel');}
 function triggerPsalmTiltFX(){playSynthSound('psalm');if(state.visualSettings.psalmTilt){const b=document.getElementById('appBody');b.classList.add('apply-tilt');setTimeout(()=>b.classList.remove('apply-tilt'),1200);}triggerProphecyFlash('⚡ INVOCAZIONE SALMO','fa-bolt');}
 function toggleDarknessLocation(){state.darknessActive=!state.darknessActive;playSynthSound('darkness');updateDarknessUI();saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function updateDarknessUI(){const v=document.getElementById('darknessVignette'),h=document.getElementById('hiddenRunesBox');const b=document.getElementById('headerDarknessBtn'),t=document.getElementById('headerDarknessText');const i=document.getElementById('darknessIcon'),a=document.getElementById('arDarknessDisplay');if(!v)return;
@@ -2028,8 +2027,12 @@ function mpApplyReceivedMap(mapId,name,url,isDungeonFromHost){
   console.log('[MP-MAP] Ricevuta:',{mapId,name,isDungeonFromHost,isDun,isHost:mpIsHost()});  if(mapId){
     const ex=savedMaps.some(m=>String(m.id)===String(mapId));
     if(!ex){
-      savedMaps.push({id:mapId,name:name||'Mappa',url:url,isDungeon:isDun,ghost:isDun});
-      safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+savedMaps.push({id:mapId,name:name||'Mappa',url:url,isDungeon:isDun,ghost:isDun});
+const __ok=safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+if(!__ok){
+  console.warn('[MP-MAP] localStorage pieno: la mappa non è stata salvata!');
+  triggerProphecyFlash('⚠️ SPAZIO ESAURITO: MAPPA NON SALVATA','fa-triangle-exclamation',3000);
+}
       updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();
     }else{
       const m=savedMaps.find(x=>String(x.id)===String(mapId));
@@ -2159,7 +2162,7 @@ function mpTryAutoReconnect(){
   console.log('[MP] Auto-reconnect a',s.room,'come',s.role);
   mpRole=s.role;mpRoomCode=s.room;mpMyId=s.myId;mpMyName=s.name||'Scvm';
   mpAuthOk=false;mpPlayers={};mpMapChunks={};
-  mpShared={map:null,travel:null,weather:'sereno',darknessActive:false};
+  mpShared={map:mpShared.map||null,travel:null,weather:'sereno',darknessActive:false};
   mpConnectWs(()=>{
     mpWsSend({setID:mpRoomChannel(mpRoomCode),passwd:'morkborg'});
     setTimeout(()=>{
@@ -2177,9 +2180,14 @@ function mpTryAutoReconnect(){
                    mpHostBroadcast();
           mpBroadcastToRoom({type:'hostReturn'});
           if(travel3DState.dungeonMapId){
-            const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));
-            if(dm&&dm.url){dm.isDungeon=true;setTimeout(()=>mpSendMapToRoom(dm),800);setTimeout(()=>mpSendMapToRoom(dm),2000);}
-          }
+  const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));
+  if(dm&&dm.url){dm.isDungeon=true;setTimeout(()=>mpSendMapToRoom(dm),800);setTimeout(()=>mpSendMapToRoom(dm),2000);}
+}
+/* NUOVO: reinvia anche la mappa normale attiva */
+if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
+  const nm=savedMaps.find(m=>String(m.id)===String(travel3DState.linkedMapId));
+  if(nm&&nm.url){setTimeout(()=>mpSendMapToRoom(nm),1000);setTimeout(()=>mpSendMapToRoom(nm),2500);}
+}
         }
         triggerProphecyFlash('🔄 Riconnesso: '+mpRoomCode,'fa-plug',2000);
       }
@@ -2208,16 +2216,31 @@ function mpTryAutoReconnect(){
 /* AVVIO */
 window.onload=function(){
   initFXCanvas();loadState();
+
+  /* NUOVO: ripristina la mappa attiva da travel3DState.linkedMapId */
+  try{
+    if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
+      const m=savedMaps.find(x=>String(x.id)===String(travel3DState.linkedMapId));
+      if(m && m.url){
+        const img=document.getElementById('activeMapImg');
+        const stage=document.getElementById('sharedMapStage');
+        const noMap=document.getElementById('noMapText');
+        if(img){img.src=m.url;img.classList.remove('hidden');}
+        if(stage)stage.classList.remove('hidden');
+        if(noMap)noMap.classList.add('hidden');
+        mpShared.map={id:String(m.id),name:m.name||'Mappa',url:m.url,isDungeon:!!m.isDungeon};
+      }
+    }
+  }catch(e){console.warn('[MAP-RESTORE]',e);}
+
   setInterval(()=>{try{saveState();save3DTravelState();}catch(e){}},30000);
   const img=document.getElementById('activeMapImg');if(img)img.addEventListener('click',mpOnMapClick);
-    const h=document.getElementById('roomHostNameInput');if(h&&state.name)h.value=state.name;
+  const h=document.getElementById('roomHostNameInput');if(h&&state.name)h.value=state.name;
   updateSubtabCounts();updateDungeonUI();renderDungeonMapGallery();
-  /* FIX: riconnessione automatica dopo refresh */
   setTimeout(()=>{try{mpTryAutoReconnect();}catch(e){console.warn(e);}},600);
 
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible'){
-      console.log('[MP] Pagina tornata visibile — riconnessione…');
       setTimeout(()=>{try{mpTryAutoReconnect();}catch(e){console.warn(e);}},500);
     }
   });
