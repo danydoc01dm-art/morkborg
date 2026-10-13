@@ -948,7 +948,79 @@ function triggerOmenBurnFX(btn){
   }
 }function triggerAttackFX(){playSynthSound('attack');if(state.visualSettings.screenShake){const b=document.getElementById('appBody');b.classList.add('apply-shake');setTimeout(()=>b.classList.remove('apply-shake'),350);}if(!state.visualSettings.combatFx||!fxCtx)return;fxParticles.push({type:'slashLine',x1:fxCanvas.width*.1,y1:fxCanvas.height*.2,x2:fxCanvas.width*.9,y2:fxCanvas.height*.8,life:1,decay:.08});}
 function triggerParryFX(){playSynthSound('parry');if(!state.visualSettings.combatFx||!fxCtx)return;fxParticles.push({type:'parryShockwave',x:fxCanvas.width/2,y:fxCanvas.height/2,radius:10,maxRadius:280,life:1,decay:.04});}
-function triggerCelestialArcFX(ph){if(!state.visualSettings.sunMoonCycle||!fxCtx)return;let m='',ic='fa-sun';if(ph===1){m='🌅 MATTINA';}else if(ph===2){m="☀️ POMERIGGIO";}else if(ph===3){m='🌇 SERA';}else{m='🌙 NOTTE';ic='fa-moon';}triggerProphecyFlash(m,ic);celestialParticles.push({phase:ph,progress:0,life:1});if(ph===4&&state.visualSettings.autoNightDarkness){state.darknessActive=true;updateDarknessUI();}}
+const MORNING_PHRASES=[
+  "🌅 IL SOLE SORGE. MA NON PER MOLTO.",
+  "🌅 UN'ALBA GRIGIA. COME LE TUE SPERANZE.",
+  "🌅 UN ALTRO GIORNO DI MISERIA. SORRIDI, SE PUOI.",
+  "🌅 LA LUCE ARRIVA DA EST. L'OMBRA DA OGNI DOVE.",
+  "🌅 SEI ANCORA VIVO. PER ORA.",
+  "🌅 IL MONDO È ANCORA QUI. PURTROPPO.",
+  "🌅 CINGI LE ARMI. LA FINE ATTENDE.",
+  "🌅 UN GIORNO IN PIÙ. UN PECCATO IN MENO.",
+  "🌅 VEDI? IL CIELO PIANGE ANCHE ALL'ALBA.",
+  "🌅 NESSUNA NOVELLA. NESSUNA SPERANZA. SOLO FANGO.",
+  "🌅 SBATTI LE PALPEBRE. RESPIRA. CONTINUA.",
+  "🌅 LA CARNE È TENERA. IL MONDO NO.",
+  "🌅 I CORVI HANNO GIÀ INIZIATO A CONTARE.",
+  "🌅 LE OSSA RICORDANO. IL GIORNO NO.",
+  "🌅 LA RUOTA GIRA. TU SEI SOTTO.",
+  "🌅 UN'ALBA SENZA SOLE. UNA VITA SENZA SENSO.",
+  "🌅 IL GIORNO SI ANNUNCIA LUNGO. LA NOTTE PIÙ LUNGA.",
+  "🌅 LA POLVERE SI SVEGLIA CON TE.",
+  "🌅 IL CREPUSCOLO È GIÀ IN CAMMINO. VERSO DI TE.",
+  "🌅 UN GIORNO COME TANTI. L'ULTIMO PER QUALCUNO.",
+  "🌅 L'ARIA SA DI SANGUE VECCHIO.",
+  "🌅 GLI DEI DORMONO. TU NO.",
+  "🌅 LA MISERICORDIA NON SORGE CON IL SOLE.",
+  "🌅 OGGI CAMMINERAI. OGGI FORSE CADRAI.",
+  "🌅 UN'ALTRA ALBA. UN ALTRO DEBITO DA PAGARE."
+];
+
+const NIGHT_PHRASES=[
+  "🌙 LA NOTTE È LUNGA. LA TUA VITA FORSE NO.",
+  "🌙 LE STELLE SONO SPENTE. NON ASPETTARE AIUTO.",
+  "🌙 CHI VEGLIA VEDE COSE CHE NON DOVREBBE.",
+  "🌙 IL BUIO NON È VUOTO. È PIENO DI DENTI.",
+  "🌙 SE SENTI PASSI, NON GIRARTI.",
+  "🌙 IL FUOCO SI STA ESAURENDO. COME TUTTO IL RESTO.",
+  "🌙 LE OMBRE SI ALLUNGANO. ANCHE LE TUE.",
+  "🌙 DORMI, SE PUOI. SOGNA, SE OSI.",
+  "🌙 LA LUNA È UN OCCHIO. E TI STA GUARDANDO.",
+  "🌙 QUALCOSA STRISCIA FUORI DAL MONDO.",
+  "🌙 UN URLO IN LONTANANZA. FORSE ERA UMANO.",
+  "🌙 IL SILENZIO PESA PIÙ DEL FERRO.",
+  "🌙 LE FIAMME RICORDANO CHI LE HA ACCESE.",
+  "🌙 NON TUTTI VEDRANNO L'ALBA.",
+  "🌙 LA NOTTE NON PERDONA. NON DIMENTICA.",
+  "🌙 UN CORVO HA PRESO NOTA DEL TUO NOME.",
+  "🌙 SE IL VENTO TACE, PREOCCUPATI.",
+  "🌙 IL MONDO MUORE PIÙ IN FRETTA AL BUIO.",
+  "🌙 QUALCOSA TI SEGUE. NON CORRERE.",
+  "🌙 LA TUA OMBRA SI MUOVE DA SOLA.",
+  "🌙 LE TENEBRE HANNO FAME. E PAZIENZA.",
+  "🌙 CHIUDI GLI OCCHI. ORA SEI PREDA.",
+  "🌙 UN'ALTRA NOTTE. UN ALTRO CONTO.",
+  "🌙 IL RIPOSO È UN LUSSO. LA PAURA È GRATIS.",
+  "🌙 SE NON SOGNI, SEI GIÀ MORTO."
+];
+
+function triggerCelestialArcFX(ph){
+  if(!state.visualSettings.sunMoonCycle||!fxCtx)return;
+  let m='',ic='fa-sun',dur=2500;
+  if(ph===1){
+    m=MORNING_PHRASES[Math.floor(Math.random()*MORNING_PHRASES.length)];
+    ic='fa-sun';dur=3800;
+  }else if(ph===2){m="☀️ POMERIGGIO";}
+  else if(ph===3){m='🌇 SERA';}
+  else{
+    m=NIGHT_PHRASES[Math.floor(Math.random()*NIGHT_PHRASES.length)];
+    ic='fa-moon';dur=3800;
+  }
+  triggerProphecyFlash(m,ic,dur);
+  celestialParticles.push({phase:ph,progress:0,life:1});
+  if(ph===4&&state.visualSettings.autoNightDarkness){state.darknessActive=true;updateDarknessUI();}
+}
+}
 function triggerDamageFX(){playSynthSound('damage');if(state.visualSettings.screenShake){const b=document.getElementById('appBody');b.classList.add('apply-shake');setTimeout(()=>b.classList.remove('apply-shake'),350);}if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++)fxParticles.push({type:'bloodDrop',x:Math.random()*fxCanvas.width,y:Math.random()*fxCanvas.height,vx:(Math.random()-.5)*.2,vy:Math.random()*.25+.05,size:Math.random()*4+2,color:Math.random()>.3?'rgba(255,0,85,.5)':'rgba(136,0,34,.5)',life:1,decay:.005});}
 function triggerHealFX(){playSynthSound('heal');if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++){const sx=Math.random()*fxCanvas.width;fxParticles.push({type:'healOrb',x:sx,baseX:sx,y:Math.random()*fxCanvas.height,vy:-(Math.random()*.25+.1),size:Math.random()*4.5+2,color:Math.random()>.4?'rgba(255,230,0,.5)':'rgba(34,197,94,.5)',life:1,decay:.004,timeOffset:Math.random()*100});}}
 function updateAndDrawFX(){if(fxCtx&&fxCanvas){fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
