@@ -1447,6 +1447,15 @@ function loadState(){
   const smo=safeGetItem('morkborg_monsters');if(smo){try{monsters=JSON.parse(smo);}catch(e){monsters=[];}}else monsters=[];
   const sn=safeGetItem('morkborg_notes_store');if(sn){try{notesStore=JSON.parse(sn);}catch(e){notesStore={};}}
   const sdk=safeGetItem('morkborg_dungeon_state');if(sdk){try{const p=JSON.parse(sdk);dungeonState.active=!!p.active;dungeonState.radius=p.radius||18;dungeonState.revealedPoints=Array.isArray(p.revealedPoints)?p.revealedPoints:[];dungeonState.encounters=Array.isArray(p.encounters)?p.encounters:[];dungeonState.notes=p.notes||'';dungeonState.startedAt=p.startedAt||null;}catch(e){}}
+  if(travel3DState.dungeonMapId){
+  const __dm=savedMaps.find(x=>String(x.id)===String(travel3DState.dungeonMapId));
+  if(__dm&&__dm.dungeonData){
+    dungeonState.revealedPoints=Array.isArray(__dm.dungeonData.revealedPoints)?__dm.dungeonData.revealedPoints.slice():[];
+    dungeonState.encounters=Array.isArray(__dm.dungeonData.encounters)?__dm.dungeonData.encounters.slice():[];
+    dungeonState.notes=__dm.dungeonData.notes||'';
+    dungeonState.startedAt=__dm.dungeonData.startedAt||null;
+  }
+}
   const slt=safeGetItem('morkborg_local_token');if(slt){try{const p=JSON.parse(slt);dungeonLocalToken.x=p.x||.5;dungeonLocalToken.y=p.y||.5;}catch(e){}}
   populateInputsFromState();updateMapDropdownOptions();renderJourneysDropdown();populate3DTravelInputs();
   renderMapsGallery();renderDungeonMapGallery();renderPsalmsList();updateMonsterJourneyDropdownFilter();renderBestiary();syncNotesViewUI();
@@ -1480,8 +1489,30 @@ function saveState(){
   updateCharacterDisplays();renderInventory();renderConditions();update3DTravelDisplays();render3DTrackedResources();
 }
 function saveMonsters(){safeSetItem('morkborg_monsters',JSON.stringify(monsters));}
-function saveDungeonState(){safeSetItem('morkborg_dungeon_state',JSON.stringify({active:dungeonState.active,radius:dungeonState.radius,revealedPoints:dungeonState.revealedPoints,encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt}));}
-function populateInputsFromState(){
+  function dungeonSaveToActiveMap(){
+  if(!travel3DState.dungeonMapId) return;
+  const m=savedMaps.find(x=>String(x.id)===String(travel3DState.dungeonMapId));
+  if(!m) return;
+  if(!m.dungeonData) m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
+  m.dungeonData.revealedPoints=Array.isArray(dungeonState.revealedPoints)?dungeonState.revealedPoints.slice():[];
+  m.dungeonData.encounters=Array.isArray(dungeonState.encounters)?dungeonState.encounters.slice():[];
+  m.dungeonData.notes=dungeonState.notes||'';
+  m.dungeonData.startedAt=dungeonState.startedAt||null;
+  safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+}
+function dungeonLoadFromMap(mapId){
+  const m=savedMaps.find(x=>String(x.id)===String(mapId));
+  if(!m) return;
+  const d=m.dungeonData||{revealedPoints:[],encounters:[],notes:'',startedAt:null};
+  dungeonState.revealedPoints=Array.isArray(d.revealedPoints)?d.revealedPoints.slice():[];
+  dungeonState.encounters=Array.isArray(d.encounters)?d.encounters.slice():[];
+  dungeonState.notes=d.notes||'';
+  dungeonState.startedAt=d.startedAt||null;
+}
+function saveDungeonState(){
+  safeSetItem('morkborg_dungeon_state',JSON.stringify({active:dungeonState.active,radius:dungeonState.radius,revealedPoints:dungeonState.revealedPoints,encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt}));
+  dungeonSaveToActiveMap();
+}
   document.getElementById('inputName').value=state.name;
   document.getElementById('inputClassTitle').value=state.classTitle||"";
   document.getElementById('inputBio').value=state.bio;
@@ -1529,12 +1560,24 @@ function renderDungeonMapGallery(){const g=document.getElementById('dungeonMapGa
 });;if(dm.length===0){g.innerHTML='<div class="col-span-4 font-mono text-[10px] text-gray-500 italic p-3 text-center border border-dashed border-mbPurple/40">Nessuna mappa dungeon.</div>';return;}const activeId=travel3DState.dungeonMapId||null;g.innerHTML=dm.map(m=>{const isActive=String(activeId)===String(m.id);const isDone=!!m.dungeonCompletedAt;return `<div class="bg-black border-2 ${isActive?'border-mbPink':'border-mbPurple'} p-1.5 space-y-1 font-mono text-[10px] relative">${isActive?'<span class="absolute -top-1.5 left-1 bg-mbPink text-black font-black text-[8px] px-1 py-0.5 uppercase border border-black">ATTIVA</span>':''}${isDone?'<span class="absolute -top-1.5 right-1 bg-mbPurple text-black font-black text-[8px] px-1 py-0.5 uppercase border border-black">✓</span>':''}<img src="${m.url}" onclick="selectMapAsDungeon('${m.id}')" class="w-full h-16 object-cover border border-gray-800 cursor-pointer hover:opacity-80"><div class="text-white font-bold truncate text-[9px]" title="${m.name}">${m.name}</div><div class="grid grid-cols-2 gap-1"><button onclick="selectMapAsDungeon('${m.id}')" class="py-1 bg-mbPurple text-black font-bold text-[9px] uppercase hover:bg-white">USA</button><button onclick="deleteSavedMap('${m.id}')" class="py-1 bg-red-900 text-white font-bold text-[9px] uppercase hover:bg-red-700"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');}
 function selectMapAsDungeon(mapId){
   const m=savedMaps.find(x=>String(x.id)===String(mapId));if(!m)return;
+
+  if(travel3DState.dungeonMapId && String(travel3DState.dungeonMapId)!==String(mapId)){
+    dungeonSaveToActiveMap();
+  }
+
   m.isDungeon=true;
-  /* FIX: nuova sessione dungeon = reset completamento */
-  delete m.dungeonCompletedAt;
+
+  if(!m.dungeonData){
+    m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
+    delete m.dungeonCompletedAt;
+  }
   safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+
   travel3DState.dungeonMapId=String(m.id);
-  save3DTravelState();  const img=document.getElementById('dungeonMapImg');
+  dungeonLoadFromMap(m.id);
+  save3DTravelState();
+
+  const img=document.getElementById('dungeonMapImg');
   const canvas=document.getElementById('dungeonFogCanvas');
   if(img)img.src=m.url;
   if(canvas)canvas.classList.remove('hidden');
@@ -1542,7 +1585,8 @@ function selectMapAsDungeon(mapId){
   setTimeout(()=>{redrawFog();renderMapTokens();},120);
   renderDungeonMapGallery();
   updateSubtabCounts();
-  /* FIX: invia la mappa al client come fantasma quando il Master la seleziona */
+  updateDungeonUI();
+
   if(mpIsHost()&&mpIsConnected()){
     mpSendMapToRoom(m);
     if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
@@ -2197,17 +2241,20 @@ if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
 
 
 /* PATCH: rimuove l'auto-reveal al centro quando attivi il dungeon */
-
-
+/* PATCH: carica i dati della mappa quando si attiva il dungeon */
 (function(){
   const __origToggleDungeonMode = toggleDungeonMode;
   toggleDungeonMode = function(){
     const wasActive = dungeonState.active;
     const r = __origToggleDungeonMode.apply(this, arguments);
     if(!wasActive && dungeonState.active){
-      dungeonState.revealedPoints = [];
+      if(travel3DState.dungeonMapId){
+        dungeonLoadFromMap(travel3DState.dungeonMapId);
+      }
       saveDungeonState();
       if(typeof redrawFog==='function') redrawFog();
+      if(typeof renderDungeonEncountersList==='function') renderDungeonEncountersList();
+      if(typeof updateDungeonUI==='function') updateDungeonUI();
     }
     return r;
   };
