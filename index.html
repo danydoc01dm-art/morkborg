@@ -67,7 +67,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 
 <div class="flex items-center space-x-2">
 <button id="headerDarknessBtn" onclick="toggleDarknessLocation()" class="px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-gray-400 text-xs font-mono font-bold flex items-center space-x-1"><i id="darknessIcon" class="fa-solid fa-moon"></i><span id="headerDarknessText" class="hidden sm:inline">BUIO</span></button>
-<select id="weatherQuickSelect" onchange="setWeather(this.value)" class="bg-black text-mbYellow font-mono text-xs p-1 border border-mbYellow font-bold"><option value="sereno">☀️ Sereno</option><option value="pioggia">🌧️ Pioggia</option><option value="temporale">🌩️ Temporale</option><option value="nebbia">🌫️ Nebbia</option><option value="cenere">🌋 Cenere</option></select><button onclick="openSettingsModal()" class="px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-xs font-mono flex items-center text-mbYellow font-bold"><i class="fa-solid fa-gear"></i></button>
+<select id="weatherQuickSelect" onchange="setWeather(this.value); if(this.value==='neve'||this.value==='bufera')playSynthSound('snow');" class="bg-black text-mbYellow font-mono text-xs p-1 border border-mbYellow font-bold"><option value="sereno">☀️ Sereno</option><option value="pioggia">🌧️ Pioggia</option><option value="temporale">🌩️ Temporale</option><option value="nebbia">🌫️ Nebbia</option><option value="neve">❄️ Neve</option><option value="bufera">🌨️ Bufera</option><option value="cenere">🌋 Cenere</option></select><button onclick="openSettingsModal()" class="px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-xs font-mono flex items-center text-mbYellow font-bold"><i class="fa-solid fa-gear"></i></button>
 <button id="headerRoomBtn" onclick="openRoomModal()" class="px-2 py-1 bg-mbPanel border border-green-500 hover:bg-green-900 text-green-400 text-xs font-mono font-bold flex items-center space-x-1"><i class="fa-solid fa-users"></i><span class="hidden sm:inline" id="headerRoomBtnText">STANZA</span></button>
 <button onclick="switchTab('export')" class="px-2.5 py-1 bg-mbPink text-black font-bold font-mono text-xs hover:bg-mbYellow uppercase tracking-wider flex items-center space-x-1"><i class="fa-solid fa-code"></i><span>EXPORT</span></button>
 </div>
@@ -877,7 +877,8 @@ else if(type==='damage'&&canPlayAudioCategory('damageHeal')){const o=audioCtx.cr
 else if(type==='heal'&&canPlayAudioCategory('damageHeal')){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(440,now);o.frequency.setValueAtTime(880,now+.1);g.gain.setValueAtTime(.12,now);g.gain.exponentialRampToValueAtTime(.01,now+.35);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.35);}
 else if(type==='psalm'&&canPlayAudioCategory('psalms')){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(90,now);o.frequency.exponentialRampToValueAtTime(20,now+.8);g.gain.setValueAtTime(.5,now);g.gain.exponentialRampToValueAtTime(.01,now+.8);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.8);}
 else if(type==='darkness'&&canPlayAudioCategory('weather')){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(110,now);g.gain.setValueAtTime(.2,now);g.gain.exponentialRampToValueAtTime(.001,now+.7);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.7);}
-else if(type==='thunder'&&canPlayAudioCategory('weather')){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(75,now);o.frequency.exponentialRampToValueAtTime(12,now+1.1);g.gain.setValueAtTime(.6,now);g.gain.exponentialRampToValueAtTime(.001,now+1.1);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+1.1);}}
+else if(type==='thunder'&&canPlayAudioCategory('weather')){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sawtooth';o.frequency.setValueAtTime(75,now);o.frequency.exponentialRampToValueAtTime(12,now+1.1);g.gain.setValueAtTime(.6,now);g.gain.exponentialRampToValueAtTime(.001,now+1.1);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+1.1);}
+else if(type==='snow'&&canPlayAudioCategory('weather')){const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';o.frequency.setValueAtTime(180,now);o.frequency.exponentialRampToValueAtTime(90,now+.9);g.gain.setValueAtTime(.08,now);g.gain.exponentialRampToValueAtTime(.001,now+.9);o.connect(g);g.connect(audioCtx.destination);o.start(now);o.stop(now+.9);}}
 
 /* FX */
 let fxCanvas,fxCtx,fxParticles=[],conditionParticles=[],weatherParticles=[],celestialParticles=[];
@@ -955,10 +956,61 @@ if(state.visualSettings.conditionFog&&state.conditions&&state.conditions.length>
 if(state.visualSettings.weather){if(state.currentWeather==='pioggia'){if(Math.random()<.6)weatherParticles.push({x:Math.random()*fxCanvas.width,y:-10,vx:-2,vy:Math.random()*12+10,length:Math.random()*18+10,color:'rgba(200,220,255,.4)'});}
 else if(state.currentWeather==='temporale'){for(let k=0;k<4;k++)weatherParticles.push({x:Math.random()*fxCanvas.width+250,y:-20,vx:-6,vy:Math.random()*22+16,length:Math.random()*28+16,color:Math.random()>.3?'rgba(220,235,255,.6)':'rgba(140,175,220,.35)'});if(Math.random()<.008){fxParticles.push({type:'overlay',color:'rgba(220,240,255,.25)',life:1,decay:.15});playSynthSound('thunder');}}
 else if(state.currentWeather==='nebbia'){if(Math.random()<.12){const sl=Math.random()>.5;weatherParticles.push({x:sl?-150:fxCanvas.width+150,y:Math.random()*fxCanvas.height,vx:sl?(Math.random()*1.8+.6):-(Math.random()*1.8+.6),vy:(Math.random()-.5)*.3,radius:Math.random()*100+50,color:'rgba(170,170,170,.08)',life:1,decay:.0025});}}
-else if(state.currentWeather==='cenere'){if(Math.random()<.4)weatherParticles.push({x:Math.random()*fxCanvas.width,y:-10,vx:(Math.random()-.5)*2,vy:Math.random()*2+1,size:Math.random()*4+1,color:Math.random()>.5?'rgba(255,100,0,.7)':'rgba(180,180,180,.5)',life:1,decay:.005});}}
+else if(state.currentWeather==='cenere'){if(Math.random()<.4)weatherParticles.push({x:Math.random()*fxCanvas.width,y:-10,vx:(Math.random()-.5)*2,vy:Math.random()*2+1,size:Math.random()*4+1,color:Math.random()>.5?'rgba(255,100,0,.7)':'rgba(180,180,180,.5)',life:1,decay:.005});}
+else if(state.currentWeather==='neve'){
+  if(Math.random()<.35){
+    weatherParticles.push({
+      type:'snow',
+      x:Math.random()*fxCanvas.width,
+      y:-10,
+      vx:0,
+      vy:Math.random()*1.5+0.8,
+      drift:(Math.random()-.5)*0.6,
+      wobbleAmp:Math.random()*0.8+0.3,
+      wobbleSpeed:Math.random()*0.02+0.01,
+      wobblePhase:Math.random()*Math.PI*2,
+      size:Math.random()*2+1,
+      color:Math.random()>.3?'rgba(240,248,255,':'rgba(200,225,255,',
+      life:1,decay:.0015
+    });
+  }
+}
+else if(state.currentWeather==='bufera'){
+  for(let k=0;k<3;k++){
+    weatherParticles.push({
+      type:'snow',
+      x:Math.random()*fxCanvas.width,
+      y:-10,
+      vx:-(Math.random()*3+1.5),
+      vy:Math.random()*3+2,
+      drift:0,
+      wobbleAmp:Math.random()*1.2,
+      wobbleSpeed:Math.random()*0.03+0.02,
+      wobblePhase:Math.random()*Math.PI*2,
+      size:Math.random()*2.5+1,
+      color:'rgba(240,248,255,',
+      life:1,decay:.001
+    });
+  }
+  if(Math.random()<.15){
+    fxParticles.push({type:'overlay',color:'rgba(220,235,255,.08)',life:1,decay:.02});
+  }
+}}
 for(let i=weatherParticles.length-1;i>=0;i--){const w=weatherParticles[i];if(state.currentWeather==='pioggia'||state.currentWeather==='temporale'){w.x+=w.vx;w.y+=w.vy;if(w.y>fxCanvas.height){weatherParticles.splice(i,1);continue;}fxCtx.strokeStyle=w.color;fxCtx.lineWidth=1.2;fxCtx.beginPath();fxCtx.moveTo(w.x,w.y);fxCtx.lineTo(w.x+w.vx,w.y+w.length);fxCtx.stroke();}
 else if(state.currentWeather==='nebbia'){w.x+=w.vx;w.life-=w.decay;if(w.life<=0){weatherParticles.splice(i,1);continue;}fxCtx.fillStyle=w.color;fxCtx.beginPath();fxCtx.arc(w.x,w.y,w.radius,0,Math.PI*2);fxCtx.fill();}
-else if(state.currentWeather==='cenere'){w.x+=w.vx;w.y+=w.vy;w.life-=w.decay;if(w.life<=0||w.y>fxCanvas.height){weatherParticles.splice(i,1);continue;}fxCtx.fillStyle=w.color;fxCtx.beginPath();fxCtx.arc(w.x,w.y,w.size,0,Math.PI*2);fxCtx.fill();}}
+else if(state.currentWeather==='cenere'){w.x+=w.vx;w.y+=w.vy;w.life-=w.decay;if(w.life<=0||w.y>fxCanvas.height){weatherParticles.splice(i,1);continue;}fxCtx.fillStyle=w.color;fxCtx.beginPath();fxCtx.arc(w.x,w.y,w.size,0,Math.PI*2);fxCtx.fill();}
+else if(state.currentWeather==='neve'||state.currentWeather==='bufera'){
+  w.y+=w.vy;
+  const driftX=(w.vx||0)+Math.sin(w.wobblePhase)*w.wobbleAmp;
+  w.x+=driftX;
+  w.wobblePhase+=w.wobbleSpeed;
+  if(w.y>fxCanvas.height+5||w.x<-20){weatherParticles.splice(i,1);continue;}
+  const alpha=(w.life*0.85).toFixed(2);
+  fxCtx.fillStyle=w.color+alpha+')';
+  fxCtx.beginPath();
+  fxCtx.arc(w.x,w.y,w.size,0,Math.PI*2);
+  fxCtx.fill();
+}}
 for(let i=celestialParticles.length-1;i>=0;i--){const c=celestialParticles[i];c.progress+=.00666;if(c.progress>=1){celestialParticles.splice(i,1);hideProphecyFlash();continue;}const ax=fxCanvas.width*c.progress;const ay=fxCanvas.height*.3-Math.sin(c.progress*Math.PI)*(fxCanvas.height*.22);fxCtx.save();if(c.phase===4){fxCtx.fillStyle='#E2E8F0';fxCtx.shadowColor='#3B82F6';fxCtx.shadowBlur=30;fxCtx.beginPath();fxCtx.arc(ax,ay,24,0,Math.PI*2);fxCtx.fill();}else{fxCtx.fillStyle=c.phase===3?'#FF3300':'#FFE600';fxCtx.shadowColor=c.phase===3?'#FF0055':'#FFE600';fxCtx.shadowBlur=40;fxCtx.beginPath();fxCtx.arc(ax,ay,30,0,Math.PI*2);fxCtx.fill();}fxCtx.restore();}
 for(let i=fxParticles.length-1;i>=0;i--){const p=fxParticles[i];p.life-=p.decay;if(p.life<=0){fxParticles.splice(i,1);continue;}
 if(p.type==='overlay'){fxCtx.fillStyle=p.color;fxCtx.fillRect(0,0,fxCanvas.width,fxCanvas.height);}
