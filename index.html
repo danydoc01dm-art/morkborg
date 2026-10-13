@@ -1513,6 +1513,7 @@ function saveDungeonState(){
   safeSetItem('morkborg_dungeon_state',JSON.stringify({active:dungeonState.active,radius:dungeonState.radius,revealedPoints:dungeonState.revealedPoints,encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt}));
   dungeonSaveToActiveMap();
 }
+function populateInputsFromState(){
   document.getElementById('inputName').value=state.name;
   document.getElementById('inputClassTitle').value=state.classTitle||"";
   document.getElementById('inputBio').value=state.bio;
@@ -2240,7 +2241,6 @@ if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
 }
 
 
-/* PATCH: rimuove l'auto-reveal al centro quando attivi il dungeon */
 /* PATCH: carica i dati della mappa quando si attiva il dungeon */
 (function(){
   const __origToggleDungeonMode = toggleDungeonMode;
