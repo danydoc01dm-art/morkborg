@@ -835,7 +835,7 @@ function triggerProphecyFlash(t,ic='fa-scroll',ms=2500){const b=document.getElem
 function hideProphecyFlash(){const b=document.getElementById('prophecyBanner');if(b)b.classList.add('hidden');if(__prophecyTimer){clearTimeout(__prophecyTimer);__prophecyTimer=null;}}
 
 function setWeather(w){state.currentWeather=w;const s=document.getElementById('weatherQuickSelect');if(s)s.value=w;saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange('travel');
-}}
+}
 function triggerPsalmTiltFX(){playSynthSound('psalm');if(state.visualSettings.psalmTilt){const b=document.getElementById('appBody');b.classList.add('apply-tilt');setTimeout(()=>b.classList.remove('apply-tilt'),1200);}triggerProphecyFlash('⚡ INVOCAZIONE SALMO','fa-bolt');}
 function toggleDarknessLocation(){state.darknessActive=!state.darknessActive;playSynthSound('darkness');updateDarknessUI();saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function updateDarknessUI(){const v=document.getElementById('darknessVignette'),h=document.getElementById('hiddenRunesBox');const b=document.getElementById('headerDarknessBtn'),t=document.getElementById('headerDarknessText');const i=document.getElementById('darknessIcon'),a=document.getElementById('arDarknessDisplay');if(!v)return;
