@@ -2688,19 +2688,27 @@ const lockNotes=!mpIsHost() && __now<mpClientNotesLockUntil;
 
 if(!mpIsHost()&&shared.travel){
   try{
+    const oldPhase=travel3DState.currentPhase;
+    const oldDay=travel3DState.currentDay;
+    const oldId=travel3DState.id;
     const incomingCompleted=shared.travel.dungeonCompletedAt;
-    /* FIX: applica travel solo se il client non ha modifiche in attesa */
+
     if(!lockTravel){
       const __before=JSON.stringify({p:travel3DState.currentPhase,d:travel3DState.currentDay,id:travel3DState.id,cp:(travel3DState.customPoints||[]).length,ev:(travel3DState.events||[]).length,lm:travel3DState.linkedMapId,dm:travel3DState.dungeonMapId});
       travel3DState=Object.assign({},travel3DState,shared.travel);
       const __after=JSON.stringify({p:travel3DState.currentPhase,d:travel3DState.currentDay,id:travel3DState.id,cp:(travel3DState.customPoints||[]).length,ev:(travel3DState.events||[]).length,lm:travel3DState.linkedMapId,dm:travel3DState.dungeonMapId});
-      if(__before===__after){
-        /* Niente è cambiato: salta TUTTO il lavoro pesante */
-        if(currentMapSubtab==='dungeon'){syncDungeonMapFromActive();}
-        mpUpdateRoomUI();renderMapTokens();
-        return;
+      if(__before!==__after){
+        populate3DTravelInputs();
+        rebuild3DRoute();
+        update3DTravelDisplays();
       }
     }
+
+    /* Animazione fase: se fase o giorno sono cambiati, mostrala sul client */
+    if(travel3DState.id===oldId && (travel3DState.currentPhase!==oldPhase || travel3DState.currentDay!==oldDay)){
+      triggerCelestialArcFX(travel3DState.currentPhase);
+    }
+
     const dmid=shared.travel.dungeonMapId;
     if(dmid){
       const dm=savedMaps.find(m=>String(m.id)===String(dmid));
@@ -2720,15 +2728,7 @@ if(!mpIsHost()&&shared.travel){
         }
       }
     }
-          if(!lockTravel){
-      populate3DTravelInputs();
-      rebuild3DRoute();
-      update3DTravelDisplays();
-    }
   }catch(e){}
-  if(currentMapSubtab==='dungeon'){syncDungeonMapFromActive();setTimeout(()=>{redrawFog();renderMapTokens();},100);}
-  mpUpdateRoomUI();
-  return;
 }
 if(!mpIsHost()&&shared.dungeon){
   dungeonState.active=!!shared.dungeon.active;
