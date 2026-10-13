@@ -2604,6 +2604,9 @@ const lockNotes=!mpIsHost() && __now<mpClientNotesLockUntil;
 
 if(!mpIsHost()&&shared.travel){
   try{
+    const oldPhase=travel3DState.currentPhase;
+    const oldDay=travel3DState.currentDay;
+    const oldId=travel3DState.id;
     const incomingCompleted=shared.travel.dungeonCompletedAt;
     /* FIX: applica travel solo se il client non ha modifiche in attesa */
     if(!lockTravel){
@@ -2628,10 +2631,14 @@ if(!mpIsHost()&&shared.travel){
         }
       }
     }
-    if(!lockTravel){
+       if(!lockTravel){
       populate3DTravelInputs();
       rebuild3DRoute();
       update3DTravelDisplays();
+      /* FIX: se la fase o il giorno sono cambiati, mostra l'animazione anche al client */
+      if(travel3DState.id===oldId && (travel3DState.currentPhase!==oldPhase || travel3DState.currentDay!==oldDay)){
+        triggerCelestialArcFX(travel3DState.currentPhase);
+      }
     }
   }catch(e){}
 }
