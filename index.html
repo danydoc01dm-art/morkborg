@@ -595,14 +595,31 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <div class="flex flex-wrap items-center gap-2">
 <button onclick="setNotesViewMode('current')" id="notesBtnCurrent" class="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs">📍 CORRENTE</button>
 <button onclick="setNotesViewMode('all')" id="notesBtnAll" class="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs">📖 STORICO</button>
-<button onclick="insertNoteTimestamp()" class="px-2 py-1 bg-green-900 text-green-300 font-mono text-[10px] font-bold border border-green-500 hover:bg-green-700">+ DATA/ORA</button>
+
 </div>
 </div>
 <div class="bg-black p-2 border border-green-900 flex justify-between items-center font-mono text-xs">
 <span class="text-green-400 font-bold" id="activeNotesHeaderLabel">📖 DIARIO: Galgenbeck ➔ Schleswig (0 Punti)</span>
 <span class="text-gray-500 text-[10px]">Auto-salvataggio</span>
 </div>
-<div id="singleNotesContainer"><textarea id="notesArea" onkeyup="saveNotes()" placeholder="Scrivi qui i tuoi appunti..." class="w-full h-96 p-3 bg-black border-2 border-green-900 font-mono text-sm text-green-400 leading-relaxed"></textarea></div>
+<div id="singleNotesContainer" class="space-y-3">
+  <div class="bg-black border-2 border-green-900 p-3 space-y-2">
+    <div class="flex items-center justify-between font-mono text-xs">
+      <span class="text-green-400 font-bold uppercase"><i class="fa-solid fa-feather-pointed mr-1"></i> NUOVO APPUNTO</span>
+      <span class="text-gray-500 text-[10px]" id="newNoteTimestamp">—</span>
+    </div>
+    <textarea id="journeyNoteInput" onfocus="updateNewNoteTimestamp()" placeholder="Scrivi qui il tuo appunto per questo viaggio..." class="w-full h-32 p-3 bg-black border border-green-900 font-mono text-sm text-green-400 leading-relaxed"></textarea>
+    <div class="flex justify-end gap-2">
+      <button onclick="clearJourneyNoteDraft()" class="px-3 py-1.5 bg-gray-900 text-gray-300 font-mono font-bold text-xs border border-gray-700 hover:bg-gray-700">PULISCI</button>
+      <button onclick="saveJourneyNote()" class="px-4 py-1.5 bg-green-600 text-black font-mono font-bold text-xs hover:bg-white uppercase"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVA APPUNTO</button>
+    </div>
+  </div>
+  <div class="bg-black border border-green-900 p-2 flex items-center justify-between font-mono text-xs">
+    <span class="text-green-400 font-bold" id="notesCountLabel">—</span>
+    <span class="text-gray-500 text-[10px] italic"><i class="fa-solid fa-lock mr-1"></i> solo tuoi, locali</span>
+  </div>
+  <div id="journeyNotesList" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
+</div>
 <div id="allNotesListContainer" class="hidden space-y-3 max-h-[500px] overflow-y-auto pr-1"></div>
 </div>
 </section>
@@ -1530,10 +1547,169 @@ function renderBestiary(){const c=document.getElementById('bestiaryContainer');i
                           if(monsterFilterSettings.journey==='current')f=f.filter(m=>String(m.journeyId)===String(travel3DState.id)||m.journeyId==='global');else if(monsterFilterSettings.journey==='global')f=f.filter(m=>m.journeyId==='global');else if(monsterFilterSettings.journey!=='all')f=f.filter(m=>String(m.journeyId)===String(monsterFilterSettings.journey));if(f.length===0){c.innerHTML='<div class="col-span-12 font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-gray-800">Nessun incontro.</div>';return;}c.innerHTML=f.map(m=>{let ab='🔘 NEUTRO',ac='text-gray-300 border-gray-600 bg-gray-900';if(m.alignment==='evil'){ab='⚫ CATTIVO';ac='text-mbPink border-mbPink bg-red-950/40';}else if(m.alignment==='good'){ab='⚪ BUONO';ac='text-green-400 border-green-600 bg-green-950/40';}let sc='text-mbYellow';if(m.state==='killed')sc='text-red-500 font-bold';else if(m.state==='fled')sc='text-amber-400';else if(m.state==='allied')sc='text-green-400';else if(m.state==='spared')sc='text-blue-300';const jb=getJourneyNameById(m.journeyId);return `<div class="bg-black p-3.5 border-2 ${m.isBoss?'border-mbYellow':(m.alignment==='evil'?'border-mbPink':'border-gray-700')} space-y-2.5 font-mono text-xs flex flex-col justify-between"><div class="space-y-2"><div class="flex items-center justify-between border-b border-gray-800 pb-1.5 gap-1"><div class="flex items-center space-x-1.5 truncate"><span class="font-glitch text-lg text-white truncate">${m.type==='npc'?'👤':'👹'} ${m.name}</span>${m.isBoss?'<span class="bg-mbYellow text-black font-black text-[9px] px-1 uppercase border border-black">👑</span>':''}</div><span class="px-1.5 py-0.5 border text-[10px] font-bold ${ac}">${ab}</span></div><div class="text-[10px] text-mbYellow font-bold flex items-center space-x-1 bg-mbPanel p-1 border border-gray-800"><i class="fa-solid fa-map-pin text-mbPink"></i><span class="truncate">${jb}</span></div>${m.dungeonMapId?`<div class="text-[10px] text-mbPurple font-bold flex items-center space-x-1 bg-mbPanel p-1 border border-mbPurple/40"><i class="fa-solid fa-dungeon"></i><span class="truncate">${m.dungeonMapName||'Dungeon'}</span></div>`:''}<p class="text-gray-300 text-[11px] leading-relaxed">${m.desc||'Nessun dettaglio.'}</p><div class="grid grid-cols-2 gap-1 bg-mbPanel p-1.5 border border-gray-800 text-[11px]"><div class="flex items-center space-x-1"><span class="text-gray-400 font-bold">HP:</span><button onclick="updateMonsterHp(${m.id},-1)" class="w-4 h-4 bg-red-900 text-white font-bold flex items-center justify-center text-[10px]">-</button><span class="text-mbYellow font-bold px-1">${m.hp}/${m.maxHp||m.hp}</span><button onclick="updateMonsterHp(${m.id},1)" class="w-4 h-4 bg-green-900 text-white font-bold flex items-center justify-center text-[10px]">+</button></div><div><span class="text-gray-400 font-bold">Arm:</span> <span class="text-gray-200">${m.armor||'0'}</span></div><div class="col-span-2"><span class="text-gray-400 font-bold">${m.type==='npc'?'Ruolo:':'Arma:'}</span> <span class="text-gray-200">${m.weapon||'d6'}</span></div></div>${Array.isArray(m.specialAttacks)&&m.specialAttacks.length>0?`<div class="p-1.5 bg-red-950/30 border border-red-900 space-y-1"><span class="text-red-400 font-bold text-[10px] uppercase block"><i class="fa-solid fa-bolt mr-1"></i> ATTACCHI:</span>${m.specialAttacks.map(sa=>`<div class="text-[10px] text-gray-300"><strong class="text-mbYellow">${sa.name}:</strong> ${sa.effect}</div>`).join('')}</div>`:''}<div class="flex items-center justify-between text-[11px] bg-black p-1 border border-gray-800"><span class="text-gray-400 font-bold">STATO:</span><select onchange="updateMonsterState(${m.id}, this.value)" class="bg-black text-xs font-bold ${sc} p-0 border-0"><option value="active" ${m.state==='active'?'selected':''}>⚠️ LIBERO</option><option value="killed" ${m.state==='killed'?'selected':''}>💀 UCCISO</option><option value="fled" ${m.state==='fled'?'selected':''}>🏃 FUGGITO</option><option value="allied" ${m.state==='allied'?'selected':''}>🤝 ALLEATO</option><option value="spared" ${m.state==='spared'?'selected':''}>🕊️ RISPARMIATO</option></select></div></div><div class="flex items-center justify-end gap-2 pt-2 border-t border-gray-800"><button onclick="openEditMonsterModal(${m.id})" class="px-2.5 py-1 bg-mbYellow text-black font-bold text-xs hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-pen-to-square"></i><span>EDIT</span></button><button onclick="deleteMonster(${m.id})" class="px-2.5 py-1 bg-red-900 text-white font-bold text-xs hover:bg-red-700"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');}
 
 /* APPUNTI */
+ /* ============================================================
+   APPUNTI PERSONALI — Blocchi per viaggio, con autore e data
+   ============================================================ */
+function migrateNotesStore(){
+  let changed=false;
+  Object.keys(notesStore).forEach(k=>{
+    if(typeof notesStore[k]==='string'){
+      const txt=notesStore[k];
+      notesStore[k]=txt.trim()?[{id:uid(),author:'(importato)',ts:Date.now(),text:txt}]:[];
+      changed=true;
+    }
+  });
+  if(changed)safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
+}
+
+function getJourneyNotes(journeyId){
+  const id=journeyId||'default_journey';
+  if(!Array.isArray(notesStore[id]))notesStore[id]=[];
+  return notesStore[id];
+}
+
+function getMyAuthorName(){
+  if(mpIsConnected()&&!mpIsHost())return mpMyName||state.name||'PG';
+  if(mpIsHost())return 'Master';
+  return state.name||'PG';
+}
+
+function updateNewNoteTimestamp(){
+  const el=document.getElementById('newNoteTimestamp');
+  if(!el)return;
+  el.innerText=new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+
+function saveJourneyNote(){
+  const t=document.getElementById('journeyNoteInput');
+  if(!t)return;
+  const text=t.value.trim();
+  if(!text){alert('Scrivi qualcosa prima di salvare.');return;}
+  const jid=travel3DState.id||'default_journey';
+  const arr=getJourneyNotes(jid);
+  arr.push({id:uid(),author:getMyAuthorName(),ts:Date.now(),text});
+  safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
+  t.value='';
+  renderJourneyNotesList();
+  updateNewNoteTimestamp();
+  triggerProphecyFlash('📝 APPUNTO SALVATO','fa-feather-pointed',1500);
+}
+
+function clearJourneyNoteDraft(){
+  const t=document.getElementById('journeyNoteInput');
+  if(!t)return;
+  if(t.value.trim()&&!confirm('Cancellare il testo non salvato?'))return;
+  t.value='';
+}
+
+function escapeHtmlNotes(s){
+  return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderJourneyNotesList(){
+  const c=document.getElementById('journeyNotesList');
+  if(!c)return;
+  const jid=travel3DState.id||'default_journey';
+  const arr=getJourneyNotes(jid).slice().sort((a,b)=>b.ts-a.ts);
+  const cnt=document.getElementById('notesCountLabel');
+  if(cnt)cnt.innerText=`${arr.length} appunt${arr.length===1?'o':'i'}`;
+  if(arr.length===0){
+    c.innerHTML=`<div class="font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-green-900">Nessun appunto per questo viaggio.</div>`;
+    return;
+  }
+  const me=getMyAuthorName();
+  c.innerHTML=arr.map(n=>{
+    const d=new Date(n.ts);
+    const dateStr=d.toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const edited=n.editedAt?` · <span class="text-amber-400">mod. ${new Date(n.editedAt).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>`:'';
+    const isMe=n.author===me;
+    return `<div class="bg-black border border-green-900 p-3 space-y-2 font-mono text-xs">
+      <div class="flex items-center justify-between border-b border-green-900 pb-1 gap-1">
+        <div class="flex items-center gap-2 min-w-0 flex-wrap">
+          <span class="text-green-400 font-bold shrink-0">👤 ${escapeHtmlNotes(n.author||'?')}</span>
+          <span class="text-gray-500 text-[10px] shrink-0">${dateStr}${edited}</span>
+        </div>
+        <div class="flex gap-0.5 shrink-0">
+          ${isMe?`<button onclick="editJourneyNote(${n.id})" class="text-mbYellow hover:text-white font-bold p-0.5" title="Modifica"><i class="fa-solid fa-pen-to-square"></i></button>`:''}
+          <button onclick="deleteJourneyNote(${n.id})" class="text-red-500 hover:text-white font-bold p-0.5" title="Elimina"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+      <p class="text-green-300/90 whitespace-pre-wrap leading-relaxed">${escapeHtmlNotes(n.text)}</p>
+    </div>`;
+  }).join('');
+}
+
+function deleteJourneyNote(id){
+  if(!confirm('Eliminare questo appunto?'))return;
+  const jid=travel3DState.id||'default_journey';
+  const arr=getJourneyNotes(jid);
+  const i=arr.findIndex(n=>String(n.id)===String(id));
+  if(i<0)return;
+  arr.splice(i,1);
+  safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
+  renderJourneyNotesList();
+}
+
+function editJourneyNote(id){
+  const jid=travel3DState.id||'default_journey';
+  const arr=getJourneyNotes(jid);
+  const n=arr.find(x=>String(x.id)===String(id));
+  if(!n)return;
+  const v=prompt('Modifica appunto:',n.text);
+  if(v===null)return;
+  const t=v.trim();
+  if(!t)return;
+  n.text=t;
+  n.editedAt=Date.now();
+  safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
+  renderJourneyNotesList();
+}
 function setNotesViewMode(m){currentNotesViewMode=m;syncNotesViewUI();}
-function syncNotesViewUI(){const bc=document.getElementById('notesBtnCurrent'),ba=document.getElementById('notesBtnAll');const sc=document.getElementById('singleNotesContainer'),ac=document.getElementById('allNotesListContainer');const hl=document.getElementById('activeNotesHeaderLabel');const jt=travel3DState.name||`${travel3DState.origin||'Partenza'} ➔ ${travel3DState.destination||'Destinazione'}`;if(currentNotesViewMode==='current'){if(bc)bc.className="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs";if(ba)ba.className="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs";if(sc)sc.classList.remove('hidden');if(ac)ac.classList.add('hidden');if(hl)hl.innerText=`📖 DIARIO: ${jt}`;const a=document.getElementById('notesArea');if(a)a.value=notesStore[travel3DState.id||"default_journey"]||"";}else{if(bc)bc.className="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs";if(ba)ba.className="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs";if(sc)sc.classList.add('hidden');if(ac)ac.classList.remove('hidden');if(hl)hl.innerText="📖 ARCHIVIO STORICO";renderAllNotesList();}}
+function syncNotesViewUI(){
+  const bc=document.getElementById('notesBtnCurrent'),ba=document.getElementById('notesBtnAll');
+  const sc=document.getElementById('singleNotesContainer'),ac=document.getElementById('allNotesListContainer');
+  const hl=document.getElementById('activeNotesHeaderLabel');
+  const jt=travel3DState.name||`${travel3DState.origin||'Partenza'} ➔ ${travel3DState.destination||'Destinazione'}`;
+  if(currentNotesViewMode==='current'){
+    if(bc)bc.className="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs";
+    if(ba)ba.className="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs";
+    if(sc)sc.classList.remove('hidden');
+    if(ac)ac.classList.add('hidden');
+    if(hl)hl.innerText=`📖 DIARIO: ${jt}`;
+    renderJourneyNotesList();
+    updateNewNoteTimestamp();
+  }else{
+    if(bc)bc.className="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs";
+    if(ba)ba.className="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs";
+    if(sc)sc.classList.add('hidden');
+    if(ac)ac.classList.remove('hidden');
+    if(hl)hl.innerText="📖 ARCHIVIO STORICO";
+    renderAllNotesList();
+  }
+}
 function saveNotes(){const a=document.getElementById('notesArea');if(!a)return;notesStore[travel3DState.id||"default_journey"]=a.value;safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));}
-function renderAllNotesList(){const c=document.getElementById('allNotesListContainer');if(!c)return;const k=Object.keys(notesStore);if(k.length===0){c.innerHTML='<div class="font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-gray-800">Nessun appunto.</div>';return;}c.innerHTML=k.map(id=>{const t=notesStore[id]||'';if(!t.trim())return'';const isDungeon=id.startsWith('dungeon_');const badge=isDungeon?'🏰 Sessione Dungeon':getJourneyNameById(id).replace('Rotta:','');return `<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold"><span>${badge}</span>${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px]">APRI</button>`:`<button onclick="deleteDungeonArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px]"><i class="fa-solid fa-trash"></i></button>`}</div><p class="${isDungeon?'text-mbPurple/90':'text-green-400/90'} whitespace-pre-wrap leading-relaxed bg-mbPanel p-2 border border-gray-800 text-xs">${t}</p></div>`;}).join('');}
+function renderAllNotesList(){
+  const c=document.getElementById('allNotesListContainer');if(!c)return;
+  const keys=Object.keys(notesStore);
+  if(keys.length===0){c.innerHTML='<div class="font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-gray-800">Nessun appunto.</div>';return;}
+  const cards=[];
+  keys.forEach(id=>{
+    const raw=notesStore[id];
+    const isDungeon=id.startsWith('dungeon_');
+    const badge=isDungeon?'🏰 Sessione Dungeon':getJourneyNameById(id).replace('Rotta:','');
+    if(Array.isArray(raw)){
+      if(raw.length===0)return;
+      const inner=raw.slice().sort((a,b)=>b.ts-a.ts).map(n=>{
+        const d=new Date(n.ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        return `<div class="bg-mbPanel p-2 border border-gray-800 space-y-1"><div class="flex items-center justify-between text-[10px]"><span class="text-green-400 font-bold">👤 ${escapeHtmlNotes(n.author||'?')}</span><span class="text-gray-500">${d}</span></div><p class="${isDungeon?'text-mbPurple/90':'text-green-400/90'} whitespace-pre-wrap leading-relaxed text-xs">${escapeHtmlNotes(n.text)}</p></div>`;
+      }).join('');
+      cards.push(`<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold"><span>${badge}</span><div class="flex gap-1">${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px]">APRI</button>`:`<button onclick="deleteDungeonArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px]"><i class="fa-solid fa-trash"></i></button>`}</div></div><div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">${inner}</div></div>`);
+    }else if(typeof raw==='string'&&raw.trim()){
+      cards.push(`<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold"><span>${badge}</span><div class="flex gap-1">${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px]">APRI</button>`:`<button onclick="deleteDungeonArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px]"><i class="fa-solid fa-trash"></i></button>`}</div></div><p class="${isDungeon?'text-mbPurple/90':'text-green-400/90'} whitespace-pre-wrap leading-relaxed bg-mbPanel p-2 border border-gray-800 text-xs">${escapeHtmlNotes(raw)}</p></div>`);
+    }
+  });
+  c.innerHTML=cards.join('')||'<div class="font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-gray-800">Nessun appunto.</div>';
+}
 function deleteDungeonArchive(id){if(!confirm('Eliminare questa sessione?'))return;delete notesStore[id];safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));renderAllNotesList();}
 function openSettingsModal(){syncSettingsUI();document.getElementById('settingsModal').classList.remove('hidden');}
 function closeSettingsModal(){document.getElementById('settingsModal').classList.add('hidden');}
@@ -1548,6 +1724,7 @@ function loadState(){
   const sm=safeGetItem('morkborg_maps');if(sm){try{savedMaps=JSON.parse(sm);}catch(e){savedMaps=[];}}
   const smo=safeGetItem('morkborg_monsters');if(smo){try{monsters=JSON.parse(smo);}catch(e){monsters=[];}}else monsters=[];
   const sn=safeGetItem('morkborg_notes_store');if(sn){try{notesStore=JSON.parse(sn);}catch(e){notesStore={};}}
+ migrateNotesStore();
   const sdk=safeGetItem('morkborg_dungeon_state');if(sdk){try{const p=JSON.parse(sdk);dungeonState.active=!!p.active;dungeonState.radius=p.radius||18;dungeonState.revealedPoints=Array.isArray(p.revealedPoints)?p.revealedPoints:[];dungeonState.encounters=Array.isArray(p.encounters)?p.encounters:[];dungeonState.notes=p.notes||'';dungeonState.startedAt=p.startedAt||null;}catch(e){}}
   if(travel3DState.dungeonMapId){
   const __dm=savedMaps.find(x=>String(x.id)===String(travel3DState.dungeonMapId));
