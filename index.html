@@ -603,7 +603,11 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <span class="text-gray-500 text-[10px]">Auto-salvataggio</span>
 </div>
 <div id="singleNotesContainer" class="space-y-3">
-  <div class="bg-black border-2 border-green-900 p-3 space-y-2">
+<div class="bg-black border-2 border-green-900 p-3 space-y-2">
+    <div class="bg-mbPanel border border-green-900 p-2 flex flex-wrap items-center gap-2 font-mono text-xs">
+      <span class="text-green-400 font-bold uppercase shrink-0"><i class="fa-solid fa-book mr-1"></i> Viaggio:</span>
+      <select id="notesJourneySelector" onchange="onNotesJourneySelectorChange(this.value)" class="flex-1 min-w-[200px] bg-black text-green-300 p-1 border border-green-700 font-bold text-xs"></select>
+    </div>
     <div class="flex items-center justify-between font-mono text-xs">
       <span class="text-green-400 font-bold uppercase"><i class="fa-solid fa-feather-pointed mr-1"></i> NUOVO APPUNTO</span>
       <span class="text-gray-500 text-[10px]" id="newNoteTimestamp">—</span>
@@ -1434,7 +1438,21 @@ function getPhaseName(p){return p===1?"MATTINA":p===2?"POMERIGGIO":p===3?"SERA":
 function update3DTravelDisplays(){const t=travel3DState.customPoints?travel3DState.customPoints.length:0;const pe=document.getElementById('travel3DProgressText');if(pe)pe.innerText=`GIORNO ${Math.min(travel3DState.currentDay,t)} / ${t} (${getPhaseName(travel3DState.currentPhase)})`;const pi=phaseDetails[travel3DState.currentPhase]||phaseDetails[1];document.getElementById('current3DPhaseTitle').innerText=pi.title;document.getElementById('current3DPhaseDesc').innerText=pi.desc;for(let i=1;i<=4;i++){const el=document.getElementById(`phase3d${i}`);if(el)el.className=(i===travel3DState.currentPhase)?"p-1.5 border border-mbYellow bg-mbYellow text-black font-bold animate-pulse":"p-1.5 border border-gray-800 bg-black text-gray-500 font-bold";}document.getElementById('travel3DHpDisplay').innerText=`${state.hp} / ${state.maxHp}`;}
 function renderGMEventsLog(){const c=document.getElementById('gmEventsLogContainer');if(!c)return;if(!travel3DState.events||travel3DState.events.length===0){c.innerHTML='<div class="font-mono text-xs text-gray-600 italic p-2">Nessun evento.</div>';return;}c.innerHTML=travel3DState.events.map(e=>`<div class="p-2 bg-black border border-mbPink flex flex-wrap items-center justify-between gap-2 font-mono text-xs"><div class="flex-1"><span class="text-mbYellow font-bold">${e.icon} GIORNO ${e.day} (${e.phase}) - ${e.name}</span><p class="text-gray-300 text-[11px] mt-0.5">${e.desc}</p></div><div class="flex items-center space-x-1"><button onclick="editGMEvent(${e.id})" class="px-2 py-1 bg-mbYellow text-black font-bold text-[10px] hover:bg-white uppercase"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteGMEvent(${e.id})" class="text-red-500 hover:text-white font-bold p-1"><i class="fa-solid fa-trash"></i></button></div></div>`).join('');}
 function saveCurrentJourneyProfile(){save3DTravelState();if(!travel3DState.id)travel3DState.id="default_journey";const t=travel3DState.customPoints?travel3DState.customPoints.length:0;travel3DState.name=`${travel3DState.origin} ➔ ${travel3DState.destination} (${t} Punti)`;const idx=savedJourneys.findIndex(j=>String(j.id)===String(travel3DState.id));if(idx>=0)savedJourneys[idx]=JSON.parse(JSON.stringify(travel3DState));else savedJourneys.push(JSON.parse(JSON.stringify(travel3DState)));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));renderJourneysDropdown();updateMonsterJourneyDropdownFilter();alert(`✓ Diario "${travel3DState.name}" salvato!`);}
-function loadJourneyProfileFromSelect(id){if(!id||id==='none')return;const f=savedJourneys.find(j=>String(j.id)===String(id));if(f){travel3DState=JSON.parse(JSON.stringify(f));populate3DTravelInputs();rebuild3DRoute();renderBestiary();syncNotesViewUI();}}
+function loadJourneyProfileFromSelect(id){
+  if(!id||id==='none')return;
+  const f=savedJourneys.find(j=>String(j.id)===String(id));
+  if(f){
+    travel3DState=JSON.parse(JSON.stringify(f));
+    /* Se non stavi sfogliando un altro viaggio, aggancia il selettore al nuovo corrente */
+    if(!notesSelectedJourneyId||String(notesSelectedJourneyId)===String(id)){
+      notesSelectedJourneyId=id;
+    }
+    populate3DTravelInputs();
+    rebuild3DRoute();
+    renderBestiary();
+    syncNotesViewUI();
+  }
+}
 function renderJourneysDropdown(){const d=document.getElementById('savedJourneysDropdown');if(!d)return;if(savedJourneys.length===0){d.innerHTML='<option value="none">-- Nessun Diario --</option>';return;}d.innerHTML=savedJourneys.map(j=>`<option value="${j.id}" ${String(j.id)===String(travel3DState.id)?'selected':''}>📖 ${j.name||j.origin+' ➔ '+j.destination}</option>`).join('');}
 function confirmDeleteSelectedJourney(){const d=document.getElementById('savedJourneysDropdown');const id=d?d.value:null;if(!id||id==='none')return;if(confirm("Eliminare la rotta?")){savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));renderJourneysDropdown();updateMonsterJourneyDropdownFilter();}}
 
@@ -1579,8 +1597,38 @@ function updateNewNoteTimestamp(){
   if(!el)return;
   el.innerText=new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
-function draftKeyForJourney(){
-  return 'morkborg_note_draft_'+(travel3DState.id||'default_journey');
+let notesSelectedJourneyId=null;
+
+function getNotesJourneyId(){
+  if(notesSelectedJourneyId&&savedJourneys.some(j=>String(j.id)===String(notesSelectedJourneyId)))return notesSelectedJourneyId;
+  return travel3DState.id||'default_journey';
+}
+
+function populateNotesJourneySelector(){
+  const s=document.getElementById('notesJourneySelector');
+  if(!s)return;
+  if(savedJourneys.length===0){
+    s.innerHTML='<option value="default_journey">📖 (nessun viaggio)</option>';
+    return;
+  }
+  const cur=getNotesJourneyId();
+  s.innerHTML=savedJourneys.map(j=>{
+    const isCur=String(j.id)===String(travel3DState.id);
+    return `<option value="${j.id}" ${String(j.id)===String(cur)?'selected':''}>📖 ${j.name||j.origin+' ➔ '+j.destination}${isCur?' (corrente)':''}</option>`;
+  }).join('');
+}
+
+function onNotesJourneySelectorChange(id){
+  saveJourneyNoteDraft();
+  notesSelectedJourneyId=id||null;
+  renderJourneyNotesList();
+  loadJourneyNoteDraft();
+  const hl=document.getElementById('activeNotesHeaderLabel');
+  const j=savedJourneys.find(x=>String(x.id)===String(getNotesJourneyId()));
+  if(hl&&j)hl.innerText=`📖 DIARIO: ${j.name||j.origin+' ➔ '+j.destination}`;
+}
+ function draftKeyForJourney(){
+ return 'morkborg_note_draft_'+(getNotesJourneyId());
 }
 function saveJourneyNoteDraft(){
   const t=document.getElementById('journeyNoteInput');
@@ -1600,7 +1648,7 @@ function saveJourneyNote(){
   if(!t)return;
   const text=t.value.trim();
   if(!text){alert('Scrivi qualcosa prima di salvare.');return;}
-  const jid=travel3DState.id||'default_journey';
+  const jid=getNotesJourneyId();
   const arr=getJourneyNotes(jid);
   arr.push({id:uid(),author:getMyAuthorName(),ts:Date.now(),text});
   safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
@@ -1625,7 +1673,7 @@ function escapeHtmlNotes(s){
 function renderJourneyNotesList(){
   const c=document.getElementById('journeyNotesList');
   if(!c)return;
-  const jid=travel3DState.id||'default_journey';
+const jid=getNotesJourneyId();
   const arr=getJourneyNotes(jid).slice().sort((a,b)=>b.ts-a.ts);
   const cnt=document.getElementById('notesCountLabel');
   if(cnt)cnt.innerText=`${arr.length} appunt${arr.length===1?'o':'i'}`;
@@ -1657,7 +1705,7 @@ function renderJourneyNotesList(){
 
 function deleteJourneyNote(id){
   if(!confirm('Eliminare questo appunto?'))return;
-  const jid=travel3DState.id||'default_journey';
+  const jid=getNotesJourneyId();
   const arr=getJourneyNotes(jid);
   const i=arr.findIndex(n=>String(n.id)===String(id));
   if(i<0)return;
@@ -1667,7 +1715,7 @@ function deleteJourneyNote(id){
 }
 
 function editJourneyNote(id){
-  const jid=travel3DState.id||'default_journey';
+ const jid=getNotesJourneyId();
   const arr=getJourneyNotes(jid);
   const n=arr.find(x=>String(x.id)===String(id));
   if(!n)return;
@@ -1692,7 +1740,8 @@ function syncNotesViewUI(){
     if(sc)sc.classList.remove('hidden');
     if(ac)ac.classList.add('hidden');
     if(hl)hl.innerText=`📖 DIARIO: ${jt}`;
-        renderJourneyNotesList();
+    populateNotesJourneySelector();
+    renderJourneyNotesList();
     updateNewNoteTimestamp();
     loadJourneyNoteDraft();
   }else{
