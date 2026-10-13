@@ -1075,6 +1075,7 @@ function triggerCelestialArcFX(ph){
   if(ph===__lastArcPhase && __now-__lastArcTrigger<6000) return;
   __lastArcPhase=ph;
   __lastArcTrigger=__now;
+   if(celestialParticles.length>2)celestialParticles.splice(0,celestialParticles.length-2);
   let m='',ic='fa-sun',dur=7000;
   if(ph===1){
     m=MORNING_PHRASES[Math.floor(Math.random()*MORNING_PHRASES.length)];
@@ -1155,7 +1156,7 @@ else if(state.currentWeather==='neve'||state.currentWeather==='bufera'){
   fxCtx.arc(w.x,w.y,w.size,0,Math.PI*2);
   fxCtx.fill();
 }}
-for(let i=celestialParticles.length-1;i>=0;i--){const c=celestialParticles[i];c.progress+=.00666;if(c.progress>=1){celestialParticles.splice(i,1);hideProphecyFlash();continue;}const ax=fxCanvas.width*c.progress;const ay=fxCanvas.height*.3-Math.sin(c.progress*Math.PI)*(fxCanvas.height*.22);fxCtx.save();if(c.phase===4){fxCtx.fillStyle='#E2E8F0';fxCtx.shadowColor='#3B82F6';fxCtx.shadowBlur=30;fxCtx.beginPath();fxCtx.arc(ax,ay,24,0,Math.PI*2);fxCtx.fill();}else{fxCtx.fillStyle=c.phase===3?'#FF3300':'#FFE600';fxCtx.shadowColor=c.phase===3?'#FF0055':'#FFE600';fxCtx.shadowBlur=40;fxCtx.beginPath();fxCtx.arc(ax,ay,30,0,Math.PI*2);fxCtx.fill();}fxCtx.restore();}
+for(let i=celestialParticles.length-1;i>=0;i--){const c=celestialParticles[i];c.progress+=.00666;if(c.progress>=1){celestialParticles.splice(i,1);hideProphecyFlash();continue;}const ax=fxCanvas.width*c.progress;const ay=fxCanvas.height*.3-Math.sin(c.progress*Math.PI)*(fxCanvas.height*.22);fxCtx.save();if(c.phase===4){fxCtx.fillStyle='#E2E8F0';fxCtx.shadowColor='#3B82F6';fxCtx.shadowBlur=12;fxCtx.beginPath();fxCtx.arc(ax,ay,24,0,Math.PI*2);fxCtx.fill();}else{fxCtx.fillStyle=c.phase===3?'#FF3300':'#FFE600';fxCtx.shadowColor=c.phase===3?'#FF0055':'#FFE600';fxCtx.shadowBlur=18;fxCtx.beginPath();fxCtx.arc(ax,ay,30,0,Math.PI*2);fxCtx.fill();}fxCtx.restore();}
 for(let i=fxParticles.length-1;i>=0;i--){const p=fxParticles[i];p.life-=p.decay;if(p.life<=0){fxParticles.splice(i,1);continue;}
 if(p.type==='overlay'){fxCtx.fillStyle=p.color;fxCtx.fillRect(0,0,fxCanvas.width,fxCanvas.height);}
 else if(p.type==='bloodDrop'){p.x+=p.vx;p.y+=p.vy;p.vy+=.002;fxCtx.fillStyle=p.color.replace(/[\d\.]+\)$/,`${p.life*.5})`);fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.size*(.6+p.life*.4),0,Math.PI*2);fxCtx.fill();}
@@ -1448,11 +1449,25 @@ function populate3DTravelInputs(){document.getElementById('travelOrigin').value=
 function save3DTravelState(){const o=document.getElementById('travelOrigin'),d=document.getElementById('travelDestination'),m=document.getElementById('travelLinkedMapSelect');if(o)travel3DState.origin=o.value;if(d)travel3DState.destination=d.value;travel3DState.totalDays=travel3DState.customPoints?travel3DState.customPoints.length:0;if(m)travel3DState.linkedMapId=m.value;const mD=Math.max(1,travel3DState.totalDays||1);if(travel3DState.currentDay>mD)travel3DState.currentDay=mD;if(travel3DState.currentDay<1)travel3DState.currentDay=1;safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));const idx=savedJourneys.findIndex(j=>String(j.id)===String(travel3DState.id));if(idx>=0){savedJourneys[idx]=JSON.parse(JSON.stringify(travel3DState));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));renderJourneysDropdown();}update3DTravelDisplays();rebuild3DRoute();updateMonsterJourneyDropdownFilter();syncNotesViewUI();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function rebuild3DRoute(){
   if(!travel3DScene)return;
-  if(travel3DTerrainMesh)travel3DScene.remove(travel3DTerrainMesh);
-  if(travel3DPathMesh)travel3DScene.remove(travel3DPathMesh);
-  if(travel3DPawnMesh)travel3DScene.remove(travel3DPawnMesh);
-  if(travel3DGridHelper)travel3DScene.remove(travel3DGridHelper);
-  travel3DEventMarkers.forEach(m=>travel3DScene.remove(m));travel3DEventMarkers=[];
+
+  const disposeMesh=(m)=>{
+    if(!m)return;
+    if(m.geometry)m.geometry.dispose();
+    if(m.material){
+      const list=Array.isArray(m.material)?m.material:[m.material];
+      list.forEach(x=>{
+        if(x&&x.map&&x.map.dispose)x.map.dispose();
+        if(x&&x.dispose)x.dispose();
+      });
+    }
+  };
+
+  if(travel3DTerrainMesh){travel3DScene.remove(travel3DTerrainMesh);disposeMesh(travel3DTerrainMesh);travel3DTerrainMesh=null;}
+  if(travel3DPathMesh){travel3DScene.remove(travel3DPathMesh);disposeMesh(travel3DPathMesh);travel3DPathMesh=null;}
+  if(travel3DPawnMesh){travel3DScene.remove(travel3DPawnMesh);disposeMesh(travel3DPawnMesh);travel3DPawnMesh=null;}
+  if(travel3DGridHelper){travel3DScene.remove(travel3DGridHelper);disposeMesh(travel3DGridHelper);travel3DGridHelper=null;}
+  travel3DEventMarkers.forEach(m=>{travel3DScene.remove(m);disposeMesh(m);});
+  travel3DEventMarkers=[];
   const geo=new THREE.PlaneGeometry(24,16);
   let mat=new THREE.MeshStandardMaterial({color:0x141414});
   if(travel3DState.linkedMapId&&travel3DState.linkedMapId!=="none"){const fm=savedMaps.find(m=>String(m.id)===String(travel3DState.linkedMapId));if(fm&&fm.url){const tex=new THREE.TextureLoader().load(fm.url);mat=new THREE.MeshStandardMaterial({map:tex});}}
@@ -1510,7 +1525,7 @@ function rebuild3DRoute(){
     if(cp){const pg=new THREE.SphereGeometry(.5,16,16);const pm=new THREE.MeshStandardMaterial({color:0xffe600,emissive:0xffe600,emissiveIntensity:.4});travel3DPawnMesh=new THREE.Mesh(pg,pm);travel3DPawnMesh.position.set(cp.x,cp.y+.5,cp.z);travel3DScene.add(travel3DPawnMesh);}
   }
 }
-function advance3DPhase(){const mD=Math.max(1,(travel3DState.customPoints&&travel3DState.customPoints.length)||1);travel3DState.currentPhase++;if(travel3DState.currentPhase>4){travel3DState.currentPhase=1;travel3DState.currentDay=Math.min(mD,(travel3DState.currentDay||1)+1);}if(travel3DState.currentPhase===1){state.darknessActive=false;updateDarknessUI();}else if(travel3DState.currentPhase===4&&state.visualSettings&&state.visualSettings.autoNightDarkness){state.darknessActive=true;updateDarknessUI();}save3DTravelState();saveState();triggerCelestialArcFX(travel3DState.currentPhase);if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
+save3DTravelState();saveState();triggerCelestialArcFX(travel3DState.currentPhase);}
 function rewind3DPhase(){travel3DState.currentPhase--;if(travel3DState.currentPhase<1){if(travel3DState.currentDay>1){travel3DState.currentDay--;travel3DState.currentPhase=4;}else travel3DState.currentPhase=1;}if(travel3DState.currentPhase===1){state.darknessActive=false;updateDarknessUI();}save3DTravelState();saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function simulate3DFullDay(){const mD=Math.max(1,(travel3DState.customPoints&&travel3DState.customPoints.length)||1);travel3DState.currentDay=Math.min(mD,(travel3DState.currentDay||1)+1);travel3DState.currentPhase=1;state.darknessActive=false;updateDarknessUI();save3DTravelState();saveState();triggerCelestialArcFX(1);if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function divertRouteFromToday(){const cd=Math.max(0,travel3DState.currentDay-1);if(!Array.isArray(travel3DState.customPoints)||travel3DState.customPoints.length===0){alert("Nessuna rotta da deviare.");return;}if(confirm(`Deviare la rotta da Giorno ${travel3DState.currentDay}?`)){travel3DState.customPoints=travel3DState.customPoints.slice(0,cd+1);travel3DState.totalDays=travel3DState.customPoints.length;document.getElementById('travel3DDays').value=travel3DState.totalDays;if(!is3DDrawMode)toggle3DDrawMode();save3DTravelState();triggerProphecyFlash("🔀 DEVIAZIONE ATTIVA","fa-code-fork");}}
@@ -2538,6 +2553,7 @@ let mpPlayers={};
 let mpShared={map:null,travel:null,weather:'sereno',darknessActive:false};
 let mpBroadcastTimer=null,mpAuthOk=false,mpMapChunks={};
 let mpClientTravelLockUntil=0,mpClientNotesLockUntil=0;
+ let __lastAnimatedPhaseKey=null;
 function openRoomModal(){document.getElementById('roomModal').classList.remove('hidden');mpUpdateRoomUI();const h=document.getElementById('roomHostNameInput'),j=document.getElementById('roomJoinNameInput');if(h&&!h.value)h.value=state.name||'Master';if(j&&!j.value)j.value=state.name||'Player';}
 function closeRoomModal(){document.getElementById('roomModal').classList.add('hidden');}
 function mpIsHost(){return mpRole==='host';}
@@ -2704,10 +2720,15 @@ if(!mpIsHost()&&shared.travel){
       }
     }
 
-    /* Animazione fase: se fase o giorno sono cambiati, mostrala sul client */
-    if(travel3DState.id===oldId && (travel3DState.currentPhase!==oldPhase || travel3DState.currentDay!==oldDay)){
-      triggerCelestialArcFX(travel3DState.currentPhase);
+        /* Fase/anno: chiave dedicata → funziona SEMPRE, indipendente da id/lock */
+    const sId=shared.travel.id;
+    const sPhase=shared.travel.currentPhase;
+    const sDay=shared.travel.currentDay;
+    const animKey=sId+':'+sDay+':'+sPhase;
+    if(__lastAnimatedPhaseKey!==null && __lastAnimatedPhaseKey!==animKey){
+      triggerCelestialArcFX(sPhase);
     }
+    __lastAnimatedPhaseKey=animKey;
 
     const dmid=shared.travel.dungeonMapId;
     if(dmid){
@@ -2769,6 +2790,19 @@ function mpSendMapToRoom(mapObj){
 }
 function mpApplyReceivedMap(mapId,name,url,isDungeonFromHost){
   if(!url)return;
+
+  /* EARLY EXIT: stessa mappa, già salvata e già attiva → niente da fare */
+  const m0=savedMaps.find(x=>String(x.id)===String(mapId));
+  if(m0 && m0.url===url){
+    const isDun0=(typeof isDungeonFromHost==='boolean')?isDungeonFromHost:!!m0.isDungeon;
+    if(isDun0){
+      const dimg=document.getElementById('dungeonMapImg');
+      if(String(travel3DState.dungeonMapId)===String(mapId) && dimg && dimg.src===url) return;
+    }else{
+      const img=document.getElementById('activeMapImg');
+      if(String(travel3DState.linkedMapId)===String(mapId) && img && img.src===url) return;
+    }
+  }
   /* FIX: niente più default ambiguo. 
      Se il flag non è esplicito, cerchiamo la mappa in savedMaps e usiamo il SUO isDungeon.
      Altrimenti DEFAULT SICURO = false (mappa normale). */
@@ -2789,19 +2823,17 @@ if(!__ok){
   triggerProphecyFlash('⚠️ SPAZIO ESAURITO: MAPPA NON SALVATA','fa-triangle-exclamation',3000);
 }
       updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();
-     }else{
+          }else{
       const m=savedMaps.find(x=>String(x.id)===String(mapId));
       if(m){
-        m.url=url;
-        if(isDun){
-          m.isDungeon=true;
-          m.ghost=true;
-          /* FIX: sul client, ogni volta che arriva una mappa dungeon è "nuova sessione"
-             → cancella eventuale completamento da sessioni passate */
-          if(!mpIsHost()) delete m.dungeonCompletedAt;
+        let changed=false;
+        if(m.url!==url){m.url=url;changed=true;}
+        if(isDun && !m.isDungeon){m.isDungeon=true;m.ghost=true;changed=true;}
+        if(isDun && !mpIsHost() && m.dungeonCompletedAt){delete m.dungeonCompletedAt;changed=true;}
+        if(changed){
+          safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+          renderMapsGallery();renderDungeonMapGallery();
         }
-        safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
-        renderMapsGallery();renderDungeonMapGallery();
       }
     }
   }
