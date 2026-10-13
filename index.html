@@ -780,6 +780,25 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <button onclick="closeSettingsModal()" class="w-full py-2 bg-mbYellow text-black font-bold uppercase hover:bg-white">✓ CHIUDI</button>
 </div>
 </div>
+ <div id="editDungeonEncounterModal" class="fixed inset-0 bg-black/90 z-[10001] hidden flex items-center justify-center p-4">
+<div class="bg-black border-4 border-mbYellow p-4 max-w-md w-full space-y-3 font-mono text-xs">
+<div class="flex justify-between items-center border-b border-mbYellow pb-2"><span class="font-glitch text-base text-mbYellow">✏️ EDIT INCONTRO</span><button onclick="closeEditDungeonEncounterModal()" class="text-red-400 font-bold"><i class="fa-solid fa-xmark"></i></button></div>
+<input type="hidden" id="editDungeonEncounterId">
+<div id="editDungeonEncounterPos" class="text-gray-400 text-[10px] text-center"></div>
+<div class="space-y-2"><span class="text-mbYellow font-bold block">TIPO INCONTRO:</span>
+<div class="grid grid-cols-3 gap-1.5" id="editDungeonTypeButtons">
+<button type="button" onclick="selectEditEncounterType('👹 Mostro')" data-type="👹 Mostro" class="enc-type-btn p-2 border-2 border-mbPurple text-white font-bold text-[11px] hover:bg-mbPurple hover:text-black">👹 Mostro</button>
+<button type="button" onclick="selectEditEncounterType('⚠️ Trappola')" data-type="⚠️ Trappola" class="enc-type-btn p-2 border-2 border-mbPurple text-white font-bold text-[11px] hover:bg-mbPurple hover:text-black">⚠️ Trappola</button>
+<button type="button" onclick="selectEditEncounterType('💰 Tesoro')" data-type="💰 Tesoro" class="enc-type-btn p-2 border-2 border-mbPurple text-white font-bold text-[11px] hover:bg-mbPurple hover:text-black">💰 Tesoro</button>
+<button type="button" onclick="selectEditEncounterType('👤 PNG')" data-type="👤 PNG" class="enc-type-btn p-2 border-2 border-mbPurple text-white font-bold text-[11px] hover:bg-mbPurple hover:text-black">👤 PNG</button>
+<button type="button" onclick="selectEditEncounterType('🚪 Porta')" data-type="🚪 Porta" class="enc-type-btn p-2 border-2 border-mbPurple text-white font-bold text-[11px] hover:bg-mbPurple hover:text-black">🚪 Porta</button>
+<button type="button" onclick="selectEditEncounterType('❓ Altro')" data-type="❓ Altro" class="enc-type-btn p-2 border-2 border-mbPurple text-white font-bold text-[11px] hover:bg-mbPurple hover:text-black">❓ Altro</button>
+</div>
+</div>
+<textarea id="editDungeonEncounterNote" placeholder="Cosa avete trovato / cosa è successo..." class="w-full p-2 bg-black border border-mbYellow text-xs text-gray-200 h-24"></textarea>
+<div class="flex justify-end space-x-2"><button onclick="closeEditDungeonEncounterModal()" class="px-3 py-1.5 bg-gray-800 text-white font-bold">ANNULLA</button><button onclick="saveDungeonEncounterEdit()" class="px-4 py-1.5 bg-mbYellow text-black font-bold uppercase">SALVA</button></div>
+</div>
+</div> 
 <div id="dungeonEncounterModal" class="fixed inset-0 bg-black/90 z-[10001] hidden flex items-center justify-center p-4">
 <div class="bg-black border-4 border-mbPurple p-4 max-w-md w-full space-y-3 font-mono text-xs">
 <div class="flex justify-between items-center border-b border-mbPurple pb-2"><span class="font-glitch text-base text-mbPurple">📝 NUOVO INCONTRO</span><button onclick="closeDungeonEncounterModal()" class="text-red-400 font-bold"><i class="fa-solid fa-xmark"></i></button></div>
@@ -1713,7 +1732,50 @@ function saveDungeonEncounter(){
   renderMapTokens();
   if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
   triggerProphecyFlash('📝 INCONTRO REGISTRATO','fa-pen',1500);
-}function renderDungeonEncountersList(){const c=document.getElementById('dungeonEncountersList');if(!c)return;if(!dungeonState.encounters||dungeonState.encounters.length===0){c.innerHTML='<div class="text-gray-500 italic text-[11px] p-2">Nessun incontro registrato.</div>';return;}c.innerHTML=dungeonState.encounters.slice().reverse().map((e,idx)=>{const n=dungeonState.encounters.length-idx;const d=new Date(e.ts);const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});return `<div class="p-2 bg-black border border-mbPurple flex flex-wrap items-start justify-between gap-2 text-[11px]"><div class="flex-1 min-w-0"><div class="flex items-center space-x-2 flex-wrap"><span class="bg-mbPurple text-black font-bold text-[9px] px-1">#${n}</span><span class="text-mbYellow font-bold">${e.type}</span><span class="text-gray-500 text-[9px]">${time} · ${e.author}</span></div><p class="text-gray-300 text-[11px] mt-0.5 whitespace-pre-wrap">${e.note}</p></div><button onclick="deleteDungeonEncounter(${e.id})" class="text-red-500 hover:text-white font-bold p-0.5 shrink-0"><i class="fa-solid fa-trash"></i></button></div>`;}).join('');}
+}
+ let editDungeonSelectedType=null;
+function editDungeonEncounter(id){
+  const e=dungeonState.encounters.find(x=>String(x.id)===String(id));
+  if(!e)return;
+  document.getElementById('editDungeonEncounterId').value=e.id;
+  document.getElementById('editDungeonEncounterPos').innerText=`Posizione: ${(e.x*100).toFixed(0)}% , ${(e.y*100).toFixed(0)}% — ${e.author||'?'}`;
+  document.getElementById('editDungeonEncounterNote').value=e.note||'';
+  editDungeonSelectedType=e.type||null;
+  document.querySelectorAll('#editDungeonTypeButtons .enc-type-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.type===editDungeonSelectedType);
+  });
+  document.getElementById('editDungeonEncounterModal').classList.remove('hidden');
+}
+function closeEditDungeonEncounterModal(){
+  document.getElementById('editDungeonEncounterModal').classList.add('hidden');
+  editDungeonSelectedType=null;
+}
+function selectEditEncounterType(t){
+  editDungeonSelectedType=t;
+  document.querySelectorAll('#editDungeonTypeButtons .enc-type-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.type===t);
+  });
+}
+function saveDungeonEncounterEdit(){
+  const id=document.getElementById('editDungeonEncounterId').value;
+  const e=dungeonState.encounters.find(x=>String(x.id)===String(id));
+  if(!e){closeEditDungeonEncounterModal();return;}
+  if(!editDungeonSelectedType){alert('Scegli un tipo!');return;}
+  e.type=editDungeonSelectedType;
+  e.note=document.getElementById('editDungeonEncounterNote').value.trim()||'(nessuna nota)';
+  e.editedAt=Date.now();
+  saveDungeonState();
+  closeEditDungeonEncounterModal();
+  renderDungeonEncountersList();
+  renderMapTokens();
+  /* Sync multiplayer: se sono client, avviso il master */
+  if(mpIsConnected()){
+    if(mpIsHost())mpHostBroadcast();
+    else mpBroadcastToRoom({type:'dungeonEncounterUpdate',encounter:e});
+  }
+  triggerProphecyFlash('✏️ INCONTRO MODIFICATO','fa-pen',1500);
+} 
+  function renderDungeonEncountersList(){const c=document.getElementById('dungeonEncountersList');if(!c)return;if(!dungeonState.encounters||dungeonState.encounters.length===0){c.innerHTML='<div class="text-gray-500 italic text-[11px] p-2">Nessun incontro registrato.</div>';return;}c.innerHTML=dungeonState.encounters.slice().reverse().map((e,idx)=>{const n=dungeonState.encounters.length-idx;const d=new Date(e.ts);const time=d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});return `<div class="p-2 bg-black border border-mbPurple flex flex-wrap items-start justify-between gap-2 text-[11px]"><div class="flex-1 min-w-0"><div class="flex items-center space-x-2 flex-wrap"><span class="bg-mbPurple text-black font-bold text-[9px] px-1">#${n}</span><span class="text-mbYellow font-bold">${e.type}</span><span class="text-gray-500 text-[9px]">${time} · ${e.author}</span></div><p class="text-gray-300 text-[11px] mt-0.5 whitespace-pre-wrap">${e.note}</p></div><div class="flex items-center gap-0.5 shrink-0"><button onclick="editDungeonEncounter(${e.id})" class="text-mbYellow hover:text-white font-bold p-0.5" title="Modifica"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteDungeonEncounter(${e.id})" class="text-red-500 hover:text-white font-bold p-0.5 shrink-0"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');}
 function deleteDungeonEncounter(id){
   if(!confirm('Cancellare questo incontro?'))return;
   dungeonState.encounters=dungeonState.encounters.filter(e=>e.id!==id);
@@ -1919,6 +1981,12 @@ function mpOnWsMessage(raw){
   if(payload.type==='playerUpdate'&&payload.player){const p=payload.player;if(p.id){mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);if(mpIsHost())mpHostBroadcast();else{mpUpdateRoomUI();renderMapTokens();}}return;}
 if(payload.type==='dungeonReveal'&&payload.x!=null){dungeonState.revealedPoints.push({x:payload.x,y:payload.y,r:payload.r||0.15});redrawFog();saveDungeonState();if(mpIsHost())mpHostBroadcast();return;}  
 if(payload.type==='dungeonEncounter'&&payload.encounter){const e=payload.encounter;if(!dungeonState.encounters.some(x=>String(x.id)===String(e.id))){dungeonState.encounters.push(e);saveDungeonState();renderDungeonEncountersList();renderMapTokens();triggerProphecyFlash('📝 NUOVO INCONTRO: '+(e.author||'?'),'fa-pen',1500);if(mpIsHost())mpHostBroadcast();}return;}
+if(payload.type==='dungeonEncounterUpdate'&&payload.encounter){
+  const inc=payload.encounter;
+  const ex=dungeonState.encounters.find(x=>String(x.id)===String(inc.id));
+  if(ex){Object.assign(ex,inc);delete ex._local;saveDungeonState();renderDungeonEncountersList();renderMapTokens();if(mpIsHost())mpHostBroadcast();}
+  return;
+}
 if(payload.type==='dungeonEncounterDelete'&&payload.id!=null){dungeonState.encounters=dungeonState.encounters.filter(e=>String(e.id)!==String(payload.id));saveDungeonState();renderDungeonEncountersList();renderMapTokens();if(mpIsHost())mpHostBroadcast();return;}
 if(payload.type==='tokenMove'&&payload.id&&payload.x!=null){if(mpPlayers[payload.id]){mpPlayers[payload.id].tokenX=payload.x;mpPlayers[payload.id].tokenY=payload.y;if(mpIsHost())mpHostBroadcast();else renderMapTokens();}return;}
 if(payload.type==='ping'){
