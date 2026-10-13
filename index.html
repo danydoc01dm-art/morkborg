@@ -1059,8 +1059,14 @@ const NIGHT_PHRASES=[
   "🌙 IL RIPOSO È UN LUSSO. LA PAURA È GRATIS.",
   "🌙 SE NON SOGNI, SEI GIÀ MORTO."
 ];
+let __lastArcTrigger=0,__lastArcPhase=-1;
 function triggerCelestialArcFX(ph){
   if(!state.visualSettings.sunMoonCycle||!fxCtx)return;
+  const __now=Date.now();
+  /* FIX: blocca ripetizioni ravvicinate della stessa fase */
+  if(ph===__lastArcPhase && __now-__lastArcTrigger<6000) return;
+  __lastArcPhase=ph;
+  __lastArcTrigger=__now;
   let m='',ic='fa-sun',dur=7000;
   if(ph===1){
     m=MORNING_PHRASES[Math.floor(Math.random()*MORNING_PHRASES.length)];
@@ -2604,13 +2610,18 @@ const lockNotes=!mpIsHost() && __now<mpClientNotesLockUntil;
 
 if(!mpIsHost()&&shared.travel){
   try{
-    const oldPhase=travel3DState.currentPhase;
-    const oldDay=travel3DState.currentDay;
-    const oldId=travel3DState.id;
     const incomingCompleted=shared.travel.dungeonCompletedAt;
     /* FIX: applica travel solo se il client non ha modifiche in attesa */
     if(!lockTravel){
+      const __before=JSON.stringify({p:travel3DState.currentPhase,d:travel3DState.currentDay,id:travel3DState.id,cp:(travel3DState.customPoints||[]).length,ev:(travel3DState.events||[]).length,lm:travel3DState.linkedMapId,dm:travel3DState.dungeonMapId});
       travel3DState=Object.assign({},travel3DState,shared.travel);
+      const __after=JSON.stringify({p:travel3DState.currentPhase,d:travel3DState.currentDay,id:travel3DState.id,cp:(travel3DState.customPoints||[]).length,ev:(travel3DState.events||[]).length,lm:travel3DState.linkedMapId,dm:travel3DState.dungeonMapId});
+      if(__before===__after){
+        /* Niente è cambiato: salta TUTTO il lavoro pesante */
+        if(currentMapSubtab==='dungeon'){syncDungeonMapFromActive();}
+        mpUpdateRoomUI();renderMapTokens();
+        return;
+      }
     }
     const dmid=shared.travel.dungeonMapId;
     if(dmid){
@@ -2631,16 +2642,15 @@ if(!mpIsHost()&&shared.travel){
         }
       }
     }
-       if(!lockTravel){
+          if(!lockTravel){
       populate3DTravelInputs();
       rebuild3DRoute();
       update3DTravelDisplays();
-      /* FIX: se la fase o il giorno sono cambiati, mostra l'animazione anche al client */
-      if(travel3DState.id===oldId && (travel3DState.currentPhase!==oldPhase || travel3DState.currentDay!==oldDay)){
-        triggerCelestialArcFX(travel3DState.currentPhase);
-      }
     }
   }catch(e){}
+  if(currentMapSubtab==='dungeon'){syncDungeonMapFromActive();setTimeout(()=>{redrawFog();renderMapTokens();},100);}
+  mpUpdateRoomUI();
+  return;
 }
 if(!mpIsHost()&&shared.dungeon){
   dungeonState.active=!!shared.dungeon.active;
