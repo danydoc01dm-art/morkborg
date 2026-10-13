@@ -1521,11 +1521,13 @@ function rebuild3DRoute(){
         labelSprite.userData={linkedTo:sphere.userData.eventId,isLabel:true};
         travel3DScene.add(labelSprite);travel3DEventMarkers.push(labelSprite);
       });
-    }    const cp=pts[Math.min(pts.length-1,cd)];
-    if(cp){const pg=new THREE.SphereGeometry(.5,16,16);const pm=new THREE.MeshStandardMaterial({color:0xffe600,emissive:0xffe600,emissiveIntensity:.4});travel3DPawnMesh=new THREE.Mesh(pg,pm);travel3DPawnMesh.position.set(cp.x,cp.y+.5,cp.z);travel3DScene.add(travel3DPawnMesh);}
+    }  
+   const cp=pts[Math.min(pts.length-1,cd)]; 
+   if(cp){const pg=new THREE.SphereGeometry(.5,16,16);const pm=new THREE.MeshStandardMaterial({color:0xffe600,emissive:0xffe600,emissiveIntensity:.4});travel3DPawnMesh=new THREE.Mesh(pg,pm);travel3DPawnMesh.position.set(cp.x,cp.y+.5,cp.z);travel3DScene.add(travel3DPawnMesh);}
   }
 }
-save3DTravelState();saveState();triggerCelestialArcFX(travel3DState.currentPhase);}
+function advance3DPhase(){const mD=Math.max(1,(travel3DState.customPoints&&travel3DState.customPoints.length)||1);travel3DState.currentPhase++;if(travel3DState.currentPhase>4){travel3DState.currentPhase=1;travel3DState.currentDay=Math.min(mD,(travel3DState.currentDay||1)+1);}if(travel3DState.currentPhase===1){state.darknessActive=false;updateDarknessUI();}else if(travel3DState.currentPhase===4&&state.visualSettings&&state.visualSettings.autoNightDarkness){state.darknessActive=true;updateDarknessUI();}save3DTravelState();saveState();triggerCelestialArcFX(travel3DState.currentPhase);}
+
 function rewind3DPhase(){travel3DState.currentPhase--;if(travel3DState.currentPhase<1){if(travel3DState.currentDay>1){travel3DState.currentDay--;travel3DState.currentPhase=4;}else travel3DState.currentPhase=1;}if(travel3DState.currentPhase===1){state.darknessActive=false;updateDarknessUI();}save3DTravelState();saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function simulate3DFullDay(){const mD=Math.max(1,(travel3DState.customPoints&&travel3DState.customPoints.length)||1);travel3DState.currentDay=Math.min(mD,(travel3DState.currentDay||1)+1);travel3DState.currentPhase=1;state.darknessActive=false;updateDarknessUI();save3DTravelState();saveState();triggerCelestialArcFX(1);if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function divertRouteFromToday(){const cd=Math.max(0,travel3DState.currentDay-1);if(!Array.isArray(travel3DState.customPoints)||travel3DState.customPoints.length===0){alert("Nessuna rotta da deviare.");return;}if(confirm(`Deviare la rotta da Giorno ${travel3DState.currentDay}?`)){travel3DState.customPoints=travel3DState.customPoints.slice(0,cd+1);travel3DState.totalDays=travel3DState.customPoints.length;document.getElementById('travel3DDays').value=travel3DState.totalDays;if(!is3DDrawMode)toggle3DDrawMode();save3DTravelState();triggerProphecyFlash("🔀 DEVIAZIONE ATTIVA","fa-code-fork");}}
