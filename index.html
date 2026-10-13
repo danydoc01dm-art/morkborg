@@ -1059,7 +1059,6 @@ const NIGHT_PHRASES=[
   "🌙 IL RIPOSO È UN LUSSO. LA PAURA È GRATIS.",
   "🌙 SE NON SOGNI, SEI GIÀ MORTO."
 ];
-
 function triggerCelestialArcFX(ph){
   if(!state.visualSettings.sunMoonCycle||!fxCtx)return;
   let m='',ic='fa-sun',dur=7000;
@@ -1079,7 +1078,7 @@ function triggerCelestialArcFX(ph){
   triggerProphecyFlash(m,ic,dur);
   celestialParticles.push({phase:ph,progress:0,life:1});
   if(ph===4&&state.visualSettings.autoNightDarkness){state.darknessActive=true;updateDarknessUI();}
-
+}
 function triggerDamageFX(){playSynthSound('damage');if(state.visualSettings.screenShake){const b=document.getElementById('appBody');b.classList.add('apply-shake');setTimeout(()=>b.classList.remove('apply-shake'),350);}if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++)fxParticles.push({type:'bloodDrop',x:Math.random()*fxCanvas.width,y:Math.random()*fxCanvas.height,vx:(Math.random()-.5)*.2,vy:Math.random()*.25+.05,size:Math.random()*4+2,color:Math.random()>.3?'rgba(255,0,85,.5)':'rgba(136,0,34,.5)',life:1,decay:.005});}
 function triggerHealFX(){playSynthSound('heal');if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++){const sx=Math.random()*fxCanvas.width;fxParticles.push({type:'healOrb',x:sx,baseX:sx,y:Math.random()*fxCanvas.height,vy:-(Math.random()*.25+.1),size:Math.random()*4.5+2,color:Math.random()>.4?'rgba(255,230,0,.5)':'rgba(34,197,94,.5)',life:1,decay:.004,timeOffset:Math.random()*100});}}
 function updateAndDrawFX(){if(fxCtx&&fxCanvas){fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
