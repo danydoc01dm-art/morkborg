@@ -1559,7 +1559,7 @@ function onMarkerPointerMove(e){
     const u=marker.object.userData;
     const c=document.getElementById('threeTravelViewport');
     const r=c.getBoundingClientRect();
-    tooltip.innerHTML=`<div class="flex items-center space-x-2"><span style="font-size:18px">${u.eventIcon}</span><span>${u.eventName}</span></div><div class="text-[10px] text-gray-400 mt-0.5">Giorno ${u.eventDay}</div>`;
+    tooltip.innerHTML=`<div class="flex items-center space-x-2"><span style="font-size:18px">${escapeHtmlNotes(u.eventIcon)}</span><span>${escapeHtmlNotes(u.eventName)}</span></div><div class="text-[10px] text-gray-400 mt-0.5">Giorno ${escapeHtmlNotes(u.eventDay)}</div>`;
     tooltip.classList.remove('hidden');
     tooltip.style.left=Math.min(e.clientX-r.left+14,r.width-230)+'px';
     tooltip.style.top=(e.clientY-r.top-10)+'px';
@@ -3265,21 +3265,20 @@ setInterval(()=>{
       setTimeout(()=>{try{mpTryAutoReconnect();}catch(e){console.warn(e);}},500);
     }
   });
-
-  window.addEventListener('resize',()=>{
-    setTimeout(()=>{
-      setupFogCanvas();
-      resizeARRenderer();
-      if(travel3DRenderer&&travel3DCamera){
-        const c=document.getElementById('threeTravelViewport');
-        if(c&&c.clientWidth>0&&c.clientHeight>0){
-          travel3DRenderer.setSize(c.clientWidth,c.clientHeight);
-          travel3DCamera.aspect=c.clientWidth/c.clientHeight;
-          travel3DCamera.updateProjectionMatrix();
-        }
+window.addEventListener('resize',()=>{
+  setTimeout(()=>{
+    setupFogCanvas();
+    resizeARRenderer();
+    if(travel3DRenderer&&travel3DCamera){
+      const c=document.getElementById('threeTravelViewport');
+      if(c&&c.clientWidth>0&&c.clientHeight>0){
+        travel3DRenderer.setSize(c.clientWidth,c.clientHeight);
+        travel3DCamera.aspect=c.clientWidth/c.clientHeight;
+        travel3DCamera.updateProjectionMatrix();
       }
-    },100);
-  });
-};</script>
-
+    }
+  },100);
+});                                          ← QUESTA RIGA MANCA NEL TUO
+window.addEventListener('beforeunload',()=>{dungeonSaveToActiveMap(true);});   ← QUESTA ALTRA
+};
 </body></html>
