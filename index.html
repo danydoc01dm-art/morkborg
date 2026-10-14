@@ -1858,6 +1858,19 @@ function onNotesJourneySelectorChange(id){
   const j=savedJourneys.find(x=>String(x.id)===String(getNotesJourneyId()));
   if(hl&&j)hl.innerText=`📖 DIARIO: ${j.name||j.origin+' ➔ '+j.destination}`;
 }
+ function populateNotesJourneySelector(){
+  const s=document.getElementById('notesViewRottaSelect');
+  if(!s)return;
+  if(savedJourneys.length===0){
+    s.innerHTML='<option value="default_journey">📖 (nessun viaggio)</option>';
+    return;
+  }
+  const cur=getNotesJourneyId();
+  s.innerHTML=savedJourneys.map(j=>{
+    const isCur=String(j.id)===String(travel3DState.id);
+    return `<option value="${j.id}" ${String(j.id)===String(cur)?'selected':''}>📖 ${j.name||j.origin+' ➔ '+j.destination}${isCur?' ✓':''}</option>`;
+  }).join('');
+}
  function onNotesViewRottaChange(id){
   notesSelectedJourneyId=id||null;
   if(currentNotesViewMode!=='current'){
