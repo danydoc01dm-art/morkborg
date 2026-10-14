@@ -2992,7 +2992,7 @@ function mpOnMapClick(e){if(!mpIsConnected())return;const img=document.getElemen
 dungeonLocalToken.x=x;dungeonLocalToken.y=y;
 safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
 if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y,ts:Date.now()});
-renderMapTokens();
+renderMapTokens();}
 function mpNotifyStateChange(reason){
   if(mpIsHost()){mpScheduleHostBroadcast(200);return;}
   if(!mpIsConnected())return;
