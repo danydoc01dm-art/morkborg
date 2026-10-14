@@ -2647,6 +2647,7 @@ function downloadExportCode(){
   clone.querySelectorAll('textarea').forEach(el=>{el.textContent='';});
   ['inventoryContainer','powersContainer','conditionsListContainer','bestiaryContainer','psalmsListContainer','gmEventsLogContainer','mapGallery','dungeonMapGallery','dungeonEncountersList','allNotesListContainer','omensContainer','roomPlayersList','mapTokensLayer','dungeonTokensLayer'].forEach(id=>{const el=clone.querySelector('#'+id);if(el)el.innerHTML='';});
   clone.querySelectorAll('#activeMapImg,#dungeonMapImg,#webcamVideo').forEach(el=>el.removeAttribute('src'));
+ clone.querySelectorAll('#threeTravelViewport').forEach(el=>el.removeAttribute('data-marker-init'));
   clone.querySelectorAll('canvas').forEach(el=>{if(!el.id)el.remove();});
   const h="<!DOCTYPE html>\n"+clone.outerHTML;
   const blob=new Blob([h],{type:'text/html'});
