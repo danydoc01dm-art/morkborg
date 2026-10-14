@@ -2020,13 +2020,27 @@ function renderAllNotesList(){
         const d=new Date(n.ts).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         return `<div class="bg-mbPanel p-2 border border-gray-800 space-y-1"><div class="flex items-center justify-between text-[10px]"><span class="text-green-400 font-bold">👤 ${escapeHtmlNotes(n.author||'?')}</span><span class="text-gray-500">${d}</span></div><p class="${isDungeon?'text-mbPurple/90':'text-green-400/90'} whitespace-pre-wrap leading-relaxed text-xs">${escapeHtmlNotes(n.text)}</p></div>`;
       }).join('');
-      cards.push(`<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold"><span>${badge}</span><div class="flex gap-1">${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px]">APRI</button>`:`<button onclick="deleteDungeonArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px]"><i class="fa-solid fa-trash"></i></button>`}</div></div><div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">${inner}</div></div>`);
+      cards.push(`<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold gap-1"><span class="truncate">${badge}</span><div class="flex gap-1 shrink-0">${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px] hover:bg-green-700">APRI</button>`:''}<button onclick="deleteNotesArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px] hover:bg-red-700" title="Elimina appunti"><i class="fa-solid fa-trash"></i></button></div></div><div class="space-y-1.5 max-h-64 overflow-y-auto pr-1">${inner}</div></div>`);
     }else if(typeof raw==='string'&&raw.trim()){
-      cards.push(`<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold"><span>${badge}</span><div class="flex gap-1">${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px]">APRI</button>`:`<button onclick="deleteDungeonArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px]"><i class="fa-solid fa-trash"></i></button>`}</div></div><p class="${isDungeon?'text-mbPurple/90':'text-green-400/90'} whitespace-pre-wrap leading-relaxed bg-mbPanel p-2 border border-gray-800 text-xs">${escapeHtmlNotes(raw)}</p></div>`);
+      cards.push(`<div class="bg-black border-2 ${isDungeon?'border-mbPurple':'border-green-900'} p-3 space-y-2 font-mono text-xs"><div class="flex items-center justify-between border-b ${isDungeon?'border-mbPurple':'border-green-900'} pb-1 ${isDungeon?'text-mbPurple':'text-green-400'} font-bold gap-1"><span class="truncate">${badge}</span><div class="flex gap-1 shrink-0">${!isDungeon?`<button onclick="loadJourneyProfileFromSelect('${id}'); setNotesViewMode('current'); switchTab('notes');" class="px-2 py-0.5 bg-green-900 text-white font-bold text-[10px] hover:bg-green-700">APRI</button>`:''}<button onclick="deleteNotesArchive('${id}')" class="px-2 py-0.5 bg-red-900 text-white font-bold text-[10px] hover:bg-red-700" title="Elimina appunti"><i class="fa-solid fa-trash"></i></button></div></div><p class="${isDungeon?'text-mbPurple/90':'text-green-400/90'} whitespace-pre-wrap leading-relaxed bg-mbPanel p-2 border border-gray-800 text-xs">${escapeHtmlNotes(raw)}</p></div>`);
     }
   });
   c.innerHTML=cards.join('')||'<div class="font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-gray-800">Nessun appunto.</div>';
 }
+function deleteNotesArchive(id){
+  const isDungeon=String(id).startsWith('dungeon_');
+  const nome=isDungeon?'questa sessione dungeon':getJourneyNameById(id).replace('Rotta:','');
+  const msg=isDungeon
+    ? `⚠️ Eliminare ${nome}?\n\nVerranno cancellati TUTTI gli appunti di questa sessione.\n\nLa mappa dungeon resta intatta.`
+    : `⚠️ Eliminare tutti gli appunti di "${nome}"?\n\nVerranno cancellati TUTTI i blocchi appunti di questa rotta.\n\n⚠️ La rotta in sé NON viene eliminata (rimane in VIAGGIO 3D).`;
+  if(!confirm(msg))return;
+  if(!confirm('Sei sicuro? Questa azione NON è reversibile.'))return;
+  delete notesStore[id];
+  safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
+  renderAllNotesList();
+  renderJourneyNotesList();
+  triggerProphecyFlash('🗑️ APPUNTI ELIMINATI','fa-trash',1500);
+} 
 function deleteDungeonArchive(id){if(!confirm('Eliminare questa sessione?'))return;delete notesStore[id];safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));renderAllNotesList();}
 function openSettingsModal(){syncSettingsUI();document.getElementById('settingsModal').classList.remove('hidden');}
 function closeSettingsModal(){document.getElementById('settingsModal').classList.add('hidden');}
