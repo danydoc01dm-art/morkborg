@@ -2400,7 +2400,7 @@ document.addEventListener('click',function(e){
   dungeonLocalToken.x=x;dungeonLocalToken.y=y;
   safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
   if(mpIsHost()){mpHostBroadcast();}else{mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y,ts:Date.now()});}
-}
+
 }else{
   dungeonLocalToken.x=x;dungeonLocalToken.y=y;
   safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
