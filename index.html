@@ -2997,7 +2997,7 @@ function mpImportManualSync(){let raw=(document.getElementById('mpManualSyncInpu
 /* NUOVO: reinvia anche la mappa normale attiva */
 if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
   const nm=savedMaps.find(m=>String(m.id)===String(travel3DState.linkedMapId));
-  if(nm&&nm.url){setTimeout(()=>mpSendMapToRoom(nm),1000);setTimeout(()=>mpSendMapToRoom(nm),2500);}
+  if(nm&&nm.url){setTimeout(()=>mpSendMapToRoom(nm),1000);}
 }
         }
         triggerProphecyFlash('🔄 Riconnesso: '+mpRoomCode,'fa-plug',2000);
