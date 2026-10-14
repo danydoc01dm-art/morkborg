@@ -1683,7 +1683,7 @@ function deleteJourneyById(id){   if(!id)return;   if(!confirm("Eliminare la rot
 
 /* INVENTARIO */
 function updateInventoryItemName(id,n){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.name=n.trim()||"Oggetto";saveState();render3DTrackedResources();}}
-function toggleItem3DTrack(id){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.trackIn3D=!it.trackIn3D;saveState();render3DTrackedResources();}}
+function toggleItem3DTrack(id){   const it=state.inventory.find(i=>String(i.id)===String(id));   if(!it)return;   it.trackIn3D=!it.trackIn3D;   safeSetItem('morkborg_char_data',JSON.stringify(state));   __lastSavedStateJSON=JSON.stringify(state);   renderInventory();   render3DTrackedResources(); }
 function modifyInventoryQty(id,d){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.qty=Math.max(0,Math.min(it.maxQty,(parseInt(it.qty)||0)+d));saveState();renderInventory();render3DTrackedResources();}}
 function modifyInventoryMaxQty(id,d){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.maxQty=Math.max(1,(parseInt(it.maxQty)||1)+d);if(it.qty>it.maxQty)it.qty=it.maxQty;saveState();renderInventory();render3DTrackedResources();}}
 function modifyInventorySlots(id,d){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.slots=Math.max(0,(parseInt(it.slots)||0)+d);saveState();renderInventory();}}
@@ -1699,6 +1699,27 @@ function renderInventory(){
   if(state.inventory.length===0){c.innerHTML='<div class="font-mono text-xs text-gray-600 italic p-2">Zaino vuoto.</div>';return;}
   const total=state.inventory.length;
   c.innerHTML=state.inventory.map((item,idx)=>{const empty=(parseInt(item.qty)||0)===0;const first=idx===0;const last=idx===total-1;return `<div class="p-2 bg-black border border-gray-800 flex flex-wrap items-center justify-between gap-2 font-mono text-xs ${empty?'item-empty':''}"><div class="flex items-center space-x-2 flex-1 min-w-[180px]"><div class="flex flex-col shrink-0 leading-none"><button onclick="moveInventoryItem(${item.id},-1)" ${first?'disabled':''} class="w-5 h-3.5 flex items-center justify-center border border-gray-700 ${first?'bg-black text-gray-700 cursor-not-allowed':'bg-gray-900 text-mbYellow hover:bg-mbYellow hover:text-black'}" title="Sposta su">▲</button><button onclick="moveInventoryItem(${item.id},1)" ${last?'disabled':''} class="w-5 h-3.5 flex items-center justify-center border border-gray-700 ${last?'bg-black text-gray-700 cursor-not-allowed':'bg-gray-900 text-mbYellow hover:bg-mbYellow hover:text-black'}" title="Sposta giù">▼</button></div><label class="inline-flex items-center cursor-pointer shrink-0"><input type="checkbox" onchange="toggleItem3DTrack(${item.id})" ${item.trackIn3D?'checked':''} class="w-3.5 h-3.5 accent-mbYellow"><span class="text-[10px] ml-1 font-bold ${item.trackIn3D?'text-mbYellow':'text-gray-600'}">3D</span></label><input type="text" value="${item.name}" onchange="updateInventoryItemName(${item.id}, this.value)" class="p-1 bg-black border border-gray-700 text-xs text-mbYellow font-bold flex-1">${empty?'<span class="text-[9px] text-red-400 font-bold shrink-0">VUOTO</span>':''}</div><div class="flex flex-wrap items-center space-x-2 sm:space-x-3 text-[11px] shrink-0"><div class="flex items-center space-x-1 text-gray-400"><span>Slot:</span><button onclick="modifyInventorySlots(${item.id},-1)" class="w-4 h-4 bg-gray-900 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center border border-gray-700 text-[10px]">-</button><span class="text-white font-bold min-w-[14px] text-center">${item.slots}</span><button onclick="modifyInventorySlots(${item.id},1)" class="w-4 h-4 bg-gray-900 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center border border-gray-700 text-[10px]">+</button></div><div class="flex items-center space-x-1 bg-mbPanel px-1.5 py-0.5 border border-gray-700"><span class="text-gray-400 font-bold text-[10px]">Q.tà:</span><button onclick="modifyInventoryQty(${item.id},-1)" class="w-4 h-4 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center border border-red-500 text-[10px]">-</button><span class="text-mbYellow font-bold px-1 min-w-[18px] text-center">${item.qty}</span><button onclick="modifyInventoryQty(${item.id},1)" class="w-4 h-4 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center border border-green-500 text-[10px]">+</button></div><div class="flex items-center space-x-1 bg-mbPanel px-1.5 py-0.5 border border-gray-700"><span class="text-gray-400 font-bold text-[10px]">Max:</span><button onclick="modifyInventoryMaxQty(${item.id},-1)" class="w-4 h-4 bg-gray-800 hover:bg-gray-700 text-mbYellow font-bold flex items-center justify-center border border-gray-600 text-[10px]">-</button><span class="text-mbYellow font-bold px-1 min-w-[18px] text-center">${item.maxQty}</span><button onclick="modifyInventoryMaxQty(${item.id},1)" class="w-4 h-4 bg-gray-800 hover:bg-gray-700 text-mbYellow font-bold flex items-center justify-center border border-gray-600 text-[10px]">+</button></div><button onclick="deleteInventoryItem(${item.id})" class="text-red-500 hover:text-white text-xs p-1 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');
+}
+function render3DTrackedResources(){
+  const c=document.getElementById('trackedResources3DContainer');
+  if(!c)return;
+  const it=state.inventory.filter(i=>i.trackIn3D===true);
+  if(it.length===0){
+    c.innerHTML='<div class="p-2 border border-dashed border-gray-800 text-gray-500 text-[10px] italic text-center">Nessun oggetto tracciato.</div>';
+    return;
+  }
+  c.innerHTML=it.map(item=>{
+    const empty=(parseInt(item.qty)||0)===0;
+    return `<div class="p-1.5 bg-mbPanel border border-gray-700 flex items-center justify-between gap-1 text-[11px] font-mono ${empty?'item-empty':''}">
+      <span class="font-bold text-white truncate max-w-[110px]" title="${item.name}">${item.name}</span>
+      <div class="flex items-center space-x-1 shrink-0">
+        <button onclick="modifyInventoryQty(${item.id},-1)" class="w-5 h-5 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center">-</button>
+        <span class="text-mbYellow font-bold px-1 min-w-[32px] text-center">${item.qty}/${item.maxQty}</span>
+        <button onclick="modifyInventoryQty(${item.id},1)" class="w-5 h-5 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center">+</button>
+        <button onclick="toggleItem3DTrack(${item.id})" class="w-5 h-5 bg-gray-900 hover:bg-red-700 text-gray-400 hover:text-white font-bold flex items-center justify-center border border-gray-700 text-[10px]" title="Rimuovi dal tracking 3D">✕</button>
+      </div>
+    </div>`;
+  }).join('');
 }/* SALMI */
 function openPsalmsModal(){renderPsalmsList();document.getElementById('psalmsModal').classList.remove('hidden');}
 function closePsalmsModal(){document.getElementById('psalmsModal').classList.add('hidden');}
