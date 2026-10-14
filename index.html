@@ -546,7 +546,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
 <div class="p-2 bg-mbPanel border border-mbPurple space-y-1"><span class="text-mbPurple font-bold block text-[10px]">RAGGIO RIVELAZIONE:</span>
 <div class="flex items-center space-x-2">
-<input type="range" id="dungeonRadiusSlider" min="5" max="50" value="18" oninput="updateDungeonRadius(this.value)" class="flex-1 accent-mbPurple cursor-pointer">
+<input type="range" id="dungeonRadiusSlider" min="5" max="50" value="18" onchange="updateDungeonRadius(this.value)" oninput="document.getElementById('dungeonRadiusVal').innerText=this.value+'%'" class="flex-1 accent-mbPurple cursor-pointer">
 <span id="dungeonRadiusVal" class="text-mbPurple font-bold">16%</span>
 </div>
 </div>
@@ -2047,16 +2047,21 @@ function saveState(){
   updateCharacterDisplays();renderInventory();renderConditions();update3DTravelDisplays();render3DTrackedResources();
 }
 function saveMonsters(){safeSetItem('morkborg_monsters',JSON.stringify(monsters));}
-  function dungeonSaveToActiveMap(){
+  let __dungeonSaveDebounce=null;
+function dungeonSaveToActiveMap(){
   if(!travel3DState.dungeonMapId) return;
-  const m=savedMaps.find(x=>String(x.id)===String(travel3DState.dungeonMapId));
-  if(!m) return;
-  if(!m.dungeonData) m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
-  m.dungeonData.revealedPoints=Array.isArray(dungeonState.revealedPoints)?dungeonState.revealedPoints.slice():[];
-  m.dungeonData.encounters=Array.isArray(dungeonState.encounters)?dungeonState.encounters.slice():[];
-  m.dungeonData.notes=dungeonState.notes||'';
-  m.dungeonData.startedAt=dungeonState.startedAt||null;
-  safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+  if(__dungeonSaveDebounce)clearTimeout(__dungeonSaveDebounce);
+  __dungeonSaveDebounce=setTimeout(()=>{
+    __dungeonSaveDebounce=null;
+    const m=savedMaps.find(x=>String(x.id)===String(travel3DState.dungeonMapId));
+    if(!m) return;
+    if(!m.dungeonData) m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
+    m.dungeonData.revealedPoints=Array.isArray(dungeonState.revealedPoints)?dungeonState.revealedPoints.slice():[];
+    m.dungeonData.encounters=Array.isArray(dungeonState.encounters)?dungeonState.encounters.slice():[];
+    m.dungeonData.notes=dungeonState.notes||'';
+    m.dungeonData.startedAt=dungeonState.startedAt||null;
+    safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+  },2000);
 }
 function dungeonLoadFromMap(mapId){
   const m=savedMaps.find(x=>String(x.id)===String(mapId));
@@ -2591,7 +2596,7 @@ function mpOnWsMessage(raw){
   if(data.FROM&&mpMySid&&data.FROM===mpMySid)return;
   let payload=null;if(typeof data.mb==='string'){try{payload=JSON.parse(data.mb);}catch(e){return;}}else if(data.mb&&typeof data.mb==='object')payload=data.mb;else if(data.msg&&typeof data.msg==='object')payload=data.msg;
   if(!payload||!payload.type)return;
-  if(payload.type==='hello'&&payload.player){const p=payload.player;if(!p.id)return;if(!mpPlayers[p.id]){const u=Object.values(mpPlayers).map(x=>x.color);p.color=p.color||MP_COLORS.find(c=>!u.includes(c))||MP_COLORS[0];}mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);mpUpdateRoomUI();renderMapTokens();if(mpIsHost()){mpHostBroadcast();if(mpShared.map&&mpShared.map.url){setTimeout(()=>mpSendMapToRoom(mpShared.map),300);setTimeout(()=>mpSendMapToRoom(mpShared.map),1500);setTimeout(()=>mpSendMapToRoom(mpShared.map),3500);}else{try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src){const found=savedMaps.find(m=>m.url===ai.src);const m=found||{id:uid(),name:'Mappa',url:ai.src};mpShared.map={id:String(m.id),name:m.name,url:m.url};setTimeout(()=>mpSendMapToRoom(m),300);setTimeout(()=>mpSendMapToRoom(m),1500);setTimeout(()=>mpSendMapToRoom(m),3500);}}catch(e){}}}return;}
+  if(payload.type==='hello'&&payload.player){const p=payload.player;if(!p.id)return;if(!mpPlayers[p.id]){const u=Object.values(mpPlayers).map(x=>x.color);p.color=p.color||MP_COLORS.find(c=>!u.includes(c))||MP_COLORS[0];}mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);mpUpdateRoomUI();renderMapTokens();if(mpIsHost()){mpHostBroadcast();if(mpShared.map&&mpShared.map.url){setTimeout(()=>mpSendMapToRoom(mpShared.map),500);}else{try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src){const found=savedMaps.find(m=>m.url===ai.src);const m=found||{id:uid(),name:'Mappa',url:ai.src};mpShared.map={id:String(m.id),name:m.name,url:m.url};setTimeout(()=>mpSendMapToRoom(m),500);}}catch(e){}}}return;}
   if(payload.type==='sync'){
   if(payload.players){
     /* FIX: preserva la posizione locale del proprio token prima di sovrascrivere */
@@ -2605,8 +2610,8 @@ function mpOnWsMessage(raw){
       myServerSide.tokenY=(myLocal.tokenY!=null)?myLocal.tokenY:.5;
     }
   }
-  if(payload.shared){mpShared=payload.shared;if(!mpIsHost())mpApplySharedState(payload.shared);}
-  mpUpdateRoomUI();renderMapTokens();return;
+   if(payload.shared){mpShared=payload.shared;if(!mpIsHost())mpApplySharedState(payload.shared);}
+  mpRenderPlayersList();renderMapTokens();return;
 }
   if(payload.type==='hostReturn'){
     const snap=mpBuildPlayerSnapshot({isHost:false});
@@ -2706,9 +2711,7 @@ const lockNotes=!mpIsHost() && __now<mpClientNotesLockUntil;
 
 if(!mpIsHost()&&shared.travel){
   try{
-    const oldPhase=travel3DState.currentPhase;
-    const oldDay=travel3DState.currentDay;
-    const oldId=travel3DState.id;
+    
     const incomingCompleted=shared.travel.dungeonCompletedAt;
 
     if(!lockTravel){
@@ -2881,7 +2884,13 @@ function mpShowRemoteMapPanel(){const p=document.getElementById('mpRemoteMapPane
 function mpSendRemoteMapUrl(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}const u=(document.getElementById('mpRemoteMapUrl')&&document.getElementById('mpRemoteMapUrl').value||'').trim();if(!u||u.indexOf('http')!==0){alert('Inserisci un URL valido.');return;}mpShared.map={id:'remote_'+uid(),name:'Mappa Remota',url:u};mpBroadcastToRoom({type:'mapRemoteUrl',id:mpShared.map.id,name:mpShared.map.name,url:u});mpApplyReceivedMap(mpShared.map.id,mpShared.map.name,u,false);mpSetStatus('✅ URL mappa inviato');}
 function mpPushMyCharacter(){const snap=mpBuildPlayerSnapshot();mpPlayers[mpMyId]=Object.assign({},mpPlayers[mpMyId]||{},snap,{isHost:mpIsHost()});if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'playerUpdate',player:mpPlayers[mpMyId]});triggerProphecyFlash('📤 SCHEDA INVIATA','fa-upload',2000);mpUpdateRoomUI();renderMapTokens();}
 function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}try{if(mpWs)mpWs.close();}catch(e){}mpWs=null;mpRole=null;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;mpPlayers={};mpShared={map:null,travel:null,weather:'sereno',darknessActive:false};mpMapChunks={};mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');renderMapTokens();}
+let __renderMapTokensScheduled=false;
 function renderMapTokens(){
+  if(__renderMapTokensScheduled)return;
+  __renderMapTokensScheduled=true;
+  requestAnimationFrame(()=>{__renderMapTokensScheduled=false;__renderMapTokensNow();});
+}
+function __renderMapTokensNow(){
   const layer=document.getElementById('mapTokensLayer'),stage=document.getElementById('sharedMapStage'),img=document.getElementById('activeMapImg');
   if(layer&&stage&&img){layer.style.pointerEvents='none';let html='';if(mpIsConnected()&&Object.keys(mpPlayers).length>0){html+=Object.values(mpPlayers).map(p=>{const x=(p.tokenX!=null?p.tokenX:.5)*100;const y=(p.tokenY!=null?p.tokenY:.5)*100;const label=(p.charName&&p.charName!=='—')?p.charName:p.name;const initial=(label||'?').charAt(0).toUpperCase();const isMe=p.id===mpMyId;return `<div class="absolute" style="left:${x}%;top:${y}%;width:0;height:0;z-index:5;"><div class="absolute -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full border-2 ${isMe?'border-white':'border-black'} shadow-lg flex items-center justify-center text-black font-black text-xs" style="background:${p.color};top:0;left:0;">${initial}</div><div class="absolute -translate-x-1/2 mt-0.5 px-1 bg-black/90 text-[10px] font-bold text-white border border-gray-600 rounded max-w-[100px] truncate whitespace-nowrap" style="top:14px;left:0;">${label}${isMe?' ★':''} · ${p.hp}/${p.maxHp}</div></div>`;}).join('');}layer.innerHTML=html;}
   const dlayer=document.getElementById('dungeonTokensLayer');
@@ -2983,7 +2992,7 @@ function mpImportManualSync(){let raw=(document.getElementById('mpManualSyncInpu
           mpBroadcastToRoom({type:'hostReturn'});
           if(travel3DState.dungeonMapId){
   const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));
-  if(dm&&dm.url){dm.isDungeon=true;setTimeout(()=>mpSendMapToRoom(dm),800);setTimeout(()=>mpSendMapToRoom(dm),2000);}
+   if(dm&&dm.url){dm.isDungeon=true;setTimeout(()=>mpSendMapToRoom(dm),800);}
 }
 /* NUOVO: reinvia anche la mappa normale attiva */
 if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
@@ -3038,7 +3047,13 @@ window.onload=function(){
     }
   }catch(e){console.warn('[MAP-RESTORE]',e);}
 
-  setInterval(()=>{try{saveState();save3DTravelState();}catch(e){}},30000);
+setInterval(()=>{
+  try{
+    saveState();
+    /* Salva solo la stringa, senza rebuild 3D né broadcast WebSocket */
+    safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));
+  }catch(e){}
+},60000);
   const img=document.getElementById('activeMapImg');if(img)img.addEventListener('click',mpOnMapClick);
   const h=document.getElementById('roomHostNameInput');if(h&&state.name)h.value=state.name;
   updateSubtabCounts();updateDungeonUI();renderDungeonMapGallery();
