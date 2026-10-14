@@ -299,9 +299,8 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 <div class="bg-mbPanel p-2 border border-mbPink flex flex-wrap items-center justify-between gap-2 font-mono text-xs">
 <span class="text-mbPink font-bold uppercase"><i class="fa-solid fa-folder-open mr-1"></i> DIARIO:</span>
-<div class="flex flex-1 items-center space-x-2 min-w-[240px]">
-<select id="savedJourneysDropdown" onchange="loadJourneyProfileFromSelect(this.value)" class="flex-1 bg-black text-mbYellow p-1 border border-mbPink font-bold text-xs"><option value="j_1791754954892483" selected="">📖 Galgenbeck ➔ Schleswig (0 Punti)</option></select>
-<button onclick="confirmDeleteSelectedJourney()" class="px-2.5 py-1 bg-red-900 hover:bg-red-700 text-white font-bold text-xs flex items-center space-x-1 border border-red-500"><i class="fa-solid fa-trash-can"></i><span>ELIMINA</span></button>
+<div class="flex-1 min-w-[240px]">
+<div id="savedJourneysDropdown" class="space-y-1 max-h-40 overflow-y-auto"></div>
 </div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 font-mono text-xs">
@@ -1524,8 +1523,7 @@ function createNewJourneyProfile(){
   rebuild3DRoute();
   renderJourneysDropdown();
   updateMonsterJourneyDropdownFilter();
-  const dd=document.getElementById('savedJourneysDropdown');
-  if(dd)dd.value=travel3DState.id;
+  
 }
 function init3DTravelViewport(){const c=document.getElementById('threeTravelViewport');if(!c||travel3DRenderer)return;travel3DScene=new THREE.Scene();travel3DScene.background=new THREE.Color(0x0a0a0a);travel3DCamera=new THREE.PerspectiveCamera(50,c.clientWidth/c.clientHeight,.1,1000);travel3DCamera.position.set(0,18,22);travel3DRenderer=new THREE.WebGLRenderer({antialias:true});travel3DRenderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));travel3DRenderer.setSize(c.clientWidth,c.clientHeight);c.appendChild(travel3DRenderer.domElement);travel3DControls=new THREE.OrbitControls(travel3DCamera,travel3DRenderer.domElement);travel3DControls.enableDamping=true;c.addEventListener('pointerdown',on3DViewportPointerDown);travel3DScene.add(new THREE.AmbientLight(0xffffff,.9));setTimeout(initMarkerInteraction,100);rebuild3DRoute();animate3DTravel();}
 function on3DViewportPointerDown(event){if(!is3DDrawMode||!travel3DTerrainMesh||!travel3DRenderer)return;const rect=travel3DRenderer.domElement.getBoundingClientRect();const mouse=new THREE.Vector2(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);const rc=new THREE.Raycaster();rc.setFromCamera(mouse,travel3DCamera);const hits=rc.intersectObject(travel3DTerrainMesh);if(hits.length>0){const pt=hits[0].point;if(!Array.isArray(travel3DState.customPoints))travel3DState.customPoints=[];travel3DState.customPoints.push({x:pt.x,y:.2,z:pt.z});travel3DState.totalDays=travel3DState.customPoints.length;document.getElementById('travel3DDays').value=travel3DState.totalDays;save3DTravelState();}}
@@ -1643,8 +1641,26 @@ function loadJourneyProfileFromSelect(id){
     syncNotesViewUI();
   }
 }
-function renderJourneysDropdown(){const d=document.getElementById('savedJourneysDropdown');if(!d)return;if(savedJourneys.length===0){d.innerHTML='<option value="none">-- Nessun Diario --</option>';return;}d.innerHTML=savedJourneys.map(j=>`<option value="${j.id}" ${String(j.id)===String(travel3DState.id)?'selected':''}>📖 ${j.name||j.origin+' ➔ '+j.destination}</option>`).join('');}
-function confirmDeleteSelectedJourney(){const d=document.getElementById('savedJourneysDropdown');const id=d?d.value:null;if(!id||id==='none')return;if(confirm("Eliminare la rotta?")){savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));renderJourneysDropdown();updateMonsterJourneyDropdownFilter();}}
+function renderJourneysDropdown(){
+  const d=document.getElementById('savedJourneysDropdown');
+  if(!d)return;
+  if(savedJourneys.length===0){
+    d.innerHTML='<div class="text-gray-500 italic text-xs p-2 border border-dashed border-mbPink/40 text-center">Nessun Diario</div>';
+    return;
+  }
+  d.innerHTML=savedJourneys.map(j=>{
+    const isActive=String(j.id)===String(travel3DState.id);
+    const label=(j.name||j.origin+' ➔ '+j.destination);
+    const cls=isActive
+      ? 'bg-mbYellow text-black border-mbYellow'
+      : 'bg-black border-mbPink text-mbYellow hover:bg-mbPink hover:text-black';
+    return `<div class="flex items-center space-x-1">
+      <button onclick="loadJourneyProfileFromSelect('${j.id}')" class="flex-1 text-left p-1.5 border font-bold text-xs truncate ${cls}" title="${label}">📖 ${label}</button>
+      <button onclick="deleteJourneyById('${j.id}')" class="px-2 py-1 bg-red-900 text-white font-bold text-[10px] hover:bg-red-700 border border-red-500" title="Elimina"><i class="fa-solid fa-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+function deleteJourneyById(id){   if(!id)return;   if(!confirm("Eliminare la rotta?"))return;   savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));   safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));   renderJourneysDropdown();   updateMonsterJourneyDropdownFilter(); }
 
 /* INVENTARIO */
 function updateInventoryItemName(id,n){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.name=n.trim()||"Oggetto";saveState();render3DTrackedResources();}}
