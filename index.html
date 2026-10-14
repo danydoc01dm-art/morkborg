@@ -553,9 +553,11 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
   <div class="flex flex-wrap justify-between items-center gap-2 border-b border-green-500 pb-2">
     <h2 class="font-glitch text-xl text-green-400"><i class="fa-solid fa-pen-to-square mr-2"></i>APPUNTI</h2>
     <div class="flex flex-wrap items-center gap-2">
-      <select id="notesViewRottaSelect" onchange="onNotesViewRottaChange(this.value)" class="bg-black text-green-300 p-1 border border-green-500 font-mono font-bold text-xs min-w-[220px]"></select>
-      <button onclick="setNotesViewMode('all')" id="notesBtnAll" class="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs">📖 STORICO</button>
-    </div>
+  <select id="notesViewRottaSelect" onchange="onNotesViewRottaChange(this.value)" class="bg-black text-green-300 p-1 border border-green-500 font-mono font-bold text-xs min-w-[220px]"></select>
+  <button onclick="refreshNotesCurrent()" class="px-2 py-1 bg-green-600 text-black font-mono font-bold text-xs border border-green-500 hover:bg-white" title="Ricarica gli appunti dal salvataggio"><i class="fa-solid fa-rotate"></i></button>
+  <button onclick="deleteNotesCurrent()" class="px-2.5 py-1 bg-red-900 hover:bg-red-700 text-white font-mono font-bold text-xs border border-red-500" title="Elimina tutti gli appunti di questa rotta"><i class="fa-solid fa-trash-can"></i></button>
+  <button onclick="setNotesViewMode('all')" id="notesBtnAll" class="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs">📖 STORICO</button>
+</div>
   </div>
 
   <!-- VISTA CORRENTE -->
@@ -1868,6 +1870,35 @@ function onNotesJourneySelectorChange(id){
     const isCur=String(j.id)===String(travel3DState.id);
     return `<option value="${j.id}" ${String(j.id)===String(cur)?'selected':''}>📖 ${j.name||j.origin+' ➔ '+j.destination}${isCur?' ✓':''}</option>`;
   }).join('');
+}
+ function refreshNotesCurrent(){
+  const jid=getNotesJourneyId();
+  const j=savedJourneys.find(x=>String(x.id)===String(jid));
+  const nome=j?(j.name||j.origin+' ➔ '+j.destination):'questa rotta';
+  /* ricarica da localStorage senza toccare i dati */
+  const fresh=safeGetItem('morkborg_notes_store');
+  if(fresh){try{notesStore=JSON.parse(fresh);migrateNotesStore();}catch(e){}}
+  renderJourneyNotesList();
+  loadJourneyNoteDraft();
+  updateNewNoteTimestamp();
+  triggerProphecyFlash('🔄 APPUNTI RICARICATI','fa-rotate',1200);
+}
+
+function deleteNotesCurrent(){
+  const jid=getNotesJourneyId();
+  if(!jid)return;
+  const j=savedJourneys.find(x=>String(x.id)===String(jid));
+  const nome=j?(j.name||j.origin+' ➔ '+j.destination):'questa rotta';
+  const arr=getJourneyNotes(jid);
+  if(arr.length===0){alert('Non ci sono appunti da eliminare per questa rotta.');return;}
+  if(!confirm(`⚠️ Eliminare tutti i ${arr.length} appunti di "${nome}"?\n\n⚠️ La rotta in sé NON viene eliminata.\n\nQuesta azione NON è reversibile.`))return;
+  delete notesStore[jid];
+  safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));
+  /* pulisce anche la bozza non salvata */
+  safeSetItem('morkborg_note_draft_'+jid,'');
+  const ta=document.getElementById('journeyNoteInput');if(ta)ta.value='';
+  renderJourneyNotesList();
+  triggerProphecyFlash('🗑️ APPUNTI ELIMINATI','fa-trash',1500);
 }
  function onNotesViewRottaChange(id){
   notesSelectedJourneyId=id||null;
