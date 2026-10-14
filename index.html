@@ -1178,7 +1178,17 @@ let dungeonPendingMode=null,dungeonSelectedType=null,dungeonNotesDebounceTimer=n
 let dungeonLocalToken={x:.5,y:.5};
 let masterOnly3D=true;
 function toggleMasterOnly3D(v){if(mpIsConnected()&&!mpIsHost())return;masterOnly3D=!!v;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;applyMasterOnly3DState();if(mpIsHost()&&mpIsConnected())mpHostBroadcast();}
-function applyMasterOnly3DState(){const block=masterOnly3D&&mpIsConnected()&&!mpIsHost();['master3DCtrlGroup1','master3DCtrlGroup2'].forEach(id=>{const g=document.getElementById(id);if(!g)return;if(block){g.style.pointerEvents='none';g.style.opacity='0.35';g.title='🔒 Solo il Master può controllare il 3D';}else{g.style.pointerEvents='';g.style.opacity='';g.title='';}});}
+function applyMasterOnly3DState(){
+  const block=masterOnly3D&&mpIsConnected()&&!mpIsHost();
+  ['master3DCtrlGroup1','master3DCtrlGroup2'].forEach(id=>{const g=document.getElementById(id);if(!g)return;if(block){g.style.pointerEvents='none';g.style.opacity='0.35';g.title='🔒 Solo il Master può controllare il 3D';}else{g.style.pointerEvents='';g.style.opacity='';g.title='';}});
+  /* FIX: blocca anche il dropdown Terreno 3D */
+  const sel=document.getElementById('travelLinkedMapSelect');
+  if(sel){
+    sel.disabled=block;
+    sel.style.opacity=block?'0.35':'';
+    sel.title=block?'🔒 Solo il Master può cambiare il terreno':'';
+  }
+}
 const phaseDetails={1:{title:"🌅 FASE 1: MATTINA",desc:"La compagnia riprende il cammino."},2:{title:"☀️ FASE 2: POMERIGGIO",desc:"Avanzamento nel territorio."},3:{title:"⛺ FASE 3: SERA",desc:"Allestimento del campo base."},4:{title:"🌙 FASE 4: NOTTE",desc:"Turno di guardia nell'oscurità."}};
 
 /* ============================================================
@@ -2834,9 +2844,11 @@ function mpApplyReceivedMap(mapId,name,url,isDungeonFromHost){
     const existing=savedMaps.find(m=>String(m.id)===String(mapId));
     if(existing&&existing.isDungeon)isDun=true;
   }
-  console.log('[MP-MAP] Ricevuta:',{mapId,name,isDungeonFromHost,isDun,isHost:mpIsHost()});  if(mapId){
+  console.log('[MP-MAP] Ricevuta:',{mapId,name,isDungeonFromHost,isDun,isHost:mpIsHost()});  
+ if(mapId){
     const ex=savedMaps.some(m=>String(m.id)===String(mapId));
-    if(!ex){
+    const exByUrl=savedMaps.some(m=>m.url===url);
+    if(!ex && !exByUrl){
 savedMaps.push({id:mapId,name:name||'Mappa',url:url,isDungeon:isDun,ghost:isDun});
 const __ok=safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
 if(!__ok){
@@ -2947,7 +2959,11 @@ function __renderMapTokensNow(){
   }
 }  
 
-function mpOnMapClick(e){if(!mpIsConnected())return;const img=document.getElementById('activeMapImg');if(!img||img.classList.contains('hidden'))return;const rect=img.getBoundingClientRect();const x=(e.clientX-rect.left)/rect.width,y=(e.clientY-rect.top)/rect.height;if(x<0||x>1||y<0||y>1)return;if(mpPlayers[mpMyId]){mpPlayers[mpMyId].tokenX=x;mpPlayers[mpMyId].tokenY=y;}if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y});renderMapTokens();}
+function mpOnMapClick(e){if(!mpIsConnected())return;const img=document.getElementById('activeMapImg');if(!img||img.classList.contains('hidden'))return;const rect=img.getBoundingClientRect();const x=(e.clientX-rect.left)/rect.width,y=(e.clientY-rect.top)/rect.height;if(x<0||x>1||y<0||y>1)return;if(mpPlayers[mpMyId]){mpPlayers[mpMyId].tokenX=x;mpPlayers[mpMyId].tokenY=y;}
+dungeonLocalToken.x=x;dungeonLocalToken.y=y;
+safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
+if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y,ts:Date.now()});
+renderMapTokens();
 function mpNotifyStateChange(reason){
   if(mpIsHost()){mpHostBroadcast();return;}
   if(!mpIsConnected())return;
