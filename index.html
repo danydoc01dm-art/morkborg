@@ -2234,6 +2234,10 @@ function selectMapAsDungeon(mapId){
 
   travel3DState.dungeonMapId=String(m.id);
   dungeonLoadFromMap(m.id);
+  /* NUOVO: reset nebbia anche al caricamento, per il Master */
+  dungeonState.revealedPoints=[];
+  if(m.dungeonData) m.dungeonData.revealedPoints=[];
+  saveDungeonState();
   save3DTravelState();
 
   const img=document.getElementById('dungeonMapImg');
@@ -2248,6 +2252,8 @@ function selectMapAsDungeon(mapId){
 
   if(mpIsHost()&&mpIsConnected()){
     mpSendMapToRoom(m);
+    /* NUOVO: avvisa i client di resettare la nebbia */
+    mpBroadcastToRoom({type:'dungeonReset'});
     if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
   }
 }
