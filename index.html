@@ -412,7 +412,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono text-xs">
 <div class="bg-black p-2 border border-mbBorder space-y-1"><span class="text-mbYellow font-bold block">PORTATA:</span>
-<select id="newMonsterJourneyScope" class="w-full p-1 bg-black text-white font-bold border border-gray-700"><option value="current">📍 Corrente</option><option value="global">🌐 Globale</option></select>
+<select id="newMonsterJourneyScope" class="w-full p-1 bg-black text-white font-bold border border-gray-700"></select>
 </div>
 <div class="bg-black p-2 border border-mbBorder space-y-1"><span class="text-mbPink font-bold block">ATTACCO SPECIALE:</span>
 <div class="grid grid-cols-12 gap-1"><input type="text" id="newMonsterSpecName" placeholder="Nome" class="col-span-5 p-1 bg-black text-xs border border-gray-700"><input type="text" id="newMonsterSpecEffect" placeholder="Effetto" class="col-span-7 p-1 bg-black text-xs border border-gray-700"></div>
@@ -684,7 +684,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 <div id="editMonsterDungeonMapWrap" class="space-y-1 hidden"><label class="text-mbPurple font-bold block">MAPPA DUNGEON</label><select id="editMonsterDungeonMapId" class="w-full p-2 bg-black border border-mbPurple text-xs text-white font-bold"></select></div>
 </div>
-<div class="space-y-1"><label class="text-gray-400 font-bold block">PORTATA</label><select id="editMonsterJourneyScope" class="w-full p-2 bg-black border border-mbPink text-xs text-white font-bold"><option value="current">📍 Corrente</option><option value="global">🌐 Globale</option></select></div>
+<div class="space-y-1"><label class="text-gray-400 font-bold block">ROTTA</label><select id="editMonsterJourneyScope" class="w-full p-2 bg-black border border-mbPink text-xs text-white font-bold"></select></div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 <div class="space-y-1"><label class="text-gray-400 font-bold block">ATTACCO (NOME)</label><input type="text" id="editMonsterSpecName" class="w-full p-2 bg-black border border-mbPink text-xs text-white"></div>
 <div class="space-y-1"><label class="text-gray-400 font-bold block">EFFETTO</label><input type="text" id="editMonsterSpecEffect" class="w-full p-2 bg-black border border-mbPink text-xs text-gray-300"></div>
@@ -1742,11 +1742,11 @@ function populateEditMonsterDungeonSelect(selectedId){
 function addCustomMonster(){const name=document.getElementById('newMonsterName').value.trim();const type=document.getElementById('newMonsterType').value;const al=document.getElementById('newMonsterAlignment').value;const isBoss=document.getElementById('newMonsterIsBoss').checked;const hp=parseInt(document.getElementById('newMonsterHp').value)||10;const armor=document.getElementById('newMonsterArmor').value.trim()||'0';const weapon=document.getElementById('newMonsterWeapon').value.trim()||(type==='npc'?'Mercante / Popolano':'Attacco (d6)');const ms=document.getElementById('newMonsterState').value;const scope=document.getElementById('newMonsterJourneyScope').value;const sn=document.getElementById('newMonsterSpecName').value.trim();const se=document.getElementById('newMonsterSpecEffect').value.trim();const desc=document.getElementById('newMonsterDesc').value.trim()||'Nessun dettaglio extra.';if(!name){alert("Inserisci un nome!");return;}let specs=[];if(sn)specs.push({name:sn,effect:se||'Nessun effetto specificato'});const inDungeon=document.getElementById('newMonsterInDungeon').checked;
 const dungeonMapId=inDungeon?(document.getElementById('newMonsterDungeonMapId').value||null):null;
 const dungeonMapName=dungeonMapId?((savedMaps.find(x=>String(x.id)===String(dungeonMapId))||{}).name||null):null;
-monsters.push({id:uid(),name,type,alignment:al,isBoss,hp,maxHp:hp,armor,weapon,state:ms,journeyId:(scope==='global')?'global':(travel3DState.id||'default_journey'),desc,specialAttacks:specs,dungeonMapId,dungeonMapName});saveMonsters();renderBestiary();document.getElementById('newMonsterName').value='';document.getElementById('newMonsterSpecName').value='';document.getElementById('newMonsterSpecEffect').value='';document.getElementById('newMonsterDesc').value='';
+monsters.push({id:uid(),name,type,alignment:al,isBoss,hp,maxHp:hp,armor,weapon,state:ms,journeyId:(scope==='global')?'global':(scope==='current'?(travel3DState.id||'default_journey'):scope),desc,specialAttacks:specs,dungeonMapId,dungeonMapName});saveMonsters();renderBestiary();document.getElementById('newMonsterName').value='';document.getElementById('newMonsterSpecName').value='';document.getElementById('newMonsterSpecEffect').value='';document.getElementById('newMonsterDesc').value='';
 document.getElementById('newMonsterInDungeon').checked=false;
 onNewMonsterDungeonToggle(false);}
 function deleteMonster(id){if(confirm("Eliminare questa scheda?")){monsters=monsters.filter(m=>m.id!==id);saveMonsters();renderBestiary();}}
-function openEditMonsterModal(id){const m=monsters.find(i=>i.id===id);if(!m)return;document.getElementById('editMonsterId').value=m.id;document.getElementById('editMonsterName').value=m.name||'';document.getElementById('editMonsterType').value=m.type||'monster';document.getElementById('editMonsterAlignment').value=m.alignment||'evil';document.getElementById('editMonsterState').value=m.state||'active';document.getElementById('editMonsterHp').value=m.hp!=null?m.hp:10;document.getElementById('editMonsterMaxHp').value=m.maxHp!=null?m.maxHp:(m.hp||10);document.getElementById('editMonsterIsBoss').checked=!!m.isBoss;document.getElementById('editMonsterArmor').value=m.armor||'';document.getElementById('editMonsterWeapon').value=m.weapon||'';document.getElementById('editMonsterDesc').value=m.desc||'';const sc=document.getElementById('editMonsterJourneyScope');if(sc)sc.value=(m.journeyId==='global')?'global':'current';const sp=Array.isArray(m.specialAttacks)?m.specialAttacks:[];
+function openEditMonsterModal(id){const m=monsters.find(i=>i.id===id);if(!m)return;document.getElementById('editMonsterId').value=m.id;document.getElementById('editMonsterName').value=m.name||'';document.getElementById('editMonsterType').value=m.type||'monster';document.getElementById('editMonsterAlignment').value=m.alignment||'evil';document.getElementById('editMonsterState').value=m.state||'active';document.getElementById('editMonsterHp').value=m.hp!=null?m.hp:10;document.getElementById('editMonsterMaxHp').value=m.maxHp!=null?m.maxHp:(m.hp||10);document.getElementById('editMonsterIsBoss').checked=!!m.isBoss;document.getElementById('editMonsterArmor').value=m.armor||'';document.getElementById('editMonsterWeapon').value=m.weapon||'';document.getElementById('editMonsterDesc').value=m.desc||'';populateEditMonsterJourneySelect(m.journeyId);const sp=Array.isArray(m.specialAttacks)?m.specialAttacks:[];
 const inD=!!m.dungeonMapId;
 document.getElementById('editMonsterInDungeon').checked=inD;
 onEditMonsterDungeonToggle(inD);
@@ -1763,7 +1763,7 @@ if(inD){
   m.dungeonMapId=null;
   m.dungeonMapName=null;
 }
-                           const sc=document.getElementById('editMonsterJourneyScope').value;if(sc==='global')m.journeyId='global';else if(!m.journeyId||m.journeyId==='global')m.journeyId=travel3DState.id||'default_journey';const sn=document.getElementById('editMonsterSpecName').value.trim();const se=document.getElementById('editMonsterSpecEffect').value.trim();if(sn)m.specialAttacks=[{name:sn,effect:se||'Nessun effetto specificato'}];else m.specialAttacks=[];saveMonsters();renderBestiary();closeEditMonsterModal();playSynthSound('heal');}
+                           const sc=document.getElementById('editMonsterJourneyScope').value; if(sc==='global')m.journeyId='global'; else if(sc==='current')m.journeyId=travel3DState.id||'default_journey'; else m.journeyId=sc;const sn=document.getElementById('editMonsterSpecName').value.trim();const se=document.getElementById('editMonsterSpecEffect').value.trim();if(sn)m.specialAttacks=[{name:sn,effect:se||'Nessun effetto specificato'}];else m.specialAttacks=[];saveMonsters();renderBestiary();closeEditMonsterModal();playSynthSound('heal');}
 function updateMonsterHp(id,d){const m=monsters.find(i=>i.id===id);if(m){m.hp=Math.max(0,Math.min(m.maxHp||m.hp,m.hp+d));if(m.hp===0)m.state='killed';saveMonsters();renderBestiary();}}
 function updateMonsterState(id,s){const m=monsters.find(i=>i.id===id);if(m){m.state=s;saveMonsters();renderBestiary();}}
 function setMonsterFilter(k,v){if(k==='alignment')monsterFilterSettings.alignment=v;if(k==='journey')monsterFilterSettings.journey=v;renderBestiary();}
@@ -2024,6 +2024,7 @@ function loadState(){
   populateInputsFromState();updateMapDropdownOptions();renderJourneysDropdown();populate3DTravelInputs();
   renderMapsGallery();renderDungeonMapGallery();renderPsalmsList();updateMonsterJourneyDropdownFilter();renderBestiary();syncNotesViewUI();
   updateDarknessUI();setWeather(state.currentWeather||'sereno');syncSettingsUI();updateDungeonUI();
+  populateMonsterJourneySelects();
 }
 let __lastSavedStateJSON=null;
 function saveState(){
@@ -2432,7 +2433,7 @@ function switchTab(t){
   document.getElementById(`tab-${t}`)?.classList.add('active','border-b-2','border-mbYellow','text-mbYellow','bg-mbPanel');
   if(t==='travel3d')setTimeout(()=>{init3DTravelViewport();rebuild3DRoute();render3DTrackedResources();applyMasterOnly3DState();},50);
   else if(t==='ar'){setTimeout(()=>{initThreeJS();resizeARRenderer();},60);}
-  else if(t==='monsters'){updateMonsterJourneyDropdownFilter();renderBestiary();}
+  else if(t==='monsters'){updateMonsterJourneyDropdownFilter();populateMonsterJourneySelects();renderBestiary();}
   else if(t==='notes')syncNotesViewUI();
   else if(t==='maps'){updateSubtabCounts();updateDungeonUI();if(currentMapSubtab==='dungeon'){renderDungeonMapGallery();syncDungeonMapFromActive();setTimeout(()=>{setupFogCanvas();redrawFog();renderMapTokens();},80);}}
 }
@@ -3088,7 +3089,53 @@ if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
     return r;
   };
 })();
+function populateMonsterJourneySelects(){
+  const fill=(sel,currentVal)=>{
+    if(!sel)return;
+    const curLabel=(travel3DState.name||travel3DState.origin+' ➔ '+travel3DState.destination);
+    let h=`<option value="current">📍 Corrente — ${curLabel}</option>`;
+    h+='<option value="global">🌐 Globale (tutte le rotte)</option>';
+    savedJourneys.forEach(j=>{
+      if(String(j.id)===String(travel3DState.id))return;
+      h+=`<option value="${j.id}">📖 ${j.name||j.origin+' ➔ '+j.destination}</option>`;
+    });
+    if(currentVal!==undefined&&currentVal!==null){
+      const isCur=(currentVal==='current'||String(currentVal)===String(travel3DState.id));
+      const isGlob=(currentVal==='global');
+      const exists=[...sel.options].some(o=>String(o.value)===String(currentVal));
+      if(!isCur&&!isGlob&&!exists&&currentVal){
+        h+=`<option value="${currentVal}">📖 (rotta eliminata)</option>`;
+      }
+    }
+    sel.innerHTML=h;
+    if(currentVal!==undefined&&currentVal!==null)sel.value=String(currentVal);
+  };
+  fill(document.getElementById('newMonsterJourneyScope'));
+  /* edit viene riempito alla apertura del modal */
+}
 
+function populateEditMonsterJourneySelect(currentJid){
+  const sel=document.getElementById('editMonsterJourneyScope');
+  if(!sel)return;
+  const normalized=(currentJid==='global')?'global':
+                   (String(currentJid)===String(travel3DState.id))?'current':
+                   (currentJid||'current');
+  populateMonsterJourneySelects();
+  /* rimuovi la select del form nuovo (già fatta) e rifai solo quella di edit */
+  const curLabel=(travel3DState.name||travel3DState.origin+' ➔ '+travel3DState.destination);
+  let h=`<option value="current">📍 Corrente — ${curLabel}</option>`;
+  h+='<option value="global">🌐 Globale (tutte le rotte)</option>';
+  savedJourneys.forEach(j=>{
+    if(String(j.id)===String(travel3DState.id))return;
+    h+=`<option value="${j.id}">📖 ${j.name||j.origin+' ➔ '+j.destination}</option>`;
+  });
+  const isCurOrGlob=(normalized==='current'||normalized==='global');
+  if(!isCurOrGlob&&!savedJourneys.some(j=>String(j.id)===String(normalized))){
+    h+=`<option value="${normalized}">📖 (rotta eliminata)</option>`;
+  }
+  sel.innerHTML=h;
+  sel.value=normalized;
+}
 /* AVVIO */
 window.onload=function(){
    switchTab('hud');  // ← NUOVA RIGA
