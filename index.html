@@ -546,45 +546,49 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 </section>
 
-<section id="view-notes" class="tab-view hidden space-y-4">
-<div class="bg-mbPanel p-4 border-2 border-green-500 space-y-3">
-<div class="flex flex-wrap justify-between items-center gap-2 border-b border-green-500 pb-2">
-<h2 class="font-glitch text-xl text-green-400"><i class="fa-solid fa-pen-to-square mr-2"></i>APPUNTI &amp; DIARIO</h2>
-<div class="flex flex-wrap items-center gap-2">
-<button onclick="setNotesViewMode('current')" id="notesBtnCurrent" class="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs">📍 CORRENTE</button>
-<button onclick="setNotesViewMode('all')" id="notesBtnAll" class="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs">📖 STORICO</button>
+<section id="view-notes" class="tab-view hidden space-y-3">
+<div class="bg-mbPanel p-3 border-2 border-green-500 space-y-3">
+
+  <!-- HEADER -->
+  <div class="flex flex-wrap justify-between items-center gap-2 border-b border-green-500 pb-2">
+    <h2 class="font-glitch text-xl text-green-400"><i class="fa-solid fa-pen-to-square mr-2"></i>APPUNTI</h2>
+    <div class="flex flex-wrap items-center gap-2">
+      <select id="notesViewRottaSelect" onchange="onNotesViewRottaChange(this.value)" class="bg-black text-green-300 p-1 border border-green-500 font-mono font-bold text-xs min-w-[220px]"></select>
+      <button onclick="setNotesViewMode('all')" id="notesBtnAll" class="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs">📖 STORICO</button>
+    </div>
+  </div>
+
+  <!-- VISTA CORRENTE -->
+  <div id="singleNotesContainer" class="space-y-3">
+    <div class="flex items-center justify-between font-mono text-[11px] text-gray-500">
+      <span id="notesCountLabel">—</span>
+      <span class="italic"><i class="fa-solid fa-lock mr-1"></i>solo tuoi, locali</span>
+    </div>
+
+    <div class="bg-black border border-green-900 p-2.5 space-y-2">
+      <div class="flex items-center justify-between font-mono text-[11px]">
+        <span class="text-green-400 font-bold uppercase"><i class="fa-solid fa-feather-pointed mr-1"></i>NUOVO APPUNTO</span>
+        <span class="text-gray-500" id="newNoteTimestamp">—</span>
+      </div>
+      <textarea id="journeyNoteInput" oninput="saveJourneyNoteDraft()" onfocus="updateNewNoteTimestamp()" placeholder="Scrivi qui il tuo appunto..." class="w-full h-28 p-2.5 bg-black border border-green-900 font-mono text-sm text-green-400 leading-relaxed resize-y"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="clearJourneyNoteDraft()" class="px-3 py-1.5 bg-gray-900 text-gray-300 font-mono font-bold text-xs border border-gray-700 hover:bg-gray-700">PULISCI</button>
+        <button onclick="saveJourneyNote()" class="px-4 py-1.5 bg-green-600 text-black font-mono font-bold text-xs hover:bg-white uppercase"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVA</button>
+      </div>
+    </div>
+
+    <div id="journeyNotesList" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
+  </div>
+
+  <!-- VISTA ARCHIVIO -->
+  <div id="allNotesListContainer" class="hidden space-y-3 max-h-[600px] overflow-y-auto pr-1"></div>
+
+  <!-- Label nascosta (compatibilità JS) -->
+  <span id="activeNotesHeaderLabel" class="hidden"></span>
 
 </div>
-</div>
-<div class="bg-black p-2 border border-green-900 flex justify-between items-center font-mono text-xs">
-<span class="text-green-400 font-bold" id="activeNotesHeaderLabel">📖 DIARIO: Galgenbeck ➔ Schleswig (0 Punti)</span>
-<span class="text-gray-500 text-[10px]">Auto-salvataggio</span>
-</div>
-<div id="singleNotesContainer" class="space-y-3">
-<div class="bg-black border-2 border-green-900 p-3 space-y-2">
-    <div class="bg-mbPanel border border-green-900 p-2 flex flex-wrap items-center gap-2 font-mono text-xs">
-      <span class="text-green-400 font-bold uppercase shrink-0"><i class="fa-solid fa-book mr-1"></i> Viaggio:</span>
-      <select id="notesJourneySelector" onchange="onNotesJourneySelectorChange(this.value)" class="flex-1 min-w-[200px] bg-black text-green-300 p-1 border border-green-700 font-bold text-xs"></select>
-    </div>
-    <div class="flex items-center justify-between font-mono text-xs">
-      <span class="text-green-400 font-bold uppercase"><i class="fa-solid fa-feather-pointed mr-1"></i> NUOVO APPUNTO</span>
-      <span class="text-gray-500 text-[10px]" id="newNoteTimestamp">—</span>
-    </div>
-   <textarea id="journeyNoteInput" oninput="saveJourneyNoteDraft()" onfocus="updateNewNoteTimestamp()" placeholder="Scrivi qui il tuo appunto per questo viaggio..." class="w-full h-32 p-3 bg-black border border-green-900 font-mono text-sm text-green-400 leading-relaxed"></textarea>
-    <div class="flex justify-end gap-2">
-      <button onclick="clearJourneyNoteDraft()" class="px-3 py-1.5 bg-gray-900 text-gray-300 font-mono font-bold text-xs border border-gray-700 hover:bg-gray-700">PULISCI</button>
-      <button onclick="saveJourneyNote()" class="px-4 py-1.5 bg-green-600 text-black font-mono font-bold text-xs hover:bg-white uppercase"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVA APPUNTO</button>
-    </div>
-  </div>
-  <div class="bg-black border border-green-900 p-2 flex items-center justify-between font-mono text-xs">
-    <span class="text-green-400 font-bold" id="notesCountLabel">—</span>
-    <span class="text-gray-500 text-[10px] italic"><i class="fa-solid fa-lock mr-1"></i> solo tuoi, locali</span>
-  </div>
-  <div id="journeyNotesList" class="space-y-2 max-h-[500px] overflow-y-auto pr-1"></div>
-</div>
-<div id="allNotesListContainer" class="hidden space-y-3 max-h-[500px] overflow-y-auto pr-1"></div>
-</div>
 </section>
+ 
 <section id="view-export" class="tab-view space-y-4">
 <div class="bg-mbPanel p-4 border-2 border-mbYellow space-y-4">
 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-mbYellow pb-3">
@@ -1823,20 +1827,28 @@ function getNotesJourneyId(){
   return travel3DState.id||'default_journey';
 }
 
-function populateNotesJourneySelector(){
-  const s=document.getElementById('notesJourneySelector');
-  if(!s)return;
-  if(savedJourneys.length===0){
-    s.innerHTML='<option value="default_journey">📖 (nessun viaggio)</option>';
-    return;
+function syncNotesViewUI(){
+  const sel=document.getElementById('notesViewRottaSelect');
+  const ba=document.getElementById('notesBtnAll');
+  const sc=document.getElementById('singleNotesContainer');
+  const ac=document.getElementById('allNotesListContainer');
+  if(currentNotesViewMode==='current'){
+    if(sel)sel.className="bg-black text-green-300 p-1 border border-green-500 font-mono font-bold text-xs min-w-[220px]";
+    if(ba)ba.className="px-2.5 py-1 bg-black border border-green-500 text-green-400 font-mono font-bold text-xs";
+    if(sc)sc.classList.remove('hidden');
+    if(ac)ac.classList.add('hidden');
+    populateNotesJourneySelector();
+    renderJourneyNotesList();
+    updateNewNoteTimestamp();
+    loadJourneyNoteDraft();
+  }else{
+    if(sel)sel.className="bg-black text-green-300/40 p-1 border border-green-900 font-mono font-bold text-xs min-w-[220px] opacity-50";
+    if(ba)ba.className="px-2.5 py-1 bg-green-500 text-black font-mono font-bold text-xs";
+    if(sc)sc.classList.add('hidden');
+    if(ac)ac.classList.remove('hidden');
+    renderAllNotesList();
   }
-  const cur=getNotesJourneyId();
-  s.innerHTML=savedJourneys.map(j=>{
-    const isCur=String(j.id)===String(travel3DState.id);
-    return `<option value="${j.id}" ${String(j.id)===String(cur)?'selected':''}>📖 ${j.name||j.origin+' ➔ '+j.destination}${isCur?' (corrente)':''}</option>`;
-  }).join('');
 }
-
 function onNotesJourneySelectorChange(id){
   saveJourneyNoteDraft();
   notesSelectedJourneyId=id||null;
@@ -1845,6 +1857,15 @@ function onNotesJourneySelectorChange(id){
   const hl=document.getElementById('activeNotesHeaderLabel');
   const j=savedJourneys.find(x=>String(x.id)===String(getNotesJourneyId()));
   if(hl&&j)hl.innerText=`📖 DIARIO: ${j.name||j.origin+' ➔ '+j.destination}`;
+}
+ function onNotesViewRottaChange(id){
+  notesSelectedJourneyId=id||null;
+  if(currentNotesViewMode!=='current'){
+    currentNotesViewMode='current';
+    syncNotesViewUI();
+  }else{
+    onNotesJourneySelectorChange(id);
+  }
 }
  function draftKeyForJourney(){
  return 'morkborg_note_draft_'+(getNotesJourneyId());
