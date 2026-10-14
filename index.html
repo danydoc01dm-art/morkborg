@@ -73,10 +73,10 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 </header>
 <main class="flex-1 flex flex-col max-w-7xl w-full mx-auto p-2 sm:p-3 space-y-3 z-10">
-<nav class="grid grid-cols-3 sm:grid-cols-7 gap-1 bg-black p-1 border-2 border-mbBorder font-mono text-[11px] font-bold uppercase tracking-wider">
+<nav class="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-black p-1 border-2 border-mbBorder font-mono text-[11px] font-bold uppercase tracking-wider">
 <button id="tab-hud" onclick="switchTab('hud')" class="tab-btn px-1 py-2 text-center flex flex-col items-center justify-center space-y-1 text-gray-400"><i class="fa-solid fa-skull text-sm"></i><span>SCHEDA</span></button>
 <button id="tab-travel3d" onclick="switchTab('travel3d')" class="tab-btn px-1 py-2 text-center text-gray-400 hover:text-white flex flex-col items-center justify-center space-y-1"><i class="fa-solid fa-cubes text-sm text-mbPink"></i><span>VIAGGIO 3D</span></button>
-<button id="tab-ar" onclick="switchTab('ar')" class="tab-btn px-1 py-2 text-center text-gray-400 hover:text-white flex flex-col items-center justify-center space-y-1"><i class="fa-solid fa-camera text-sm"></i><span>AR CAM</span></button>
+
 <button id="tab-monsters" onclick="switchTab('monsters')" class="tab-btn px-1 py-2 text-center text-gray-400 hover:text-white flex flex-col items-center justify-center space-y-1"><i class="fa-solid fa-dragon text-sm"></i><span>INCONTRI</span></button>
 <button id="tab-maps" onclick="switchTab('maps')" class="tab-btn px-1 py-2 text-center text-gray-400 hover:text-white flex flex-col items-center justify-center space-y-1"><i class="fa-solid fa-map-location-dot text-sm text-mbYellow"></i><span>MAPPE</span></button>
 <button id="tab-notes" onclick="switchTab('notes')" class="tab-btn px-1 py-2 text-center text-gray-400 hover:text-white flex flex-col items-center justify-center space-y-1"><i class="fa-solid fa-book-open text-sm text-green-400"></i><span>APPUNTI</span></button>
@@ -380,47 +380,6 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <div id="gmEventsLogContainer" class="space-y-1 max-h-52 overflow-y-auto pr-1"></div></div>
 </div>
 </section>
-
-<section id="view-ar" class="tab-view hidden flex-1 flex flex-col space-y-3">
-<div class="bg-mbPanel p-3 border-2 border-mbBorder flex flex-wrap items-center justify-between gap-2">
-<div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span><span class="font-mono text-xs text-gray-300 font-bold uppercase" id="camStatusText">MODALITÀ: SIMULATORE AR</span></div>
-<div class="flex items-center space-x-2">
-<button id="toggleRealCamBtn" onclick="toggleRealCamera()" class="px-3 py-1 bg-mbYellow text-black font-bold font-mono text-xs hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-video"></i><span id="camBtnLabel">ATTIVA CAM</span></button>
-<select id="markerSelect" onchange="changeSimulatedMarker(this.value)" class="bg-black text-mbYellow font-mono text-xs p-1.5 border border-mbYellow"><option value="character">Personaggio</option><option value="map">Mappa</option><option value="monster">Mostro</option></select>
-</div>
-</div>
-<div class="relative w-full h-[480px] sm:h-[540px] bg-black border-4 border-mbYellow overflow-hidden flex items-center justify-center shadow-2xl">
-<video id="webcamVideo" autoplay="" playsinline="" muted="" class="absolute inset-0 w-full h-full object-cover hidden"></video>
-<div class="scanlines absolute inset-0 z-10 pointer-events-none"></div>
-<div id="threeContainer" class="absolute inset-0 w-full h-full z-0"></div>
-<div id="arReticle" class="absolute z-20 pointer-events-none flex flex-col items-center justify-center">
-<div class="w-64 h-64 border-2 border-dashed border-mbYellow/70 relative flex items-center justify-center animate-pulse">
-<div class="absolute -top-3 left-2 bg-mbYellow text-black font-mono text-[10px] px-1 font-bold">AR TARGET</div>
-<div class="w-12 h-12 border-t-4 border-l-4 border-mbPink absolute top-0 left-0"></div>
-<div class="w-12 h-12 border-t-4 border-r-4 border-mbPink absolute top-0 right-0"></div>
-<div class="w-12 h-12 border-b-4 border-l-4 border-mbPink absolute bottom-0 left-0"></div>
-<div class="w-12 h-12 border-b-4 border-r-4 border-mbPink absolute bottom-0 right-0"></div>
-<i class="fa-solid fa-crosshairs text-4xl text-mbYellow/30"></i>
-</div>
-</div>
-<div id="arFloatingHUD" class="absolute top-4 right-4 z-20 bg-black/85 border-2 border-mbPink p-3 w-64 shadow-xl">
-<div class="flex items-center justify-between border-b border-mbPink pb-1 mb-2"><span class="font-glitch text-mbYellow text-sm" id="arHudTitle">SCHEDA AR</span><span class="bg-mbPink text-black font-mono text-[10px] px-1 font-bold">LOCKED</span></div>
-<div class="space-y-2 font-mono text-xs">
-<div class="flex justify-between items-center text-gray-300"><span>HP:</span><span class="font-bold text-mbYellow text-sm" id="arHpDisplay">12 / 12</span></div>
-<div class="w-full bg-gray-800 h-2 border border-gray-600"><div id="arHpBar" class="bg-mbYellow h-full" style="width: 100%;"></div></div>
-<div class="flex justify-between text-gray-300 pt-1"><span>OMENS:</span><span class="text-mbPink font-bold" id="arOmensDisplay">2 / 2</span></div>
-<div class="flex justify-between text-gray-300"><span>BUIO:</span><span class="text-gray-400 font-bold" id="arDarknessDisplay">OFF</span></div>
-</div>
-</div>
-<div class="absolute bottom-3 inset-x-3 z-20 flex flex-wrap items-center justify-center gap-2 bg-black/80 p-2 border border-mbBorder">
-<button onclick="modifyHP(-1)" class="px-3 py-1.5 bg-red-900/80 hover:bg-red-700 text-white font-mono text-xs border border-red-500 font-bold">- Danno</button>
-<button onclick="modifyHP(1)" class="px-3 py-1.5 bg-green-900/80 hover:bg-green-700 text-white font-mono text-xs border border-green-500 font-bold">+ Cura</button>
-<button onclick="toggleDarknessLocation()" class="px-3 py-1.5 bg-amber-900/80 hover:bg-amber-600 text-mbYellow font-mono text-xs border border-mbYellow font-bold"><i class="fa-solid fa-moon"></i> Buio</button>
-<button onclick="triggerAttackFX()" class="px-3 py-1.5 bg-mbPink text-black font-mono text-xs border border-white font-bold hover:bg-mbYellow"><i class="fa-solid fa-skull-crossbones"></i> Fendente</button>
-</div>
-</div>
-</section>
-
 <section id="view-monsters" class="tab-view hidden space-y-4">
 <div class="bg-mbPanel p-4 border-2 border-mbPink space-y-3 shadow-xl">
 <div class="border-b border-mbPink pb-2"><h2 class="font-glitch text-xl text-mbPink"><i class="fa-solid fa-skull-crossbones mr-2"></i>NUOVA CREATURA / PNJ</h2></div>
@@ -1096,7 +1055,7 @@ function triggerCelestialArcFX(ph){
 }
 function triggerDamageFX(){playSynthSound('damage');if(state.visualSettings.screenShake){const b=document.getElementById('appBody');b.classList.add('apply-shake');setTimeout(()=>b.classList.remove('apply-shake'),350);}if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++)fxParticles.push({type:'bloodDrop',x:Math.random()*fxCanvas.width,y:Math.random()*fxCanvas.height,vx:(Math.random()-.5)*.2,vy:Math.random()*.25+.05,size:Math.random()*4+2,color:Math.random()>.3?'rgba(255,0,85,.5)':'rgba(136,0,34,.5)',life:1,decay:.005});}
 function triggerHealFX(){playSynthSound('heal');if(!state.visualSettings.damageHealFx||!fxCtx)return;for(let i=0;i<90;i++){const sx=Math.random()*fxCanvas.width;fxParticles.push({type:'healOrb',x:sx,baseX:sx,y:Math.random()*fxCanvas.height,vy:-(Math.random()*.25+.1),size:Math.random()*4.5+2,color:Math.random()>.4?'rgba(255,230,0,.5)':'rgba(34,197,94,.5)',life:1,decay:.004,timeOffset:Math.random()*100});}}
-function updateAndDrawFX(){if(fxCtx&&fxCanvas){fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
+function updateAndDrawFX(){if(document.visibilityState==='hidden'){requestAnimationFrame(updateAndDrawFX);return;}if(fxCtx&&fxCanvas){fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
 if(state.visualSettings.conditionFog&&state.conditions&&state.conditions.length>0){if(Math.random()<.3)conditionParticles.push({x:Math.random()*fxCanvas.width,y:fxCanvas.height+10,vx:(Math.random()-.5)*1.5,vy:-(Math.random()*1.8+1),size:Math.random()*5+2,color:Math.random()>.5?'rgba(168,85,247,':'rgba(34,197,94,',life:1,decay:.008});for(let i=conditionParticles.length-1;i>=0;i--){const c=conditionParticles[i];c.life-=c.decay;if(c.life<=0){conditionParticles.splice(i,1);continue;}c.x+=c.vx;c.y+=c.vy;fxCtx.fillStyle=c.color+`${c.life*.5})`;fxCtx.beginPath();fxCtx.arc(c.x,c.y,c.size,0,Math.PI*2);fxCtx.fill();}}
 if(state.visualSettings.weather){if(state.currentWeather==='pioggia'){if(Math.random()<.6)weatherParticles.push({x:Math.random()*fxCanvas.width,y:-10,vx:-2,vy:Math.random()*12+10,length:Math.random()*18+10,color:'rgba(200,220,255,.4)'});}
 else if(state.currentWeather==='temporale'){for(let k=0;k<4;k++)weatherParticles.push({x:Math.random()*fxCanvas.width+250,y:-20,vx:-6,vy:Math.random()*22+16,length:Math.random()*28+16,color:Math.random()>.3?'rgba(220,235,255,.6)':'rgba(140,175,220,.35)'});if(Math.random()<.008){fxParticles.push({type:'overlay',color:'rgba(220,240,255,.25)',life:1,decay:.15});playSynthSound('thunder');}}
@@ -1643,7 +1602,15 @@ function resetMarkerFilter(){
   if(s)s.value='all';
   activeMarkerFilter='all';
 }
-function animate3DTravel(){requestAnimationFrame(animate3DTravel);if(travel3DControls)travel3DControls.update();if(activeMarkerFilter!=='none')animateMarkerPulse();if(travel3DRenderer&&travel3DScene&&travel3DCamera)travel3DRenderer.render(travel3DScene,travel3DCamera);}
+function animate3DTravel(){
+  requestAnimationFrame(animate3DTravel);
+  if(document.visibilityState==='hidden')return;
+  const vp=document.getElementById('threeTravelViewport');
+  if(!vp||vp.offsetParent===null)return;
+  if(travel3DControls)travel3DControls.update();
+  if(activeMarkerFilter!=='none')animateMarkerPulse();
+  if(travel3DRenderer&&travel3DScene&&travel3DCamera)travel3DRenderer.render(travel3DScene,travel3DCamera);
+}
 function toggleGridVisibility(){isGridVisible=!isGridVisible;const b=document.getElementById('gridToggleBtn');if(b)b.innerHTML=isGridVisible?'<i class="fa-solid fa-border-all"></i><span>GRIGLIA</span>':'<i class="fa-solid fa-border-none"></i><span>GRIGLIA OFF</span>';if(travel3DGridHelper)travel3DGridHelper.visible=isGridVisible;}
 function toggle3DDrawMode(){is3DDrawMode=!is3DDrawMode;const b=document.getElementById('toggleDrawModeBtn'),h=document.getElementById('drawModeHint');if(travel3DControls)travel3DControls.enabled=!is3DDrawMode;if(is3DDrawMode){b.className="px-2.5 py-1.5 bg-mbPink text-black font-bold hover:bg-white flex items-center space-x-1 animate-pulse";b.innerHTML='<i class="fa-solid fa-pen"></i><span>DISABILITA</span>';if(h)h.innerText="🎯 CLICCA PER AGGIUNGERE GIORNO "+((travel3DState.customPoints?.length||0)+1);}else{b.className="px-2.5 py-1.5 bg-mbYellow text-black font-bold hover:bg-white flex items-center space-x-1";b.innerHTML='<i class="fa-solid fa-pen-to-square"></i><span>DISEGNA</span>';if(h)h.innerText="💡 trascina per ruotare";}}
 function removeLastPathPoint(){if(Array.isArray(travel3DState.customPoints)&&travel3DState.customPoints.length>0){travel3DState.customPoints.pop();travel3DState.totalDays=travel3DState.customPoints.length;document.getElementById('travel3DDays').value=travel3DState.totalDays;save3DTravelState();}}
