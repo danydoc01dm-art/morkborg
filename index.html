@@ -2130,8 +2130,8 @@ function renderDungeonMapGallery(){const g=document.getElementById('dungeonMapGa
 function selectMapAsDungeon(mapId){
   const m=savedMaps.find(x=>String(x.id)===String(mapId));if(!m)return;
 
-  if(travel3DState.dungeonMapId && String(travel3DState.dungeonMapId)!==String(mapId)){
-    dungeonSaveToActiveMap();
+   if(travel3DState.dungeonMapId && String(travel3DState.dungeonMapId)!==String(mapId)){
+    dungeonSaveToActiveMap(true);
   }
 
    m.isDungeon=true;
@@ -2386,10 +2386,10 @@ document.addEventListener('click',function(e){
   if(dungeonPendingMode==='reveal'){revealAtPoint(x,y);dungeonPendingMode=null;const btn=document.getElementById('dungeonRevealBtn');if(btn){btn.className='px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-eye mr-1"></i> RIVELA AREA';}const hint=document.getElementById('dungeonClickHint');if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';return;}
   if(mpIsConnected()&&mpPlayers[mpMyId]){
   mpPlayers[mpMyId].tokenX=x;mpPlayers[mpMyId].tokenY=y;
-  /* FIX: aggiorna anche dungeonLocalToken per coerenza (fallback) */
   dungeonLocalToken.x=x;dungeonLocalToken.y=y;
   safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
-  if(mpIsHost()){mpHostBroadcast();}else{mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y});}
+  if(mpIsHost()){mpHostBroadcast();}else{mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y,ts:Date.now()});}
+}}
 }else{
   dungeonLocalToken.x=x;dungeonLocalToken.y=y;
   safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
@@ -2647,7 +2647,18 @@ if(payload.type==='dungeonEncounterUpdate'&&payload.encounter){
   return;
 }
 if(payload.type==='dungeonEncounterDelete'&&payload.id!=null){dungeonState.encounters=dungeonState.encounters.filter(e=>String(e.id)!==String(payload.id));saveDungeonState();renderDungeonEncountersList();renderMapTokens();if(mpIsHost())mpHostBroadcast();return;}
-if(payload.type==='tokenMove'&&payload.id&&payload.x!=null){if(mpPlayers[payload.id]){mpPlayers[payload.id].tokenX=payload.x;mpPlayers[payload.id].tokenY=payload.y;if(mpIsHost())mpHostBroadcast();else renderMapTokens();}return;}
+if(payload.type==='tokenMove'&&payload.id&&payload.x!=null){
+  if(mpPlayers[payload.id]){
+    const lastTs=mpPlayers[payload.id]._lastTokenTs||0;
+    if((payload.ts||0)>lastTs){
+      mpPlayers[payload.id]._lastTokenTs=payload.ts||0;
+      mpPlayers[payload.id].tokenX=payload.x;
+      mpPlayers[payload.id].tokenY=payload.y;
+      if(mpIsHost())mpHostBroadcast();else renderMapTokens();
+    }
+  }
+  return;
+}
 if(payload.type==='ping'){
   if(payload.pendingEncounters&&Array.isArray(payload.pendingEncounters)&&mpIsHost()){
     let added=false;
