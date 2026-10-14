@@ -1996,6 +1996,7 @@ function loadState(){
   renderMapsGallery();renderDungeonMapGallery();renderPsalmsList();updateMonsterJourneyDropdownFilter();renderBestiary();syncNotesViewUI();
   updateDarknessUI();setWeather(state.currentWeather||'sereno');syncSettingsUI();updateDungeonUI();
 }
+let __lastSavedStateJSON=null;
 function saveState(){
   const val=id=>{const e=document.getElementById(id);return e?e.value:null;};
   const num=(id,f=0)=>{const v=parseInt(val(id));return isNaN(v)?f:v;};
@@ -2020,7 +2021,12 @@ function saveState(){
   if(val('inputArmorDesc')!==null)state.armorDesc=val('inputArmorDesc');
   if(!state.visualSettings)state.visualSettings={...defaultState.visualSettings};
   if(!state.audioSettings)state.audioSettings={...defaultState.audioSettings};
-    safeSetItem('morkborg_char_data',JSON.stringify(state));
+      const __json=JSON.stringify(state);
+  if(__json===__lastSavedStateJSON){
+    return;
+  }
+  __lastSavedStateJSON=__json;
+  safeSetItem('morkborg_char_data',__json);
   updateCharacterDisplays();renderInventory();renderConditions();update3DTravelDisplays();render3DTrackedResources();
   if(typeof mpIsHost==='function'&&mpIsHost()&&mpAuthOk)mpScheduleHostBroadcast(300);
 }
@@ -3075,11 +3081,15 @@ window.onload=function(){
     }
   }catch(e){console.warn('[MAP-RESTORE]',e);}
 
+let __lastTravel3DJSON=null;
 setInterval(()=>{
   try{
     saveState();
-    /* Salva solo la stringa, senza rebuild 3D né broadcast WebSocket */
-    safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));
+    const __tj=JSON.stringify(travel3DState);
+    if(__tj!==__lastTravel3DJSON){
+      __lastTravel3DJSON=__tj;
+      safeSetItem('morkborg_travel_3d_active',__tj);
+    }
   }catch(e){}
 },60000);
     const h=document.getElementById('roomHostNameInput');if(h&&state.name)h.value=state.name;
