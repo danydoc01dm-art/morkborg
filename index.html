@@ -2325,33 +2325,80 @@ setTimeout(()=>{setupFogCanvas();redrawFog();renderMapTokens();},100);
 triggerProphecyFlash('🏰 DUNGEON ATTIVO — La mappa è coperta','fa-dungeon');}else{if(!confirm('Chiudere la sessione dungeon?'))return;archiveDungeonSession();dungeonState.active=false;triggerProphecyFlash('🚪 DUNGEON CHIUSO','fa-door-open',2000);}saveDungeonState();updateDungeonUI();renderMapTokens();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function updateDungeonRadius(v){if(mpIsConnected()&&!mpIsHost())return;dungeonState.radius=parseInt(v)||18;const radV=document.getElementById('dungeonRadiusVal');if(radV)radV.innerText=dungeonState.radius+'%';saveDungeonState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function revealAtPoint(x,y){const r=dungeonState.radius/100;dungeonState.revealedPoints.push({x,y,r});redrawFog();saveDungeonState();/* FIX: la nebbia è locale, non si sincronizza */}
-function revealAllDungeon(){
-  if(mpIsConnected()&&!mpIsHost()){alert('Solo il Master può rivelare tutta la mappa.');return;}
-  if(!confirm("Rivelare TUTTA la mappa?"))return;
-  dungeonState.revealedPoints.push({x:.5,y:.5,r:2});
+function selectMapAsDungeon(mapId){
+  const m=savedMaps.find(x=>String(x.id)===String(mapId));if(!m)return;
+
+  if(travel3DState.dungeonMapId && String(travel3DState.dungeonMapId)!==String(mapId)){
+    dungeonSaveToActiveMap(true);
+  }
+
+  m.isDungeon=true;
+  
+  // Se la mappa NON è completata, resetta tutto (nuova sessione).
+  // Se È completata, NON resettare, lascia la nebbia rivelata.
+  if (!m.dungeonCompletedAt) {
+    if(!m.dungeonData){
+      m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
+    } else {
+      m.dungeonData.revealedPoints = [];
+    }
+  } else {
+    // Se è completata ma non ha dati, crea il punto di rivelazione totale
+    if(!m.dungeonData) {
+      m.dungeonData={revealedPoints:[{x:.5,y:.5,r:2}],encounters:[],notes:'',startedAt:null};
+    }
+  }
+  
+  safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
+
+  travel3DState.dungeonMapId=String(m.id);
+  dungeonLoadFromMap(m.id); 
+  
+  // NON azzeriamo più forzatamente: ci pensa la logica sopra
+  saveDungeonState();
+  save3DTravelState();
+
+  const img=document.getElementById('dungeonMapImg');
+  const canvas=document.getElementById('dungeonFogCanvas');
+  if(img)img.src=m.url;
+  if(canvas)canvas.classList.remove('hidden');
+  setupFogCanvas();
+  setTimeout(()=>{redrawFog();renderMapTokens();},120);
+  renderDungeonMapGallery();
+  updateSubtabCounts();
+  updateDungeonUI();
+
+  if(mpIsHost()&&mpIsConnected()){
+    mpSendMapToRoom(m);
+    // Se la mappa è completata, manda RevealAll, altrimenti Reset
+    if(m.dungeonCompletedAt) {
+      mpBroadcastToRoom({type:'dungeonRevealAll'});
+    } else {
+      mpBroadcastToRoom({type:'dungeonReset'});
+    }
+    if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
+  }
+}
+function resetDungeonFog(){
+  if(mpIsConnected()&&!mpIsHost()){alert('Solo il Master può resettare la nebbia.');return;}
+  if(!confirm("Reset nebbia? La mappa tornerà nascosta e non sarà più 'completata'."))return;
+  
+  dungeonState.revealedPoints=[];
+  
   if(travel3DState.dungeonMapId){
     const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));
-    if(dm&&dm.isDungeon){
-      dm.dungeonCompletedAt=Date.now();
+    if(dm){
+      delete dm.dungeonCompletedAt; // Rimuove lo stato "completato"
+      if(!dm.dungeonData) dm.dungeonData={};
+      dm.dungeonData.revealedPoints=[];
       safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
       renderMapsGallery();
     }
   }
-   redrawFog();
-  saveDungeonState();
-  if(mpIsHost()&&mpIsConnected()){
-    /* FIX: manda il "rivelato tutto" ai client */
-    mpBroadcastToRoom({type:'dungeonRevealAll'});
-  }
-  if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
-}function resetDungeonFog(){
-  if(mpIsConnected()&&!mpIsHost()){alert('Solo il Master può resettare la nebbia.');return;}
-  if(!confirm("Reset nebbia?"))return;
-  dungeonState.revealedPoints=[];
+  
   redrawFog();
   saveDungeonState();
   if(mpIsHost()&&mpIsConnected()){
-    /* FIX: manda il reset a tutti i client */
     mpBroadcastToRoom({type:'dungeonReset'});
   }
 }
