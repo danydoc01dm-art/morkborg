@@ -2291,7 +2291,7 @@ function setupFogCanvas(){
   if(img.complete&&img.naturalWidth)sync();else img.onload=sync;
   setTimeout(sync,200);setTimeout(sync,600);
 }
-function redrawFog(){const canvas=document.getElementById('dungeonFogCanvas');const img=document.getElementById('dungeonMapImg');if(!canvas||!img)return;if(!dungeonState.active){canvas.classList.add('hidden');return;}canvas.classList.remove('hidden');if(img.naturalWidth){canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;}else if(!canvas.width){canvas.width=800;canvas.height=600;}const ctx=canvas.getContext('2d');ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(0,0,0,.98)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalCompositeOperation='destination-out';const minSide=Math.min(canvas.width,canvas.height);(dungeonState.revealedPoints||[]).forEach(p=>{const x=p.x*canvas.width;const y=p.y*canvas.height;const r=(p.r||.15)*minSide;const grd=ctx.createRadialGradient(x,y,0,x,y,r);grd.addColorStop(0,'rgba(0,0,0,1)');grd.addColorStop(.6,'rgba(0,0,0,.85)');grd.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grd;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();});ctx.globalCompositeOperation='source-over';}
+function redrawFog(){const canvas=document.getElementById('dungeonFogCanvas');const img=document.getElementById('dungeonMapImg');if(!canvas||!img)return;if(!dungeonState.active){canvas.classList.add('hidden');return;}canvas.classList.remove('hidden');if(img.naturalWidth){canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;}else if(!canvas.width){canvas.width=800;canvas.height=600;}const ctx=canvas.getContext('2d');ctx.globalCompositeOperation='source-over';ctx.fillStyle='rgba(0,0,0,1)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.globalCompositeOperation='destination-out';const minSide=Math.min(canvas.width,canvas.height);(dungeonState.revealedPoints||[]).forEach(p=>{const x=p.x*canvas.width;const y=p.y*canvas.height;const r=(p.r||.15)*minSide;const grd=ctx.createRadialGradient(x,y,0,x,y,r);grd.addColorStop(0,'rgba(0,0,0,1)');grd.addColorStop(.6,'rgba(0,0,0,.85)');grd.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grd;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();});ctx.globalCompositeOperation='source-over';}
 function updateDungeonUI(){
   const btn=document.getElementById('dungeonToggleBtn');
   const ctrl=document.getElementById('dungeonControls');
@@ -2857,7 +2857,8 @@ try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src&&ai.src.index
 try{if(travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.url)mpShared.map={id:String(dm.id),name:dm.name||'Dungeon',url:dm.url,isDungeon:true};}}catch(e){}mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;mpSetStatus('✅ Stanza attiva — '+code);mpPlayers[mpMyId]=mpBuildPlayerSnapshot({isHost:true,color:MP_COLORS[0]});mpUpdateRoomUI();mpHostBroadcast();triggerProphecyFlash('👑 STANZA: '+code,'fa-users');}},1500);});}
 function mpJoinRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomJoinNameInput').value||state.name||'Player').trim();const code=(document.getElementById('roomCodeInput').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code||code.length<4){alert('Inserisci codice (4 caratteri).');return;}mpMyName=name;mpRoomCode=code;mpRole='client';mpMyId='p-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;mpSaveSession();
 mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;mpSetStatus('✅ Connesso — '+code);const snap=mpBuildPlayerSnapshot({isHost:false});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);mpUpdateRoomUI();triggerProphecyFlash('🎲 STANZA '+code,'fa-users',2000);}},1500);});}
-function mpApplySharedState(shared){if(!shared)return;if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}applyMasterOnly3DState();if(shared.weather&&shared.weather!==state.currentWeather){state.currentWeather=shared.weather;const s=document.getElementById('weatherQuickSelect');if(s)s.value=shared.weather;}if(typeof shared.darknessActive==='boolean'&&shared.darknessActive!==state.darknessActive){state.darknessActive=shared.darknessActive;updateDarknessUI();}if(shared.map&&shared.map.url)mpApplyReceivedMap(shared.map.id,shared.map.name||'Mappa',shared.map.url,!!shared.map.isDungeon);const __now=Date.now();
+function mpApplySharedState(shared){
+if(!shared)return;if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}applyMasterOnly3DState();if(shared.weather&&shared.weather!==state.currentWeather){state.currentWeather=shared.weather;const s=document.getElementById('weatherQuickSelect');if(s)s.value=shared.weather;}if(typeof shared.darknessActive==='boolean'&&shared.darknessActive!==state.darknessActive){state.darknessActive=shared.darknessActive;updateDarknessUI();}if(shared.map&&shared.map.url)mpApplyReceivedMap(shared.map.id,shared.map.name||'Mappa',shared.map.url,!!shared.map.isDungeon);const __now=Date.now();
 const lockTravel=!mpIsHost() && __now<mpClientTravelLockUntil;
 const lockNotes=!mpIsHost() && __now<mpClientNotesLockUntil;
 
@@ -2909,18 +2910,48 @@ if(!mpIsHost()&&shared.travel){
   }catch(e){}
 }
 if(!mpIsHost()&&shared.dungeon){
+  const __wasActive = dungeonState.active;
+  const __oldStartedAt = dungeonState.startedAt;
+
   dungeonState.active=!!shared.dungeon.active;
   dungeonState.radius=shared.dungeon.radius||18;
-  /* FIX: NON applicare revealedPoints dal master (nebbia locale) */
-  if(Array.isArray(shared.dungeon.encounters)){shared.dungeon.encounters.forEach(se=>{delete se._local;const ex=dungeonState.encounters.find(le=>String(le.id)===String(se.id));if(ex){Object.assign(ex,se);delete ex._local;}else dungeonState.encounters.push(se);});}
-  /* FIX: non sovrascrivere le note del client se sta scrivendo */
+
+  /* FIX: REPLACE completo incontri, preservando solo i pending locali */
+  if(Array.isArray(shared.dungeon.encounters)){
+    const pending = (dungeonState.encounters||[]).filter(e=>e&&e._local);
+    const serverList = shared.dungeon.encounters.map(se=>{
+      const copy = Object.assign({}, se);
+      delete copy._local;
+      return copy;
+    });
+    const serverIds = new Set(serverList.map(e=>String(e.id)));
+    pending.forEach(p=>{
+      if(!serverIds.has(String(p.id))) serverList.push(p);
+    });
+    dungeonState.encounters = serverList;
+  }
+
   if(!lockNotes){
     dungeonState.notes=shared.dungeon.notes||'';
   }
   dungeonState.startedAt=shared.dungeon.startedAt||null;
-  saveDungeonState();updateDungeonUI();renderMapTokens();
-  if(currentMapSubtab==='dungeon'){syncDungeonMapFromActive();setTimeout(()=>{redrawFog();renderMapTokens();},100);}
-}}
+
+  /* FIX: nebbia pulita se entro in una sessione nuova/diversa */
+  if(dungeonState.active && (!__wasActive || __oldStartedAt !== dungeonState.startedAt)){
+    dungeonState.revealedPoints = [];
+  }
+
+  saveDungeonState();
+  updateDungeonUI();
+  renderMapTokens();
+  renderDungeonEncountersList();   /* FIX: ridisegna la lista sul client */
+
+  if(currentMapSubtab==='dungeon'){
+    syncDungeonMapFromActive();
+    setTimeout(()=>{redrawFog();renderMapTokens();},100);
+  }
+ }
+}
 function mpHostBroadcast(){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel={id:travel3DState.id,origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId,events:travel3DState.events,dungeonCompletedAt:(()=>{try{const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));return dm&&dm.dungeonCompletedAt?dm.dungeonCompletedAt:null;}catch(e){return null;}})()};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};let mapOut=null;try{if(mpShared.map&&mpShared.map.url&&mpShared.map.url.length<60000)mapOut=mpShared.map;else if(mpShared.map)mapOut={id:mpShared.map.id,name:mpShared.map.name,url:null,needsChunks:true,isDungeon:!!mpShared.map.isDungeon};}catch(e){}mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:{weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,dungeon:dungeonOut,masterOnly3D:masterOnly3D}});mpRenderPlayersList();renderMapTokens();}
 function mpCompressMapUrl(dataUrl,maxW,quality,cb){try{if(!dataUrl||dataUrl.indexOf('data:image')!==0){cb(dataUrl);return;}const img=new Image();img.onload=function(){try{const enc=(w,q)=>{let tw=img.width,th=img.height;if(tw>w){th=Math.round(th*(w/tw));tw=w;}const c=document.createElement('canvas');c.width=tw;c.height=th;c.getContext('2d').drawImage(img,0,0,tw,th);return c.toDataURL('image/jpeg',q);};let out=enc(maxW,quality);if(out.length>120000)out=enc(Math.min(maxW,800),.45);if(out.length>200000)out=enc(Math.min(maxW,600),.38);cb(out&&out.length<dataUrl.length?out:dataUrl);}catch(e){cb(dataUrl);}};img.onerror=()=>cb(dataUrl);img.src=dataUrl;}catch(e){cb(dataUrl);}}
 function mpSendMapToRoom(mapObj){
@@ -3008,6 +3039,10 @@ if(!__ok){
           safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
           renderMapsGallery();
         }
+      }
+     
+      if(String(travel3DState.dungeonMapId) !== String(mapId)){
+        dungeonState.revealedPoints = [];
       }
       travel3DState.dungeonMapId=String(mapId);
       const dimg=document.getElementById('dungeonMapImg');
