@@ -836,7 +836,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </label>
 <div class="flex justify-end space-x-2 mt-2"><button onclick="closeDungeonEncounterModal()" class="px-3 py-1.5 bg-gray-800 text-white font-bold">ANNULLA</button><button onclick="saveDungeonEncounter()" class="px-4 py-1.5 bg-mbPurple text-black font-bold uppercase">SALVA</button></div>
 </div>
-
+</div>
 <script>
 /* SAFE STORAGE */
 function safeSetItem(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}
@@ -2432,7 +2432,32 @@ function saveDungeonNotes(){
 }
 function startAddEncounter(){const btn=document.getElementById('dungeonAddEncounterBtn');const hint=document.getElementById('dungeonClickHint');if(dungeonPendingMode==='encounter'){dungeonPendingMode=null;if(btn){btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';}if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';return;}dungeonPendingMode='encounter';if(btn){btn.className='px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px] animate-pulse';btn.innerHTML='<i class="fa-solid fa-crosshairs mr-1"></i> CLICCA SULLA MAPPA';}if(hint)hint.innerText='🎯 Clicca il punto dell\'incontro';}
 function startRevealMode(){const btn=document.getElementById('dungeonRevealBtn');const hint=document.getElementById('dungeonClickHint');const isClient=mpIsConnected()&&!mpIsHost();if(dungeonPendingMode==='reveal'){dungeonPendingMode=null;if(btn){btn.className=isClient?'px-3 py-1.5 bg-blue-800 text-white font-bold hover:bg-blue-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-eye mr-1"></i> '+(isClient?'RIVELA MIO PUNTO':'RIVELA AREA');}if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';return;}dungeonPendingMode='reveal';if(btn){btn.className='px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px] animate-pulse';btn.innerHTML='<i class="fa-solid fa-crosshairs mr-1"></i> CLICCA SULLA MAPPA';}if(hint)hint.innerText=isClient?'🎯 Clicca dove vuoi rivelare (solo la tua area)':'🎯 Clicca il punto da rivelare';}
-function saveDungeonEncounter(){
+function openDungeonEncounterModal(x,y){
+  dungeonPendingMode=null;
+  const btn=document.getElementById('dungeonAddEncounterBtn');
+  if(btn){
+    btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';
+    btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';
+  }
+  
+  window._dungeonPendingPos={x,y};
+  dungeonSelectedType=null;
+  
+  document.querySelectorAll('.enc-type-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('dungeonEncounterPos').innerText=`Posizione: ${(x*100).toFixed(0)}% , ${(y*100).toFixed(0)}%`;
+  document.getElementById('dungeonEncounterNote').value='';
+  
+  // Resetta il checkbox e nascondilo se non sei il Master
+  const hiddenCheckbox = document.getElementById('dungeonEncounterHidden');
+  if(hiddenCheckbox) hiddenCheckbox.checked = false;
+  
+  const hideWrap = document.getElementById('newEncounterHiddenWrap');
+  if(hideWrap) hideWrap.style.display = (mpIsHost() || !mpIsConnected()) ? 'flex' : 'none';
+
+  document.getElementById('dungeonEncounterModal').classList.remove('hidden');
+}
+
+ function saveDungeonEncounter(){
   if(!window._dungeonPendingPos)return;
   if(!dungeonSelectedType){alert('Scegli un tipo!');return;}
   const note=document.getElementById('dungeonEncounterNote').value.trim()||'(nessuna nota)';
@@ -2455,23 +2480,7 @@ function saveDungeonEncounter(){
 }
 function closeDungeonEncounterModal(){document.getElementById('dungeonEncounterModal').classList.add('hidden');window._dungeonPendingPos=null;dungeonPendingMode=null;const btn=document.getElementById('dungeonAddEncounterBtn');if(btn){btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';}const hint=document.getElementById('dungeonClickHint');if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';}
 function selectEncounterType(t){dungeonSelectedType=t;document.querySelectorAll('.enc-type-btn').forEach(b=>{b.classList.toggle('active',b.dataset.type===t);});}
-function saveDungeonEncounter(){
 
-  if(!window._dungeonPendingPos)return;
-  if(!dungeonSelectedType){alert('Scegli un tipo!');return;}
-  const note=document.getElementById('dungeonEncounterNote').value.trim()||'(nessuna nota)';
-  const author=(mpIsConnected())?(mpIsHost()?'Master':mpMyName):(state.name||'PG');
-  const enc={id:uid(),x:window._dungeonPendingPos.x,y:window._dungeonPendingPos.y,type:dungeonSelectedType,note,author,ts:Date.now()};
-  if(mpIsConnected()&&!mpIsHost())enc._local=true;
-  dungeonState.encounters.push(enc);
-  saveDungeonState();
-  closeDungeonEncounterModal();
-  renderDungeonEncountersList();
-  redrawFog();
-  renderMapTokens();
-  if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
-  triggerProphecyFlash('📝 INCONTRO REGISTRATO','fa-pen',1500);
-}
  let editDungeonSelectedType=null;
  function toggleDungeonEncounterVisibility(id){
   if(mpIsConnected() && !mpIsHost()) return;
