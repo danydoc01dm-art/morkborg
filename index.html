@@ -2305,15 +2305,31 @@ function revealAllDungeon(){
     }
   }
   
+  // FIX CRITICO: Risincronizza le dimensioni del canvas prima di disegnare!
+  if(typeof setupFogCanvas === 'function') {
+    setupFogCanvas();
+  }
+  
   redrawFog();
-  // SALVATAGGIO IMMEDIATO per non perdere i dati
+  
+  // Salva immediatamente per non perdere i dati
   dungeonSaveToActiveMap(true);
-  safeSetItem('morkborg_dungeon_state',JSON.stringify({active:dungeonState.active,radius:dungeonState.radius,revealedPoints:dungeonState.revealedPoints,encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt}));
+  safeSetItem('morkborg_dungeon_state',JSON.stringify({
+    active:dungeonState.active,
+    radius:dungeonState.radius,
+    revealedPoints:dungeonState.revealedPoints,
+    encounters:dungeonState.encounters,
+    notes:dungeonState.notes,
+    startedAt:dungeonState.startedAt
+  }));
   
   if(mpIsHost()&&mpIsConnected()){
     mpBroadcastToRoom({type:'dungeonRevealAll'});
   }
   if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
+
+  // FIX: Ridisegna ancora dopo 50ms per assicurarsi che il browser abbia elaborato
+  setTimeout(redrawFog, 50);
 }
 function selectMapAsDungeon(mapId){
   const m=savedMaps.find(x=>String(x.id)===String(mapId));if(!m)return;
