@@ -2373,15 +2373,15 @@ function selectMapAsDungeon(mapId){
   renderDungeonMapGallery();
   updateSubtabCounts();
   updateDungeonUI();
-
   if(mpIsHost()&&mpIsConnected()){
-    mpSendMapToRoom(m);
-    // Se la mappa è completata, manda RevealAll, altrimenti Reset
-    if(m.dungeonCompletedAt) {
-      mpBroadcastToRoom({type:'dungeonRevealAll'});
-    } else {
-      mpBroadcastToRoom({type:'dungeonReset'});
-    }
+    mpSendMapToRoom(m, function() {
+      // Questa parte viene eseguita SOLO DOPO che la nuova mappa è stata inviata del tutto
+      if(m.dungeonCompletedAt) {
+        mpBroadcastToRoom({type:'dungeonRevealAll'});
+      } else {
+        mpBroadcastToRoom({type:'dungeonReset'});
+      }
+    });
     if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
   }
 }
@@ -3007,7 +3007,7 @@ if(!mpIsHost()&&shared.dungeon){
 }
 function mpHostBroadcast(){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel={id:travel3DState.id,origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId,events:travel3DState.events,dungeonCompletedAt:(()=>{try{const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));return dm&&dm.dungeonCompletedAt?dm.dungeonCompletedAt:null;}catch(e){return null;}})()};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};let mapOut=null;try{if(mpShared.map&&mpShared.map.url&&mpShared.map.url.length<60000)mapOut=mpShared.map;else if(mpShared.map)mapOut={id:mpShared.map.id,name:mpShared.map.name,url:null,needsChunks:true,isDungeon:!!mpShared.map.isDungeon};}catch(e){}mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:{weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,dungeon:dungeonOut,masterOnly3D:masterOnly3D}});mpRenderPlayersList();renderMapTokens();}
 function mpCompressMapUrl(dataUrl,maxW,quality,cb){try{if(!dataUrl||dataUrl.indexOf('data:image')!==0){cb(dataUrl);return;}const img=new Image();img.onload=function(){try{const enc=(w,q)=>{let tw=img.width,th=img.height;if(tw>w){th=Math.round(th*(w/tw));tw=w;}const c=document.createElement('canvas');c.width=tw;c.height=th;c.getContext('2d').drawImage(img,0,0,tw,th);return c.toDataURL('image/jpeg',q);};let out=enc(maxW,quality);if(out.length>120000)out=enc(Math.min(maxW,800),.45);if(out.length>200000)out=enc(Math.min(maxW,600),.38);cb(out&&out.length<dataUrl.length?out:dataUrl);}catch(e){cb(dataUrl);}};img.onerror=()=>cb(dataUrl);img.src=dataUrl;}catch(e){cb(dataUrl);}}
-function mpSendMapToRoom(mapObj){
+function mpSendMapToRoom(mapObj, onComplete){
   if(!mapObj||!mapObj.url||!mpAuthOk||!mpIsHost())return;
   console.log('[MP-INVIO]',{id:mapObj.id,name:mapObj.name,isDungeon:mapObj.isDungeon});  mpCompressMapUrl(mapObj.url,800,.5,function(url){
     const mapId=String(mapObj.id||uid());
@@ -3019,7 +3019,10 @@ function mpSendMapToRoom(mapObj){
     let i=0;
     (function burst(){
       if(i>=total){
-        setTimeout(()=>mpBroadcastToRoom({type:'mapEnd',mapId}),100);
+        setTimeout(()=>{
+          mpBroadcastToRoom({type:'mapEnd',mapId});
+          if(onComplete) onComplete(); // <-- NOVITÀ: esegue la callback alla fine
+        },100);
         triggerProphecyFlash('🗺️ MAPPA SINCRONIZZATA','fa-map',1500);
         return;
       }
