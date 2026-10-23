@@ -2844,7 +2844,7 @@ function mpConnectWs(onReady){let i=0;function tc(){if(i>=MP_WS_URLS.length){mpS
 function mpOnWsMessage(raw){
   let data;try{data=JSON.parse(raw);}catch(e){return;}
   if(data.auth==='ok'||data.auth===true){mpAuthOk=true;startHeartbeat();if(data.SID)mpMySid=data.SID;mpSetStatus(mpIsHost()?('✅ Stanza attiva — '+mpRoomCode):('✅ Connesso — '+mpRoomCode));mpUpdateRoomUI();const snap=mpBuildPlayerSnapshot({isHost:mpIsHost()});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});if(mpIsHost()){mpHostBroadcast();}else{setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);}return;}
-  if(data.auth&&data.auth!=='ok'){mpSetStatus('Auth fallita');return;}
+  if(data.auth){var __a=String(data.auth).toLowerCase().trim();if(__a==='failed'||__a==='error'||data.auth===false||data.auth===0){mpSetStatus('Auth fallita (retry...)');return;}if(__a==='ok'||__a==='success'||__a==='connected'||data.auth===true||data.auth===1){mpAuthOk=true;if(mpAuthOk&&data.SID)mpMySid=data.SID;mpSetStatus(mpIsHost()?('✅ Stanza attiva — '+mpRoomCode):('✅ Connesso — '+mpRoomCode));mpUpdateRoomUI();}return;}
   if(data.SID!=null&&(data.mb==null||data.mb==='')){if(!mpMySid)mpMySid=data.SID;return;}
   if(data.FROM&&mpMySid&&data.FROM===mpMySid)return;
   let payload=null;if(typeof data.mb==='string'){try{payload=JSON.parse(data.mb);}catch(e){return;}}else if(data.mb&&typeof data.mb==='object')payload=data.mb;else if(data.msg&&typeof data.msg==='object')payload=data.msg;
