@@ -2826,10 +2826,24 @@ function mpWsSend(o){
   }catch(e){return false;}
 }
 function mpBroadcastToRoom(payload){if(!mpRoomCode||!mpAuthOk)return;mpWsSend({to:mpRoomChannel(mpRoomCode),mb:JSON.stringify(payload)});}
-function mpConnectWs(onReady){let i=0;function tc(){if(i>=MP_WS_URLS.length){mpSetStatus('Relay non raggiungibile.');alert('Relay non raggiungibile.');return;}const url=MP_WS_URLS[i++];mpSetStatus('Connessione...');try{if(mpWs){mpWs.onclose=null;mpWs.onerror=null;mpWs.onmessage=null;mpWs.close();}}catch(e){}let ws;try{ws=new WebSocket(url);}catch(e){tc();return;}mpWs=ws;let opened=false,adv=false;const t=setTimeout(()=>{if(!opened&&!adv){adv=true;try{ws.close();}catch(e){}tc();}},8000);ws.onopen=()=>{opened=true;clearTimeout(t);mpSetStatus('Autenticazione...');onReady(ws);};ws.onerror=()=>{};ws.onclose=()=>{clearTimeout(t);if(mpWs!==ws)return;if(!opened&&!adv){adv=true;tc();return;}if(mpRole){mpSetStatus('Connessione persa.');mpRole=null;mpAuthOk=false;mpUpdateRoomUI();}};ws.onmessage=e=>mpOnWsMessage(e.data);}tc();}
+/* ===== HEARTBEAT (battito cardiaco) ===== */
+let mpHeartbeatTimer=null;
+function startHeartbeat(){
+  if(mpHeartbeatTimer)clearInterval(mpHeartbeatTimer);
+  mpHeartbeatTimer=setInterval(function(){
+    if(mpWs&&mpWs.readyState===1&&mpRoomCode&&mpAuthOk){
+      mpWsSend({to:mpRoomChannel(mpRoomCode),mb:JSON.stringify({type:'ping'})});
+    }
+  },28000);
+}
+function stopHeartbeat(){
+  if(mpHeartbeatTimer){clearInterval(mpHeartbeatTimer);mpHeartbeatTimer=null;}
+}
+/* ===== FINE HEARTBEAT ===== */
+function mpConnectWs(onReady){let i=0;function tc(){if(i>=MP_WS_URLS.length){mpSetStatus('Relay non raggiungibile.');alert('Relay non raggiungibile.');return;}const url=MP_WS_URLS[i++];mpSetStatus('Connessione...');try{if(mpWs){mpWs.onclose=null;mpWs.onerror=null;mpWs.onmessage=null;mpWs.close();}}catch(e){}let ws;try{ws=new WebSocket(url);}catch(e){tc();return;}mpWs=ws;let opened=false,adv=false;const t=setTimeout(()=>{if(!opened&&!adv){adv=true;try{ws.close();}catch(e){}tc();}},8000);ws.onopen=()=>{opened=true;clearTimeout(t);mpSetStatus('Autenticazione...');onReady(ws);};ws.onerror=()=>{};ws.onclose=()=>{clearTimeout(t);if(mpWs!==ws)return;if(!opened&&!adv){adv=true;tc();return;}if(mpRole){mpSetStatus('Connessione persa. Riconnessione...');stopHeartbeat();mpAuthOk=false;mpUpdateRoomUI();setTimeout(()=>{if(mpRole&&!mpAuthOk){try{mpTryAutoReconnect();}catch(e){console.warn('[MP] reconnect',e);}}},3000);}};ws.onmessage=e=>mpOnWsMessage(e.data);}tc();}
 function mpOnWsMessage(raw){
   let data;try{data=JSON.parse(raw);}catch(e){return;}
-   if(data.auth==='ok'||data.auth===true){mpAuthOk=true;if(data.SID)mpMySid=data.SID;mpSetStatus(mpIsHost()?('✅ Stanza attiva — '+mpRoomCode):('✅ Connesso — '+mpRoomCode));mpUpdateRoomUI();const snap=mpBuildPlayerSnapshot({isHost:mpIsHost()});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});if(mpIsHost()){mpHostBroadcast();}else{setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);}return;}
+  if(data.auth==='ok'||data.auth===true){mpAuthOk=true;startHeartbeat();if(data.SID)mpMySid=data.SID;mpSetStatus(mpIsHost()?('✅ Stanza attiva — '+mpRoomCode):('✅ Connesso — '+mpRoomCode));mpUpdateRoomUI();const snap=mpBuildPlayerSnapshot({isHost:mpIsHost()});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});if(mpIsHost()){mpHostBroadcast();}else{setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);}return;}
   if(data.auth&&data.auth!=='ok'){mpSetStatus('Auth fallita');return;}
   if(data.SID!=null&&(data.mb==null||data.mb==='')){if(!mpMySid)mpMySid=data.SID;return;}
   if(data.FROM&&mpMySid&&data.FROM===mpMySid)return;
@@ -2952,9 +2966,9 @@ function mpCreateRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('
 mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel=JSON.parse(JSON.stringify(travel3DState));}catch(e){}
 try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src&&ai.src.indexOf('data:')===0){const found=savedMaps.find(m=>m.url===ai.src);if(found)mpShared.map={id:String(found.id),name:found.name||'Mappa',url:found.url,isDungeon:!!found.isDungeon};}}catch(e){}
 /* FIX: se c'è una mappa dungeon attiva, mettila subito in mpShared.map */
-try{if(travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.url)mpShared.map={id:String(dm.id),name:dm.name||'Dungeon',url:dm.url,isDungeon:true};}}catch(e){}mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;mpSetStatus('✅ Stanza attiva — '+code);mpPlayers[mpMyId]=mpBuildPlayerSnapshot({isHost:true,color:MP_COLORS[0]});mpUpdateRoomUI();mpHostBroadcast();triggerProphecyFlash('👑 STANZA: '+code,'fa-users');}},1500);});}
+try{if(travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.url)mpShared.map={id:String(dm.id),name:dm.name||'Dungeon',url:dm.url,isDungeon:true};}}catch(e){}mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;startHeartbeat();mpSetStatus('✅ Stanza attiva — '+code);mpPlayers[mpMyId]=mpBuildPlayerSnapshot({isHost:true,color:MP_COLORS[0]});mpUpdateRoomUI();mpHostBroadcast();triggerProphecyFlash('👑 STANZA: '+code,'fa-users');}},1500);});}
 function mpJoinRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomJoinNameInput').value||state.name||'Player').trim();const code=(document.getElementById('roomCodeInput').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code||code.length<4){alert('Inserisci codice (4 caratteri).');return;}mpMyName=name;mpRoomCode=code;mpRole='client';mpMyId='p-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;mpSaveSession();
-mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;mpSetStatus('✅ Connesso — '+code);const snap=mpBuildPlayerSnapshot({isHost:false});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);mpUpdateRoomUI();triggerProphecyFlash('🎲 STANZA '+code,'fa-users',2000);}},1500);});}
+mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;startHeartbeat();mpSetStatus('✅ Connesso — '+code);const snap=mpBuildPlayerSnapshot({isHost:false});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);mpUpdateRoomUI();triggerProphecyFlash('🎲 STANZA '+code,'fa-users',2000);}},1500);});}
 function mpApplySharedState(shared){
 if(!shared)return;if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}applyMasterOnly3DState();if(shared.weather&&shared.weather!==state.currentWeather){state.currentWeather=shared.weather;const s=document.getElementById('weatherQuickSelect');if(s)s.value=shared.weather;}if(typeof shared.darknessActive==='boolean'&&shared.darknessActive!==state.darknessActive){state.darknessActive=shared.darknessActive;updateDarknessUI();}if(shared.map&&shared.map.url)mpApplyReceivedMap(shared.map.id,shared.map.name||'Mappa',shared.map.url,!!shared.map.isDungeon);const __now=Date.now();
 const lockTravel=!mpIsHost() && __now<mpClientTravelLockUntil;
@@ -3175,7 +3189,7 @@ function mpRequestMapNow(){if(!mpIsConnected()){alert('Non sei in una stanza.');
 function mpShowRemoteMapPanel(){const p=document.getElementById('mpRemoteMapPanel');if(p)p.classList.toggle('hidden');}
 function mpSendRemoteMapUrl(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}const u=(document.getElementById('mpRemoteMapUrl')&&document.getElementById('mpRemoteMapUrl').value||'').trim();if(!u||u.indexOf('http')!==0){alert('Inserisci un URL valido.');return;}mpShared.map={id:'remote_'+uid(),name:'Mappa Remota',url:u};mpBroadcastToRoom({type:'mapRemoteUrl',id:mpShared.map.id,name:mpShared.map.name,url:u});mpApplyReceivedMap(mpShared.map.id,mpShared.map.name,u,false);mpSetStatus('✅ URL mappa inviato');}
 function mpPushMyCharacter(){const snap=mpBuildPlayerSnapshot();mpPlayers[mpMyId]=Object.assign({},mpPlayers[mpMyId]||{},snap,{isHost:mpIsHost()});if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'playerUpdate',player:mpPlayers[mpMyId]});triggerProphecyFlash('📤 SCHEDA INVIATA','fa-upload',2000);mpUpdateRoomUI();renderMapTokens();}
-function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}try{if(mpWs)mpWs.close();}catch(e){}mpWs=null;mpRole=null;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;mpPlayers={};mpShared={map:null,travel:null,weather:'sereno',darknessActive:false};mpMapChunks={};mpSendQueue=[];mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');renderMapTokens();}
+function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}stopHeartbeat();if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}try{if(mpWs)mpWs.close();}catch(e){}mpWs=null;mpRole=null;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;mpPlayers={};mpShared={map:null,travel:null,weather:'sereno',darknessActive:false};mpMapChunks={};mpSendQueue=[];mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');renderMapTokens();}
 let __renderMapTokensScheduled=false;
 function renderMapTokens(){
   if(__renderMapTokensScheduled)return;
@@ -3272,9 +3286,10 @@ function mpImportManualSync(){let raw=(document.getElementById('mpManualSyncInpu
   mpShared={map:mpShared.map||null,travel:null,weather:'sereno',darknessActive:false};
   mpConnectWs(()=>{
     mpWsSend({setID:mpRoomChannel(mpRoomCode),passwd:'morkborg'});
-    setTimeout(()=>{
+   setTimeout(()=>{
       if(!mpAuthOk){
         mpAuthOk=true;
+        startHeartbeat();
         mpUpdateRoomUI();
         const snap=mpBuildPlayerSnapshot({isHost:mpIsHost()});
         mpPlayers[mpMyId]=snap;
