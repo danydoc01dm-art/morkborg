@@ -591,7 +591,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 </section>
  
-<section id="view-export" class="tab-view space-y-4">
+<section id="view-export" class="tab-view hidden space-y-4">
 <div class="bg-mbPanel p-4 border-2 border-mbYellow space-y-4">
 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-mbYellow pb-3">
 <div><h2 class="font-glitch text-2xl text-mbYellow">EXPORT</h2><p class="font-mono text-xs text-gray-300">Scarica una copia aggiornata della tua app.</p></div>
@@ -875,7 +875,7 @@ function hideProphecyFlash(){const b=document.getElementById('prophecyBanner');i
 
 function setWeather(w){state.currentWeather=w;const s=document.getElementById('weatherQuickSelect');if(s)s.value=w;saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange('travel');}
 function triggerPsalmTiltFX(){playSynthSound('psalm');if(state.visualSettings.psalmTilt){const b=document.getElementById('appBody');b.classList.add('apply-tilt');setTimeout(()=>b.classList.remove('apply-tilt'),1200);}triggerProphecyFlash('⚡ INVOCAZIONE SALMO','fa-bolt');}
-function toggleDarknessLocation(){state.darknessActive=!state.darknessActive;playSynthSound('darkness');updateDarknessUI();saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
+function toggleDarknessLocation(){state.darknessActive=!state.darknessActive;playSynthSound('darkness');updateDarknessUI();saveState();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange('travel');}
 function updateDarknessUI(){const v=document.getElementById('darknessVignette'),h=document.getElementById('hiddenRunesBox');const b=document.getElementById('headerDarknessBtn'),t=document.getElementById('headerDarknessText');const i=document.getElementById('darknessIcon'),a=document.getElementById('arDarknessDisplay');if(!v)return;
 if(state.darknessActive){v.classList.add('dark-mode-active');updateDarknessSpotlight();if(h)h.classList.remove('hidden');if(b)b.className='px-2 py-1 bg-amber-950 border border-mbYellow text-mbYellow text-xs font-mono font-bold flex items-center space-x-1';if(t)t.innerText='BUIO (ON)';if(i)i.className='fa-solid fa-moon text-mbYellow animate-pulse';if(a){a.innerText='ON';a.className='text-mbYellow font-bold';}}
 else{v.classList.remove('dark-mode-active');v.style.background='transparent';if(h)h.classList.add('hidden');if(b)b.className='px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-gray-400 text-xs font-mono font-bold flex items-center space-x-1';if(t)t.innerText='BUIO';if(i)i.className='fa-solid fa-moon';if(a){a.innerText='OFF';a.className='text-gray-400 font-bold';}}}
@@ -969,7 +969,7 @@ const AFTERNOON_PHRASES=[
   "☀️ UN'ORA COME TANTE. NESSUNA BUONA.",
   "☀️ LE MOSCHE VI SEGUONO. SANNO QUALCOSA.",
   "☀️ IL CALORE È UN RICORDO DI UN MONDO MORTO.",
-  "☀️ QUESTO SOLE NON ILLUMINA. ACceca.",
+  "☀️ QUESTO SOLE NON ILLUMINA. ACCECA.",
   "☀️ CONTINUATE. LA META NON VI VUOLE.",
   "☀️ QUALCOSA È MORTE OGGI. FORSE NON ANCORA VOI.",
   "☀️ IL POMERIGGIO È UN LUNGO ADDIO.",
@@ -1006,7 +1006,7 @@ const EVENING_PHRASES=[
   "🌇 IL CREPUSCOLO NON PERDONA.",
   "🌇 LE VOSTRE OSSA RINGRAZIANO IL RIPOSO.",
   "🌇 UN'OMBRA VI SORVEGLIA. LO SAPETE.",
-  "🌇 LA SERA È UN'ATTESA. DI COSA, LO SCOPRIREte.",
+  "🌇 LA SERA È UN'ATTESA. DI COSA, LO SCOPRIRETE.",
   "🌇 SI AVVICINA L'ORA DEI LUPI. E NON SOLO.",
   "🌇 UN'ALTRA SERA. UN ALTRO CONTO DA PAGARE."
 ];
@@ -3134,7 +3134,7 @@ if(!__ok){
         let changed=false;
         if(m.url!==url){m.url=url;changed=true;}
         if(isDun && !m.isDungeon){m.isDungeon=true;m.ghost=true;changed=true;}
-        if(isDun && !mpIsHost() && m.dungeonCompletedAt){delete m.dungeonCompletedAt;changed=true;}
+        if(isDun && !mpIsHost() && m.dungeonCompletedAt && !travel3DState.dungeonCompletedAt){delete m.dungeonCompletedAt;changed=true;}
         if(changed){
           safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
           renderMapsGallery();renderDungeonMapGallery();
