@@ -524,6 +524,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <button onclick="startRevealMode()" id="dungeonRevealBtn" class="px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]" title=""><i class="fa-solid fa-eye mr-1"></i> RIVELA AREA</button>
 <button onclick="revealAllDungeon()" id="dungeonRevealAllBtn" class="px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px]" title=""><i class="fa-solid fa-eye mr-1"></i> RIVELA TUTTO</button>
 <button onclick="resetDungeonFog()" id="dungeonResetBtn" class="px-3 py-1.5 bg-red-900 text-white font-bold hover:bg-red-700 uppercase text-[11px]" title=""><i class="fa-solid fa-rotate-left mr-1"></i> RESET</button>
+<button onclick="togglePlayerFogLock()" id="dungeonFogLockBtn" class="px-3 py-1.5 bg-red-800 text-white font-bold hover:bg-red-600 uppercase text-[11px]" title="Blocca o sblocca la rivelazione della nebbia ai giocatori"><i class="fa-solid fa-lock mr-1"></i> NEBBIA: BLOCCATA</button>
 </div>
 </div>
 </div>
@@ -1151,7 +1152,7 @@ let travel3DState={id:"default_journey",origin:"Galgenbeck",destination:"Schlesw
 let savedJourneys=[],monsters=[],notesStore={},currentNotesViewMode='current';
 let monsterFilterSettings={alignment:'all',journey:'all',bossOnly:false,dungeonOnly:false};
 let savedMaps=[],isGridVisible=true,currentMapSubtab='maps';
-const dungeonState={active:false,radius:18,revealedPoints:[],encounters:[],notes:'',startedAt:null};
+const dungeonState={active:false,radius:18,revealedPoints:[],encounters:[],notes:'',startedAt:null,lockPlayerFog:true};
 let dungeonPendingMode=null,dungeonSelectedType=null,dungeonNotesDebounceTimer=null;
 let dungeonLocalToken={x:.5,y:.5};
 let masterOnly3D=true;
@@ -2099,7 +2100,7 @@ function loadState(){
   const smo=safeGetItem('morkborg_monsters');if(smo){try{monsters=JSON.parse(smo);}catch(e){monsters=[];}}else monsters=[];
   const sn=safeGetItem('morkborg_notes_store');if(sn){try{notesStore=JSON.parse(sn);}catch(e){notesStore={};}}
  migrateNotesStore();
-  const sdk=safeGetItem('morkborg_dungeon_state');if(sdk){try{const p=JSON.parse(sdk);dungeonState.active=!!p.active;dungeonState.radius=p.radius||18;dungeonState.revealedPoints=Array.isArray(p.revealedPoints)?p.revealedPoints:[];dungeonState.encounters=Array.isArray(p.encounters)?p.encounters:[];dungeonState.notes=p.notes||'';dungeonState.startedAt=p.startedAt||null;}catch(e){}}
+  const sdk=safeGetItem('morkborg_dungeon_state');if(sdk){try{const p=JSON.parse(sdk);dungeonState.active=!!p.active;dungeonState.radius=p.radius||18;dungeonState.revealedPoints=Array.isArray(p.revealedPoints)?p.revealedPoints:[];dungeonState.encounters=Array.isArray(p.encounters)?p.encounters:[];dungeonState.notes=p.notes||'';dungeonState.startedAt=p.startedAt||null;dungeonState.lockPlayerFog=(p.lockPlayerFog!==undefined)?!!p.lockPlayerFog:true;}catch(e){}}
   if(travel3DState.dungeonMapId){
   const __dm=savedMaps.find(x=>String(x.id)===String(travel3DState.dungeonMapId));
   if(__dm&&__dm.dungeonData){
@@ -2182,7 +2183,7 @@ function dungeonLoadFromMap(mapId){
   dungeonState.startedAt=d.startedAt||null;
 }
 function saveDungeonState(){
-  safeSetItem('morkborg_dungeon_state',JSON.stringify({active:dungeonState.active,radius:dungeonState.radius,revealedPoints:dungeonState.revealedPoints,encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt}));
+  safeSetItem('morkborg_dungeon_state',JSON.stringify({active:dungeonState.active,radius:dungeonState.radius,revealedPoints:dungeonState.revealedPoints,encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt,lockPlayerFog:!!dungeonState.lockPlayerFog}));
   dungeonSaveToActiveMap();
 }
 function populateInputsFromState(){
@@ -2335,14 +2336,50 @@ function updateDungeonUI(){
   notes.value=dungeonState.notes||'';
 }
   const isClient=mpIsConnected()&&!mpIsHost();
+  const fogLockedForClient=isClient&&!!dungeonState.lockPlayerFog;
+  if(fogLockedForClient&&dungeonPendingMode==='reveal')dungeonPendingMode=null;
   if(rad){rad.disabled=isClient;rad.classList.toggle('opacity-40',isClient);rad.classList.toggle('cursor-not-allowed',isClient);rad.title=isClient?'🔒 Solo il Master può modificare il raggio':'';}
-  [document.getElementById('dungeonRevealBtn')].forEach(b=>{if(b){b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';if(dungeonPendingMode!=='reveal'){b.className=isClient?'px-3 py-1.5 bg-blue-800 text-white font-bold hover:bg-blue-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';b.innerHTML='<i class="fa-solid fa-eye mr-1"></i> '+(isClient?'RIVELA MIO PUNTO':'RIVELA AREA');}}});[document.getElementById('dungeonRevealAllBtn'),document.getElementById('dungeonResetBtn')].forEach(b=>{if(!b)return;if(isClient){b.disabled=true;b.classList.add('opacity-40','cursor-not-allowed');b.title='Solo il Master';}else{b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';}});
+  [document.getElementById('dungeonRevealBtn')].forEach(b=>{
+    if(!b)return;
+    if(fogLockedForClient){
+      b.disabled=true;
+      b.className='px-3 py-1.5 bg-blue-950 text-gray-400 font-bold uppercase text-[11px] opacity-40 cursor-not-allowed';
+      b.innerHTML='<i class="fa-solid fa-lock mr-1"></i> RIVELAZIONE BLOCCATA';
+      b.title='Il Master ha bloccato la rivelazione della nebbia';
+    }else{
+      b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';
+      if(dungeonPendingMode!=='reveal'){
+        b.className=isClient?'px-3 py-1.5 bg-blue-800 text-white font-bold hover:bg-blue-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';
+        b.innerHTML='<i class="fa-solid fa-eye mr-1"></i> '+(isClient?'RIVELA MIO PUNTO':'RIVELA AREA');
+      }
+    }
+  });
+  [document.getElementById('dungeonRevealAllBtn'),document.getElementById('dungeonResetBtn')].forEach(b=>{if(!b)return;if(isClient){b.disabled=true;b.classList.add('opacity-40','cursor-not-allowed');b.title='Solo il Master';}else{b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';}});
+  const fogBtn=document.getElementById('dungeonFogLockBtn');
+  if(fogBtn){
+    fogBtn.classList.toggle('hidden',isClient);
+    if(!isClient){
+      const locked=!!dungeonState.lockPlayerFog;
+      fogBtn.className=locked?'px-3 py-1.5 bg-red-800 text-white font-bold hover:bg-red-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-700 text-white font-bold hover:bg-green-500 uppercase text-[11px]';
+      fogBtn.innerHTML=locked?'<i class="fa-solid fa-lock mr-1"></i> NEBBIA: BLOCCATA':'<i class="fa-solid fa-lock-open mr-1"></i> NEBBIA: LIBERA';
+      fogBtn.title=locked?'I giocatori NON possono schiarire la nebbia (clicca per sbloccare)':'I giocatori possono schiarire la nebbia (clicca per bloccare)';
+    }
+  }
+  dungeonSyncClickHint();
   const hint=document.getElementById('dungeonMasterOnlyHint');
   if(hint)hint.classList.toggle('hidden',!isClient);
   redrawFog();renderDungeonEncountersList();updateSubtabCounts();
 }
+function togglePlayerFogLock(){
+  if(mpIsConnected()&&!mpIsHost())return;
+  dungeonState.lockPlayerFog=!dungeonState.lockPlayerFog;
+  saveDungeonState();
+  updateDungeonUI();
+  if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
+  triggerProphecyFlash(dungeonState.lockPlayerFog?'🔒 NEBBIA BLOCCATA AI GIOCATORI':'🔓 GIOCATORI POSSONO RIVELARE',dungeonState.lockPlayerFog?'fa-lock':'fa-lock-open',2000);
+}
 function toggleDungeonMode(){if(mpIsConnected()&&!mpIsHost())return;if(!dungeonState.active){syncDungeonMapFromActive();const img=document.getElementById('dungeonMapImg');if(!img||!img.src){alert('Carica o seleziona una mappa dungeon prima!');return;}if(travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.dungeonCompletedAt){delete dm.dungeonCompletedAt;safeSetItem('morkborg_maps',JSON.stringify(savedMaps));renderMapsGallery();renderDungeonMapGallery();updateSubtabCounts();}}
-if(travel3DState.dungeonMapId)dungeonLoadFromMap(travel3DState.dungeonMapId); dungeonState.active=true;dungeonState.startedAt=Date.now();
+if(travel3DState.dungeonMapId)dungeonLoadFromMap(travel3DState.dungeonMapId); dungeonState.active=true;dungeonState.startedAt=Date.now();dungeonState.lockPlayerFog=true;
 /* FIX: nessun auto-reveal - la mappa resta completamente nera finché il Master non clicca */
 setTimeout(()=>{setupFogCanvas();redrawFog();renderMapTokens();},100);
 triggerProphecyFlash('🏰 DUNGEON ATTIVO — La mappa è coperta','fa-dungeon');}else{if(!confirm('Chiudere la sessione dungeon?'))return;archiveDungeonSession();dungeonState.active=false;triggerProphecyFlash('🚪 DUNGEON CHIUSO','fa-door-open',2000);}saveDungeonState();updateDungeonUI();renderMapTokens();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
@@ -2383,7 +2420,8 @@ function revealAllDungeon(){
     revealedPoints:dungeonState.revealedPoints,
     encounters:dungeonState.encounters,
     notes:dungeonState.notes,
-    startedAt:dungeonState.startedAt
+    startedAt:dungeonState.startedAt,
+    lockPlayerFog:!!dungeonState.lockPlayerFog
   }));
   
   if(mpIsHost()&&mpIsConnected()){
@@ -2405,6 +2443,7 @@ function selectMapAsDungeon(mapId){
   
   if (!m.dungeonCompletedAt) {
     // Se la mappa NON è completata, resetta tutto (nuova sessione con nebbia nera)
+    dungeonState.lockPlayerFog=true;
     if(!m.dungeonData){
       m.dungeonData={revealedPoints:[],encounters:[],notes:'',startedAt:null};
     } else {
@@ -2490,8 +2529,10 @@ function saveDungeonNotes(){
     if(typeof mpNotifyStateChange==='function')mpNotifyStateChange('notes');
   },800);
 }
-function startAddEncounter(){const btn=document.getElementById('dungeonAddEncounterBtn');const hint=document.getElementById('dungeonClickHint');if(dungeonPendingMode==='encounter'){dungeonPendingMode=null;if(btn){btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';}if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';return;}dungeonPendingMode='encounter';if(btn){btn.className='px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px] animate-pulse';btn.innerHTML='<i class="fa-solid fa-crosshairs mr-1"></i> CLICCA SULLA MAPPA';}if(hint)hint.innerText='🎯 Clicca il punto dell\'incontro';}
-function startRevealMode(){const btn=document.getElementById('dungeonRevealBtn');const hint=document.getElementById('dungeonClickHint');const isClient=mpIsConnected()&&!mpIsHost();if(dungeonPendingMode==='reveal'){dungeonPendingMode=null;if(btn){btn.className=isClient?'px-3 py-1.5 bg-blue-800 text-white font-bold hover:bg-blue-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-eye mr-1"></i> '+(isClient?'RIVELA MIO PUNTO':'RIVELA AREA');}if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';return;}dungeonPendingMode='reveal';if(btn){btn.className='px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px] animate-pulse';btn.innerHTML='<i class="fa-solid fa-crosshairs mr-1"></i> CLICCA SULLA MAPPA';}if(hint)hint.innerText=isClient?'🎯 Clicca dove vuoi rivelare (solo la tua area)':'🎯 Clicca il punto da rivelare';}
+function dungeonIsFogLockedForMe(){return mpIsConnected()&&!mpIsHost()&&!!dungeonState.lockPlayerFog;}
+function dungeonSyncClickHint(){const h=document.getElementById('dungeonClickHint');if(!h||dungeonPendingMode)return;h.innerText=dungeonIsFogLockedForMe()?'🔒 Nebbia bloccata dal Master — puoi muovere solo il token':'💡 Clicca per muovere il token e rivelare';}
+function startAddEncounter(){const btn=document.getElementById('dungeonAddEncounterBtn');const hint=document.getElementById('dungeonClickHint');if(dungeonPendingMode==='encounter'){dungeonPendingMode=null;if(btn){btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';}dungeonSyncClickHint();return;}dungeonPendingMode='encounter';if(btn){btn.className='px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px] animate-pulse';btn.innerHTML='<i class="fa-solid fa-crosshairs mr-1"></i> CLICCA SULLA MAPPA';}if(hint)hint.innerText='🎯 Clicca il punto dell\'incontro';}
+function startRevealMode(){if(dungeonIsFogLockedForMe()){triggerProphecyFlash('🔒 Rivelazione nebbia bloccata dal Master','fa-lock',1800);return;}const btn=document.getElementById('dungeonRevealBtn');const hint=document.getElementById('dungeonClickHint');const isClient=mpIsConnected()&&!mpIsHost();if(dungeonPendingMode==='reveal'){dungeonPendingMode=null;if(btn){btn.className=isClient?'px-3 py-1.5 bg-blue-800 text-white font-bold hover:bg-blue-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-eye mr-1"></i> '+(isClient?'RIVELA MIO PUNTO':'RIVELA AREA');}dungeonSyncClickHint();return;}dungeonPendingMode='reveal';if(btn){btn.className='px-3 py-1.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px] animate-pulse';btn.innerHTML='<i class="fa-solid fa-crosshairs mr-1"></i> CLICCA SULLA MAPPA';}if(hint)hint.innerText=isClient?'🎯 Clicca dove vuoi rivelare (solo la tua area)':'🎯 Clicca il punto da rivelare';}
 function openDungeonEncounterModal(x,y){
   dungeonPendingMode=null;
   const btn=document.getElementById('dungeonAddEncounterBtn');
@@ -2538,7 +2579,7 @@ function openDungeonEncounterModal(x,y){
   if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();
   triggerProphecyFlash('📝 INCONTRO REGISTRATO','fa-pen',1500);
 }
-function closeDungeonEncounterModal(){document.getElementById('dungeonEncounterModal').classList.add('hidden');window._dungeonPendingPos=null;dungeonPendingMode=null;const btn=document.getElementById('dungeonAddEncounterBtn');if(btn){btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';}const hint=document.getElementById('dungeonClickHint');if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';}
+function closeDungeonEncounterModal(){document.getElementById('dungeonEncounterModal').classList.add('hidden');window._dungeonPendingPos=null;dungeonPendingMode=null;const btn=document.getElementById('dungeonAddEncounterBtn');if(btn){btn.className='px-3 py-1.5 bg-mbPink text-black font-bold hover:bg-white uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-plus mr-1"></i> AGGIUNGI INCONTRO';}dungeonSyncClickHint();}
 function selectEncounterType(t){dungeonSelectedType=t;document.querySelectorAll('.enc-type-btn').forEach(b=>{b.classList.toggle('active',b.dataset.type===t);});}
 
  let editDungeonSelectedType=null;
@@ -2636,7 +2677,7 @@ document.addEventListener('click',function(e){
   const x=(e.clientX-rect.left)/rect.width,y=(e.clientY-rect.top)/rect.height;
   if(x<0||x>1||y<0||y>1)return;
   if(dungeonPendingMode==='encounter'){openDungeonEncounterModal(x,y);return;}
-  if(dungeonPendingMode==='reveal'){revealAtPoint(x,y);dungeonPendingMode=null;const btn=document.getElementById('dungeonRevealBtn');if(btn){btn.className='px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';btn.innerHTML='<i class="fa-solid fa-eye mr-1"></i> RIVELA AREA';}const hint=document.getElementById('dungeonClickHint');if(hint)hint.innerText='💡 Clicca per muovere il token e rivelare';return;}
+  if(dungeonPendingMode==='reveal'){dungeonPendingMode=null;if(!dungeonIsFogLockedForMe())revealAtPoint(x,y);updateDungeonUI();return;}
   if(mpIsConnected()&&mpPlayers[mpMyId]){
   mpPlayers[mpMyId].tokenX=x;mpPlayers[mpMyId].tokenY=y;
   dungeonLocalToken.x=x;dungeonLocalToken.y=y;
@@ -2647,7 +2688,8 @@ document.addEventListener('click',function(e){
   dungeonLocalToken.x=x;dungeonLocalToken.y=y;
   safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
 }
-  revealAtPoint(x,y);renderMapTokens();
+  if(!dungeonIsFogLockedForMe())revealAtPoint(x,y);
+  renderMapTokens();
 });
 
 /* OMENS */
@@ -3496,6 +3538,7 @@ if(!mpIsHost()&&shared.dungeon){
 
   dungeonState.active=!!shared.dungeon.active;
   dungeonState.radius=shared.dungeon.radius||18;
+  dungeonState.lockPlayerFog=(shared.dungeon.lockPlayerFog!==undefined)?!!shared.dungeon.lockPlayerFog:true;
 
   /* FIX: REPLACE completo incontri, preservando solo i pending locali */
   if(Array.isArray(shared.dungeon.encounters)){
@@ -3590,7 +3633,7 @@ function mpRefreshHostSharedMaps(){
   else if(dungeonM)mpShared.map=dungeonM;
   else mpShared.map=null;
 }
-function mpHostBroadcast(){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;mpRefreshHostSharedMaps();try{mpShared.travel={id:travel3DState.id,origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId,events:travel3DState.events,dungeonCompletedAt:(()=>{try{const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));return dm&&dm.dungeonCompletedAt?dm.dungeonCompletedAt:null;}catch(e){return null;}})()};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};const tRef=mpShared.travelMap?mpMakeMapRef(mpShared.travelMap,false):null;const dRef=mpShared.dungeonMap?mpMakeMapRef(mpShared.dungeonMap,true):null;const mapOut=((currentMapSubtab==='dungeon'||dungeonState.active)&&dRef)?dRef:(tRef||dRef||null);mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:{weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,travelMap:tRef,dungeonMap:dRef,dungeon:dungeonOut,masterOnly3D:masterOnly3D}});mpRenderPlayersList();renderMapTokens();}
+function mpHostBroadcast(){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;mpRefreshHostSharedMaps();try{mpShared.travel={id:travel3DState.id,origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId,events:travel3DState.events,dungeonCompletedAt:(()=>{try{const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));return dm&&dm.dungeonCompletedAt?dm.dungeonCompletedAt:null;}catch(e){return null;}})()};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,lockPlayerFog:!!dungeonState.lockPlayerFog,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};const tRef=mpShared.travelMap?mpMakeMapRef(mpShared.travelMap,false):null;const dRef=mpShared.dungeonMap?mpMakeMapRef(mpShared.dungeonMap,true):null;const mapOut=((currentMapSubtab==='dungeon'||dungeonState.active)&&dRef)?dRef:(tRef||dRef||null);mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:{weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,travelMap:tRef,dungeonMap:dRef,dungeon:dungeonOut,masterOnly3D:masterOnly3D}});mpRenderPlayersList();renderMapTokens();}
 function mpCompressMapUrl(dataUrl,maxW,quality,cb){
   if(typeof maxW==='function'){cb=maxW;maxW=900;quality=0.58;}
   try{
