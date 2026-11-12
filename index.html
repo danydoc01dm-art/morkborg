@@ -742,6 +742,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 <div class="text-right"><span class="text-gray-400 text-[10px] uppercase">Ruolo</span><div id="roomRoleDisplay" class="text-mbYellow font-bold">👑 MASTER</div></div>
 </div>
+<button id="roomReclaimHostBtn" onclick="mpReclaimHost()" class="hidden w-full py-2 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px]">👑 RIPRENDI RUOLO MASTER</button>
 <div class="space-y-1"><span class="text-green-400 font-bold uppercase text-[11px]">Giocatori</span>
 <div id="roomPlayersList" class="space-y-1 max-h-48 overflow-y-auto"></div></div>
 <div id="roomMasterOnly3DPanel" class="bg-mbPanel p-3 border border-mbYellow space-y-2">
@@ -1053,19 +1054,19 @@ function triggerCelestialArcFX(ph){
   __lastArcPhase=ph;
   __lastArcTrigger=__now;
    if(celestialParticles.length>2)celestialParticles.splice(0,celestialParticles.length-2);
-  let m='',ic='fa-sun',dur=10000;
+  let m='',ic='fa-sun',dur=7000;
   if(ph===1){
     m=MORNING_PHRASES[Math.floor(Math.random()*MORNING_PHRASES.length)];
-    ic='fa-sun';dur=10000;
+    ic='fa-sun';dur=7000;
   }else if(ph===2){
     m=AFTERNOON_PHRASES[Math.floor(Math.random()*AFTERNOON_PHRASES.length)];
-    ic='fa-sun';dur=10000;
+    ic='fa-sun';dur=7000;
   }else if(ph===3){
     m=EVENING_PHRASES[Math.floor(Math.random()*EVENING_PHRASES.length)];
-    ic='fa-sun';dur=10000;
+    ic='fa-sun';dur=7000;
   }else{
     m=NIGHT_PHRASES[Math.floor(Math.random()*NIGHT_PHRASES.length)];
-    ic='fa-moon';dur=10000;
+    ic='fa-moon';dur=7000;
   }
   triggerProphecyFlash(m,ic,dur);
   celestialParticles.push({phase:ph,progress:0,life:1});
@@ -1133,7 +1134,7 @@ else if(state.currentWeather==='neve'||state.currentWeather==='bufera'){
   fxCtx.arc(w.x,w.y,w.size,0,Math.PI*2);
   fxCtx.fill();
 }}
-for(let i=celestialParticles.length-1;i>=0;i--){const c=celestialParticles[i];c.progress+=.003;if(c.progress>=1){celestialParticles.splice(i,1);hideProphecyFlash();continue;}const ax=fxCanvas.width*c.progress;const ay=fxCanvas.height*.3-Math.sin(c.progress*Math.PI)*(fxCanvas.height*.22);fxCtx.save();if(c.phase===4){fxCtx.fillStyle='#E2E8F0';fxCtx.shadowColor='#3B82F6';fxCtx.shadowBlur=12;fxCtx.beginPath();fxCtx.arc(ax,ay,24,0,Math.PI*2);fxCtx.fill();}else{fxCtx.fillStyle=c.phase===3?'#FF3300':'#FFE600';fxCtx.shadowColor=c.phase===3?'#FF0055':'#FFE600';fxCtx.shadowBlur=18;fxCtx.beginPath();fxCtx.arc(ax,ay,30,0,Math.PI*2);fxCtx.fill();}fxCtx.restore();}
+for(let i=celestialParticles.length-1;i>=0;i--){const c=celestialParticles[i];c.progress+=.004;if(c.progress>=1){celestialParticles.splice(i,1);hideProphecyFlash();continue;}const ax=fxCanvas.width*c.progress;const ay=fxCanvas.height*.3-Math.sin(c.progress*Math.PI)*(fxCanvas.height*.22);fxCtx.save();if(c.phase===4){fxCtx.fillStyle='#E2E8F0';fxCtx.shadowColor='#3B82F6';fxCtx.shadowBlur=12;fxCtx.beginPath();fxCtx.arc(ax,ay,24,0,Math.PI*2);fxCtx.fill();}else{fxCtx.fillStyle=c.phase===3?'#FF3300':'#FFE600';fxCtx.shadowColor=c.phase===3?'#FF0055':'#FFE600';fxCtx.shadowBlur=18;fxCtx.beginPath();fxCtx.arc(ax,ay,30,0,Math.PI*2);fxCtx.fill();}fxCtx.restore();}
 for(let i=fxParticles.length-1;i>=0;i--){const p=fxParticles[i];p.life-=p.decay;if(p.life<=0){fxParticles.splice(i,1);continue;}
 if(p.type==='overlay'){fxCtx.fillStyle=p.color;fxCtx.fillRect(0,0,fxCanvas.width,fxCanvas.height);}
 else if(p.type==='bloodDrop'){p.x+=p.vx;p.y+=p.vy;p.vy+=.002;fxCtx.fillStyle=p.color.replace(/[\d\.]+\)$/,`${p.life*.5})`);fxCtx.beginPath();fxCtx.arc(p.x,p.y,p.size*(.6+p.life*.4),0,Math.PI*2);fxCtx.fill();}
@@ -2335,7 +2336,7 @@ function updateDungeonUI(){
 }
   const isClient=mpIsConnected()&&!mpIsHost();
   if(rad){rad.disabled=isClient;rad.classList.toggle('opacity-40',isClient);rad.classList.toggle('cursor-not-allowed',isClient);rad.title=isClient?'🔒 Solo il Master può modificare il raggio':'';}
-  [document.getElementById('dungeonRevealBtn')].forEach(b=>{if(b){b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';}});[document.getElementById('dungeonRevealAllBtn'),document.getElementById('dungeonResetBtn')].forEach(b=>{if(!b)return;if(isClient){b.disabled=true;b.classList.add('opacity-40','cursor-not-allowed');b.title='Solo il Master';}else{b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';}});
+  [document.getElementById('dungeonRevealBtn')].forEach(b=>{if(b){b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';if(dungeonPendingMode!=='reveal'){b.className=isClient?'px-3 py-1.5 bg-blue-800 text-white font-bold hover:bg-blue-600 uppercase text-[11px]':'px-3 py-1.5 bg-green-800 text-white font-bold hover:bg-green-600 uppercase text-[11px]';b.innerHTML='<i class="fa-solid fa-eye mr-1"></i> '+(isClient?'RIVELA MIO PUNTO':'RIVELA AREA');}}});[document.getElementById('dungeonRevealAllBtn'),document.getElementById('dungeonResetBtn')].forEach(b=>{if(!b)return;if(isClient){b.disabled=true;b.classList.add('opacity-40','cursor-not-allowed');b.title='Solo il Master';}else{b.disabled=false;b.classList.remove('opacity-40','cursor-not-allowed');b.title='';}});
   const hint=document.getElementById('dungeonMasterOnlyHint');
   if(hint)hint.classList.toggle('hidden',!isClient);
   redrawFog();renderDungeonEncountersList();updateSubtabCounts();
@@ -2788,7 +2789,7 @@ function downloadExportCode(){
 /* MULTIPLAYER */
 const MP_COLORS=['#FFE600','#FF0055','#22c55e','#3b82f6','#a855f7','#f97316','#06b6d4','#f43f5e'];
 const MP_WS_URLS=['wss://cloud.achex.ca','wss://ws.achex.ca'];
-let mpWs=null,mpRole=null,mpRoomCode=null,mpMyId=null,mpMySid=null;
+let mpWs=null,mpRole=null,mpRoomCode=null,mpMyId=null,mpMySid=null,mpIsCreator=false;
 let mpMyName='Scvm';
 let mpPlayers={};
 let mpShared={map:null,travelMap:null,dungeonMap:null,travel:null,weather:'sereno',darknessActive:false};
@@ -2882,7 +2883,7 @@ function mpSaveSession(){
   try{
     if(mpRole&&mpRoomCode&&mpMyId){
       localStorage.setItem('morkborg_mp_session',JSON.stringify({
-        role:mpRole,room:mpRoomCode,myId:mpMyId,name:mpMyName
+        role:mpRole,room:mpRoomCode,myId:mpMyId,name:mpMyName,isCreator:!!mpIsCreator
       }));
     }else{
       localStorage.removeItem('morkborg_mp_session');
@@ -2892,10 +2893,48 @@ function mpSaveSession(){
 function mpClearSession(){try{localStorage.removeItem('morkborg_mp_session');}catch(e){}}function mpGenerateCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let r='';for(let i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
 function mpSetStatus(msg){const e=document.getElementById('roomStatusText');if(e)e.innerText=msg;}
 function mpUpdateHeaderBtn(){const b=document.getElementById('headerRoomBtn'),t=document.getElementById('headerRoomBtnText');if(!b)return;if(mpIsConnected()){b.className='px-2 py-1 bg-green-700 border border-green-400 text-white text-xs font-mono font-bold flex items-center space-x-1 animate-pulse';if(t)t.innerText=mpRoomCode||'ONLINE';}else{b.className='px-2 py-1 bg-mbPanel border border-green-500 hover:bg-green-900 text-green-400 text-xs font-mono font-bold flex items-center space-x-1';if(t)t.innerText='STANZA';}}
-function mpUpdateRoomUI(){const s=document.getElementById('roomSetupPanel'),c=document.getElementById('roomConnectedPanel');if(!s||!c)return;if(mpIsConnected()){s.classList.add('hidden');c.classList.remove('hidden');document.getElementById('roomCodeDisplay').innerText=mpRoomCode||'----';document.getElementById('roomRoleDisplay').innerText=mpIsHost()?'👑 MASTER':'🎲 PLAYER';const mp3dP=document.getElementById('roomMasterOnly3DPanel');if(mp3dP)mp3dP.classList.toggle('hidden',!mpIsHost());const mp3dC=document.getElementById('toggleMasterOnly3D');if(mp3dC)mp3dC.checked=masterOnly3D;mpRenderPlayersList();}else{s.classList.remove('hidden');c.classList.add('hidden');}mpUpdateHeaderBtn();const ts=document.getElementById('travelRoomStatus');if(ts){if(mpIsConnected()){const n=Object.keys(mpPlayers).length;ts.innerHTML=mpIsHost()?`👑 <strong class="text-green-300">${mpRoomCode}</strong> · ${n} online`:`🎲 <strong class="text-green-300">${mpRoomCode}</strong> · ${n} online`;}else ts.innerText='Nessuna stanza';}updateDungeonUI();}
-function mpRenderPlayersList(){const l=document.getElementById('roomPlayersList');if(!l)return;const ids=Object.keys(mpPlayers);if(ids.length===0){l.innerHTML='<div class="text-gray-600 italic p-2">Nessun giocatore</div>';return;}l.innerHTML=ids.map(pid=>{const p=mpPlayers[pid],isMe=pid===mpMyId;return `<div class="p-2 bg-black border border-gray-700 flex items-center space-x-2"><span class="w-3 h-3 rounded-full shrink-0" style="background:${p.color}"></span><div class="min-w-0 flex-1"><div class="text-white font-bold truncate">${escapeHtmlNotes(p.name)}${isMe?' (tu)':''}${p.isHost?' 👑':''}</div><div class="text-gray-400 text-[10px] truncate">${escapeHtmlNotes(p.charName||'—')} · HP ${p.hp}/${p.maxHp}</div></div></div>`;}).join('');}
+function mpUpdateRoomUI(){const s=document.getElementById('roomSetupPanel'),c=document.getElementById('roomConnectedPanel');if(!s||!c)return;if(mpIsConnected()){s.classList.add('hidden');c.classList.remove('hidden');document.getElementById('roomCodeDisplay').innerText=mpRoomCode||'----';document.getElementById('roomRoleDisplay').innerText=mpIsHost()?'👑 MASTER':'🎲 PLAYER';const mp3dP=document.getElementById('roomMasterOnly3DPanel');if(mp3dP)mp3dP.classList.toggle('hidden',!mpIsHost());const mp3dC=document.getElementById('toggleMasterOnly3D');if(mp3dC)mp3dC.checked=masterOnly3D;const recBtn=document.getElementById('roomReclaimHostBtn');if(recBtn)recBtn.classList.toggle('hidden',!(mpIsCreator&&!mpIsHost()));mpRenderPlayersList();}else{s.classList.remove('hidden');c.classList.add('hidden');const recBtn=document.getElementById('roomReclaimHostBtn');if(recBtn)recBtn.classList.add('hidden');}mpUpdateHeaderBtn();const ts=document.getElementById('travelRoomStatus');if(ts){if(mpIsConnected()){const n=Object.keys(mpPlayers).length;ts.innerHTML=mpIsHost()?`👑 <strong class="text-green-300">${mpRoomCode}</strong> · ${n} online`:`🎲 <strong class="text-green-300">${mpRoomCode}</strong> · ${n} online`;}else ts.innerText='Nessuna stanza';}applyMasterOnly3DState();updateDungeonUI();}
+function mpRenderPlayersList(){const l=document.getElementById('roomPlayersList');if(!l)return;const ids=Object.keys(mpPlayers);if(ids.length===0){l.innerHTML='<div class="text-gray-600 italic p-2">Nessun giocatore</div>';return;}const amHost=mpIsHost();l.innerHTML=ids.map(pid=>{const p=mpPlayers[pid],isMe=pid===mpMyId;const passBtn=(amHost&&!isMe)?`<button data-pid="${escapeHtmlNotes(pid)}" onclick="mpTransferHost(this.dataset.pid)" class="px-2 py-1 bg-mbYellow text-black font-bold text-[10px] hover:bg-white uppercase shrink-0" title="Passa il ruolo di Master a questo giocatore">👑 PASSA MASTER</button>`:'';return `<div class="p-2 bg-black border ${p.isHost?'border-mbYellow':'border-gray-700'} flex items-center gap-2"><span class="w-3 h-3 rounded-full shrink-0" style="background:${p.color}"></span><div class="min-w-0 flex-1"><div class="text-white font-bold truncate">${escapeHtmlNotes(p.name)}${isMe?' (tu)':''}${p.isHost?' 👑':''}</div><div class="text-gray-400 text-[10px] truncate">${escapeHtmlNotes(p.charName||'—')} · HP ${p.hp}/${p.maxHp}</div></div>${passBtn}</div>`;}).join('');}
+function mpApplyRoleTransition(newRole,activeHostId,flashMsg){
+  if(mpHostBroadcastDebounce){clearTimeout(mpHostBroadcastDebounce);mpHostBroadcastDebounce=null;}
+  mpClearMapRuntimeState();
+  dungeonPendingMode=null;
+  mpRole=newRole;
+  Object.keys(mpPlayers).forEach(pid=>{
+    if(mpPlayers[pid])mpPlayers[pid].isHost=(String(pid)===String(activeHostId));
+  });
+  mpSaveSession();
+  mpUpdateRoomUI();
+  renderMapsGallery();
+  renderDungeonMapGallery();
+  renderMapTokens();
+  updateSubtabCounts();
+  if(mpIsHost()){
+    mpSetStatus('✅ Stanza attiva — '+mpRoomCode);
+    mpRefreshHostSharedMaps();
+    if(mpAuthOk)mpHostBroadcast();
+  }else{
+    mpSetStatus('✅ Connesso — '+mpRoomCode);
+  }
+  if(flashMsg)triggerProphecyFlash(flashMsg,mpIsHost()?'fa-crown':'fa-users',2600);
+}
+function mpTransferHost(targetId){
+  if(!mpIsConnected()||!mpIsHost()){alert('Solo il Master attuale può passare il ruolo.');return;}
+  const target=mpPlayers[targetId];
+  if(!target||targetId===mpMyId)return;
+  const label=target.name||target.charName||'questo giocatore';
+  if(!confirm(`Passare il ruolo di MASTER a "${label}"?\n\nPotrà gestire mappe, Dungeon, nebbia, incontri e 3D al posto tuo.`))return;
+  mpBroadcastToRoom({type:'transferHost',toId:targetId,fromId:mpMyId,ts:Date.now()});
+  mpApplyRoleTransition('client',targetId,`👑 Master passato a ${label}`);
+}
+function mpReclaimHost(){
+  if(!mpIsConnected()||!mpIsCreator||mpIsHost())return;
+  if(!confirm('Riprendere il ruolo di MASTER della stanza?'))return;
+  mpBroadcastToRoom({type:'reclaimHost',toId:mpMyId,ts:Date.now()});
+  mpApplyRoleTransition('host',mpMyId,'👑 SEI TORNATO MASTER!');
+}
 function mpCopyRoomCode(){if(!mpRoomCode)return;navigator.clipboard.writeText(mpRoomCode).then(()=>{triggerProphecyFlash('📋 COPIATO: '+mpRoomCode,'fa-copy',2000);}).catch(()=>alert('Codice: '+mpRoomCode));}
-function mpBuildPlayerSnapshot(e={}){const pend=(dungeonState.encounters||[]).filter(en=>en&&en._local).map(en=>{const c=Object.assign({},en);delete c._local;return c;});return{id:mpMyId,name:mpMyName,color:(mpPlayers[mpMyId]&&mpPlayers[mpMyId].color)||MP_COLORS[0],charName:state.name||'???',hp:state.hp,maxHp:state.maxHp,tokenX:(typeof dungeonLocalToken!=='undefined'&&dungeonLocalToken.x!=null)?dungeonLocalToken.x:((mpPlayers[mpMyId]&&mpPlayers[mpMyId].tokenX!=null)?mpPlayers[mpMyId].tokenX:.5),tokenY:(typeof dungeonLocalToken!=='undefined'&&dungeonLocalToken.y!=null)?dungeonLocalToken.y:((mpPlayers[mpMyId]&&mpPlayers[mpMyId].tokenY!=null)?mpPlayers[mpMyId].tokenY:.5),isHost:mpIsHost(),pendingEncounters:pend.length?pend:null,...e};}
+function mpBuildPlayerSnapshot(e={}){const pend=(dungeonState.encounters||[]).filter(en=>en&&en._local).map(en=>{const c=Object.assign({},en);delete c._local;return c;});return{id:mpMyId,name:mpMyName,color:(mpPlayers[mpMyId]&&mpPlayers[mpMyId].color)||MP_COLORS[0],charName:state.name||'???',hp:state.hp,maxHp:state.maxHp,tokenX:(typeof dungeonLocalToken!=='undefined'&&dungeonLocalToken.x!=null)?dungeonLocalToken.x:((mpPlayers[mpMyId]&&mpPlayers[mpMyId].tokenX!=null)?mpPlayers[mpMyId].tokenX:.5),tokenY:(typeof dungeonLocalToken!=='undefined'&&dungeonLocalToken.y!=null)?dungeonLocalToken.y:((mpPlayers[mpMyId]&&mpPlayers[mpMyId].tokenY!=null)?mpPlayers[mpMyId].tokenY:.5),isHost:mpIsHost(),isCreator:!!mpIsCreator,pendingEncounters:pend.length?pend:null,...e};}
 function mpRoomChannel(c){return'mork'+String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
 let mpSendQueue=[];
 function mpWsSend(o){
@@ -3047,10 +3086,34 @@ if(data.auth){
   if(!payload||!payload.type||payload._sender===mpMyId)return;
   if(payload.type==='hello'&&payload.player){
     const p=payload.player;if(!p.id)return;
+    if(mpIsHost()&&p.id!==mpMyId)p.isHost=false;
     if(!mpPlayers[p.id]){const u=Object.values(mpPlayers).map(x=>x.color);p.color=p.color||MP_COLORS.find(c=>!u.includes(c))||MP_COLORS[0];}
     mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);
     mpUpdateRoomUI();renderMapTokens();
     if(mpIsHost()){mpHostBroadcast();}
+    return;
+  }
+  if(payload.type==='transferHost'&&payload.toId){
+    const tid=String(payload.toId);
+    const tName=(mpPlayers[tid]&&mpPlayers[tid].name)||'Giocatore';
+    if(tid===String(mpMyId)){
+      mpApplyRoleTransition('host',tid,'👑 SEI ORA IL MASTER!');
+    }else{
+      mpApplyRoleTransition('client',tid,'👑 Nuovo Master: '+tName);
+    }
+    return;
+  }
+  if(payload.type==='reclaimHost'&&payload.toId){
+    const tid=String(payload.toId);
+    const senderCreator=(mpPlayers[tid]&&mpPlayers[tid].isCreator)||tid.indexOf('host-')===0;
+    if(!senderCreator)return;
+    const tName=(mpPlayers[tid]&&mpPlayers[tid].name)||'Master';
+    if(tid===String(mpMyId)){
+      mpApplyRoleTransition('host',tid,'👑 SEI TORNATO MASTER!');
+    }else{
+      const wasHost=mpIsHost();
+      mpApplyRoleTransition('client',tid,wasHost?'🎲 Il creatore ha ripreso il ruolo Master':'👑 Nuovo Master: '+tName);
+    }
     return;
   }
   if(payload.type==='sync'){
@@ -3076,7 +3139,7 @@ if(data.auth){
     mpBroadcastToRoom({type:'hello',player:snap});
     return;
   }
-  if(payload.type==='playerUpdate'&&payload.player){const p=payload.player;if(p.id){mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);if(mpIsHost())mpHostBroadcast();else{mpUpdateRoomUI();renderMapTokens();}}return;}
+  if(payload.type==='playerUpdate'&&payload.player){const p=payload.player;if(p.id){if(mpIsHost()&&p.id!==mpMyId)p.isHost=false;mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);if(mpIsHost())mpHostBroadcast();else{mpUpdateRoomUI();renderMapTokens();}}return;}
 if(payload.type==='dungeonRevealAll'){
   /* FIX: il master ha rivelato tutto → mostra tutto anche sul client */
   dungeonState.revealedPoints=[{x:.5,y:.5,r:2}];
@@ -3343,11 +3406,11 @@ if(payload.type==='ping'){
     return;
   }
 }
-function mpCreateRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomHostNameInput').value||state.name||'Master').trim();mpMyName=name;const code=mpGenerateCode();mpRoomCode=code;mpRole='host';mpMyId='host-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;__mpIsReconnectFlow=false;mpClearMapRuntimeState();mpSaveSession();
+function mpCreateRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomHostNameInput').value||state.name||'Master').trim();mpMyName=name;const code=mpGenerateCode();mpRoomCode=code;mpRole='host';mpIsCreator=true;mpMyId='host-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;__mpIsReconnectFlow=false;mpClearMapRuntimeState();mpSaveSession();
 mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel=JSON.parse(JSON.stringify(travel3DState));}catch(e){}
 mpRefreshHostSharedMaps();
 mpConnectWs((ws,connSeq)=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});__mpAuthFallbackTimer=setTimeout(()=>{if(!mpAuthOk&&mpWs===ws&&connSeq===__mpCurrentWsSeq){mpCompleteAuthSetup(ws,connSeq,false);}},2200);});}
-function mpJoinRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomJoinNameInput').value||state.name||'Player').trim();const code=(document.getElementById('roomCodeInput').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code||code.length<4){alert('Inserisci codice (4 caratteri).');return;}mpMyName=name;mpRoomCode=code;mpRole='client';mpMyId='p-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;__mpIsReconnectFlow=false;mpClearMapRuntimeState();mpSaveSession();
+function mpJoinRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomJoinNameInput').value||state.name||'Player').trim();const code=(document.getElementById('roomCodeInput').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code||code.length<4){alert('Inserisci codice (4 caratteri).');return;}mpMyName=name;mpRoomCode=code;mpRole='client';mpIsCreator=false;mpMyId='p-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;__mpIsReconnectFlow=false;mpClearMapRuntimeState();mpSaveSession();
 mpConnectWs((ws,connSeq)=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});__mpAuthFallbackTimer=setTimeout(()=>{if(!mpAuthOk&&mpWs===ws&&connSeq===__mpCurrentWsSeq){mpCompleteAuthSetup(ws,connSeq,false);}},2200);});}
 function mpScheduleClientMapRetry(mapIds){
   if(!Array.isArray(mapIds)||mapIds.length===0||mpIsHost())return;
@@ -3844,7 +3907,7 @@ function mpRequestMapNow(){if(!mpIsConnected()){alert('Non sei in una stanza.');
 function mpShowRemoteMapPanel(){const p=document.getElementById('mpRemoteMapPanel');if(p)p.classList.toggle('hidden');}
 function mpSendRemoteMapUrl(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}const u=(document.getElementById('mpRemoteMapUrl')&&document.getElementById('mpRemoteMapUrl').value||'').trim();if(!u||u.indexOf('http')!==0){alert('Inserisci un URL valido.');return;}const obj={id:'remote_'+uid(),name:'Mappa Remota',url:u,isDungeon:false,isRemote:true};mpShared.travelMap=obj;mpShared.map=obj;mpHostBroadcast();mpBroadcastToRoom({type:'mapRemoteUrl',id:obj.id,name:obj.name,url:u,isDungeon:false});mpApplyReceivedMap(obj.id,obj.name,u,false,{force:true});mpSetStatus('✅ URL mappa inviato');}
 function mpPushMyCharacter(){const snap=mpBuildPlayerSnapshot();mpPlayers[mpMyId]=Object.assign({},mpPlayers[mpMyId]||{},snap,{isHost:mpIsHost()});if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'playerUpdate',player:mpPlayers[mpMyId]});triggerProphecyFlash('📤 SCHEDA INVIATA','fa-upload',2000);mpUpdateRoomUI();renderMapTokens();}
-function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}stopHeartbeat();if(__mpAuthFallbackTimer){clearTimeout(__mpAuthFallbackTimer);__mpAuthFallbackTimer=null;}if(__mpClientReqTimer){clearTimeout(__mpClientReqTimer);__mpClientReqTimer=null;}if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}try{if(mpWs){mpWs.onclose=null;mpWs.onerror=null;mpWs.onmessage=null;mpWs.close();}}catch(e){}mpWs=null;mpRole=null;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;__mpConnecting=false;mpPlayers={};mpShared={map:null,travelMap:null,dungeonMap:null,travel:null,weather:'sereno',darknessActive:false};mpClearMapRuntimeState();mpSendQueue=[];mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');renderMapTokens();}
+function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}stopHeartbeat();if(__mpAuthFallbackTimer){clearTimeout(__mpAuthFallbackTimer);__mpAuthFallbackTimer=null;}if(__mpClientReqTimer){clearTimeout(__mpClientReqTimer);__mpClientReqTimer=null;}if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}try{if(mpWs){mpWs.onclose=null;mpWs.onerror=null;mpWs.onmessage=null;mpWs.close();}}catch(e){}mpWs=null;mpRole=null;mpIsCreator=false;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;__mpConnecting=false;mpPlayers={};mpShared={map:null,travelMap:null,dungeonMap:null,travel:null,weather:'sereno',darknessActive:false};mpClearMapRuntimeState();mpSendQueue=[];mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');renderMapTokens();}
 let __renderMapTokensScheduled=false;
 function renderMapTokens(){
   if(__renderMapTokensScheduled)return;
@@ -3934,6 +3997,7 @@ function mpTryAutoReconnect(){
   if(!s||!s.role||!s.room||!s.myId)return;
   console.log('[MP] Auto-reconnect a',s.room,'come',s.role);
   mpRole=s.role;mpRoomCode=s.room;mpMyId=s.myId;mpMyName=s.name||'Scvm';
+  mpIsCreator=(typeof s.isCreator==='boolean')?s.isCreator:(String(s.myId||'').indexOf('host-')===0);
   mpAuthOk=false;__mpIsReconnectFlow=true;mpPlayers={};
   mpClearMapRuntimeState();
   mpShared={map:mpShared.map||null,travelMap:mpShared.travelMap||null,dungeonMap:mpShared.dungeonMap||null,travel:null,weather:'sereno',darknessActive:false};
@@ -4070,5 +4134,6 @@ setInterval(()=>{
   window.addEventListener('beforeunload',()=>{dungeonSaveToActiveMap(true);});
 };
 </script>
+
 
 </body></html>
