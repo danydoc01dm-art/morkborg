@@ -360,7 +360,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <div class="p-2.5 bg-black border border-gray-800 space-y-2 text-[11px]">
 <div class="flex justify-between text-gray-300 border-b border-gray-800 pb-1"><span>HP:</span><span id="travel3DHpDisplay" class="text-mbYellow font-bold">12 / 12</span></div>
 <span class="text-mbYellow font-bold block text-[10px] uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> RISORSE:</span>
-<div id="trackedResources3DContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"><div class="p-1.5 bg-mbPanel border border-gray-700 flex items-center justify-between gap-1 text-[11px] font-mono "><span class="font-bold text-white truncate max-w-[110px]">Otre d'acqua</span><div class="flex items-center space-x-1"><button onclick="modifyInventoryQty(1791754674047401,-1)" class="w-5 h-5 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center">-</button><span class="text-mbYellow font-bold px-1 min-w-[32px] text-center">3/3</span><button onclick="modifyInventoryQty(1791754674047401,1)" class="w-5 h-5 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center">+</button></div></div><div class="p-1.5 bg-mbPanel border border-gray-700 flex items-center justify-between gap-1 text-[11px] font-mono "><span class="font-bold text-white truncate max-w-[110px]">acciarino</span><div class="flex items-center space-x-1"><button onclick="modifyInventoryQty(1791754674047402,-1)" class="w-5 h-5 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center">-</button><span class="text-mbYellow font-bold px-1 min-w-[32px] text-center">1/1</span><button onclick="modifyInventoryQty(1791754674047402,1)" class="w-5 h-5 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center">+</button></div></div><div class="p-1.5 bg-mbPanel border border-gray-700 flex items-center justify-between gap-1 text-[11px] font-mono "><span class="font-bold text-white truncate max-w-[110px]">Cassetta degli attrezzi : 10 chiodi, pinze, martello, sega piccola e trapano.</span><div class="flex items-center space-x-1"><button onclick="modifyInventoryQty(1791754674047403,-1)" class="w-5 h-5 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center">-</button><span class="text-mbYellow font-bold px-1 min-w-[32px] text-center">1/1</span><button onclick="modifyInventoryQty(1791754674047403,1)" class="w-5 h-5 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center">+</button></div></div><div class="p-1.5 bg-mbPanel border border-gray-700 flex items-center justify-between gap-1 text-[11px] font-mono "><span class="font-bold text-white truncate max-w-[110px]">Sintassi enochiana (pergamena sacra) Una creatura obbedisce ciecamente a un singolo comando</span><div class="flex items-center space-x-1"><button onclick="modifyInventoryQty(1791754674047404,-1)" class="w-5 h-5 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center">-</button><span class="text-mbYellow font-bold px-1 min-w-[32px] text-center">1/1</span><button onclick="modifyInventoryQty(1791754674047404,1)" class="w-5 h-5 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center">+</button></div></div></div>
+<div id="trackedResources3DContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
 </div>
 </div>
 </div>
@@ -524,7 +524,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 <div id="dungeonMapContainer" class="bg-black border-2 border-mbPurple p-2 space-y-2">
 <div class="flex items-center justify-between border-b border-mbPurple pb-1 font-mono text-xs">
 <span class="text-mbPurple font-bold"><i class="fa-solid fa-map mr-1"></i> MAPPA DUNGEON</span>
-<span id="dungeonClickHint" class="text-mbYellow texFt-[10px]">💡 Clicca per muovere il token e rivelare</span>
+<span id="dungeonClickHint" class="text-mbYellow text-[10px]">💡 Clicca per muovere il token e rivelare</span>
 </div>
 <div class="relative flex justify-center bg-neutral-950 p-2 border border-gray-800" style="overflow:hidden;">
 <div id="dungeonMapStage" class="relative" style="display:inline-block;max-width:100%;max-height:75vh;">
@@ -1626,7 +1626,7 @@ function toggleGridVisibility(){isGridVisible=!isGridVisible;const b=document.ge
 function toggle3DDrawMode(){is3DDrawMode=!is3DDrawMode;const b=document.getElementById('toggleDrawModeBtn'),h=document.getElementById('drawModeHint');if(travel3DControls)travel3DControls.enabled=!is3DDrawMode;if(is3DDrawMode){b.className="px-2.5 py-1.5 bg-mbPink text-black font-bold hover:bg-white flex items-center space-x-1 animate-pulse";b.innerHTML='<i class="fa-solid fa-pen"></i><span>DISABILITA</span>';if(h)h.innerText="🎯 CLICCA PER AGGIUNGERE GIORNO "+((travel3DState.customPoints?.length||0)+1);}else{b.className="px-2.5 py-1.5 bg-mbYellow text-black font-bold hover:bg-white flex items-center space-x-1";b.innerHTML='<i class="fa-solid fa-pen-to-square"></i><span>DISEGNA</span>';if(h)h.innerText="💡 trascina per ruotare";}}
 function removeLastPathPoint(){if(Array.isArray(travel3DState.customPoints)&&travel3DState.customPoints.length>0){travel3DState.customPoints.pop();travel3DState.totalDays=travel3DState.customPoints.length;document.getElementById('travel3DDays').value=travel3DState.totalDays;save3DTravelState();}}
 function clearPathPoints(){if(confirm("Cancellare il percorso?")){travel3DState.customPoints=[];travel3DState.totalDays=0;travel3DState.currentDay=1;document.getElementById('travel3DDays').value=0;save3DTravelState();}}
-function onTerrainMapSelectChange(mapId){travel3DState.linkedMapId=mapId||'none';rebuild3DRoute();save3DTravelState();if(mapId&&mapId!=='none'){const m=savedMaps.find(x=>String(x.id)===String(mapId));if(m&&mpIsHost()&&mpIsConnected())mpSetSharedMap(m);}if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
+function onTerrainMapSelectChange(mapId){travel3DState.linkedMapId=mapId||'none';if(mapId&&mapId!=='none'){const m=savedMaps.find(x=>String(x.id)===String(mapId));if(m&&m.url){const img=document.getElementById('activeMapImg'),stage=document.getElementById('sharedMapStage'),noMap=document.getElementById('noMapText');if(noMap)noMap.classList.add('hidden');if(stage)stage.classList.remove('hidden');if(img){img.src=m.url;img.classList.remove('hidden');}if(mpIsHost()&&mpIsConnected())mpSetSharedMap(m);}}rebuild3DRoute();save3DTravelState();renderMapsGallery();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
 function onEventIconChange(ctx){const sel=ctx==='new'?document.getElementById('gmEventIcon'):document.getElementById('editEventIcon');const inp=ctx==='new'?document.getElementById('gmEventIconCustom'):document.getElementById('editEventIconCustom');if(!sel||!inp)return;if(sel.value==='🔧')inp.classList.remove('hidden');else inp.classList.add('hidden');}
 function getEventIconValue(ctx){const sel=ctx==='new'?document.getElementById('gmEventIcon'):document.getElementById('editEventIcon');const inp=ctx==='new'?document.getElementById('gmEventIconCustom'):document.getElementById('editEventIconCustom');if(!sel)return'🔧';if(sel.value==='🔧'){const v=inp?inp.value.trim():'';return v||'🔧';}return sel.value;}
 function setEventIconValue(ctx,icon){const sel=ctx==='new'?document.getElementById('gmEventIcon'):document.getElementById('editEventIcon');const inp=ctx==='new'?document.getElementById('gmEventIconCustom'):document.getElementById('editEventIconCustom');if(!sel)return;const known=Array.from(sel.options).map(o=>o.value);if(known.includes(icon)&&icon!=='🔧'){sel.value=icon;if(inp)inp.classList.add('hidden');}else{sel.value='🔧';if(inp){inp.value=icon;inp.classList.remove('hidden');}}}
@@ -1686,7 +1686,7 @@ function confirmDeleteSelectedJourney(){
   if(!s||!s.value)return;
   deleteJourneyById(s.value);
 }
-function deleteJourneyById(id){   if(!id)return;   if(!confirm("Eliminare la rotta?"))return;   savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));   safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));   renderJourneysDropdown();   updateMonsterJourneyDropdownFilter(); }
+function deleteJourneyById(id){if(!id)return;if(!confirm("Eliminare la rotta?"))return;savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));if(String(travel3DState.id)===String(id)){if(savedJourneys.length>0){travel3DState=JSON.parse(JSON.stringify(savedJourneys[0]));}else{travel3DState={id:"default_journey",origin:"Galgenbeck",destination:"Schleswig",linkedMapId:"none",dungeonMapId:null,totalDays:0,currentDay:1,currentPhase:1,customPoints:[],events:[]};}safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));populate3DTravelInputs();rebuild3DRoute();}renderJourneysDropdown();updateMonsterJourneyDropdownFilter();syncNotesViewUI();}
 
 /* INVENTARIO */
 function updateInventoryItemName(id,n){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.name=n.trim()||"Oggetto";saveState();render3DTrackedResources();}}
@@ -1705,7 +1705,7 @@ function renderInventory(){
   if(fe)fe.innerText=`Max = Base (${bv}) + FORZA (${sv>=0?'+':''}${sv}) + Extra (${bo}) = ${ta}`;
   if(state.inventory.length===0){c.innerHTML='<div class="font-mono text-xs text-gray-600 italic p-2">Zaino vuoto.</div>';return;}
   const total=state.inventory.length;
-  c.innerHTML=state.inventory.map((item,idx)=>{const empty=(parseInt(item.qty)||0)===0;const first=idx===0;const last=idx===total-1;return `<div class="p-2 bg-black border border-gray-800 flex flex-wrap items-center justify-between gap-2 font-mono text-xs ${empty?'item-empty':''}"><div class="flex items-center space-x-2 flex-1 min-w-[180px]"><div class="flex flex-col shrink-0 leading-none"><button onclick="moveInventoryItem(${item.id},-1)" ${first?'disabled':''} class="w-5 h-3.5 flex items-center justify-center border border-gray-700 ${first?'bg-black text-gray-700 cursor-not-allowed':'bg-gray-900 text-mbYellow hover:bg-mbYellow hover:text-black'}" title="Sposta su">▲</button><button onclick="moveInventoryItem(${item.id},1)" ${last?'disabled':''} class="w-5 h-3.5 flex items-center justify-center border border-gray-700 ${last?'bg-black text-gray-700 cursor-not-allowed':'bg-gray-900 text-mbYellow hover:bg-mbYellow hover:text-black'}" title="Sposta giù">▼</button></div><label class="inline-flex items-center cursor-pointer shrink-0"><input type="checkbox" onchange="toggleItem3DTrack(${item.id})" ${item.trackIn3D?'checked':''} class="w-3.5 h-3.5 accent-mbYellow"><span class="text-[10px] ml-1 font-bold ${item.trackIn3D?'text-mbYellow':'text-gray-600'}">3D</span></label><input type="text" value="${item.name}" onchange="updateInventoryItemName(${item.id}, this.value)" class="p-1 bg-black border border-gray-700 text-xs text-mbYellow font-bold flex-1">${empty?'<span class="text-[9px] text-red-400 font-bold shrink-0">VUOTO</span>':''}</div><div class="flex flex-wrap items-center space-x-2 sm:space-x-3 text-[11px] shrink-0"><div class="flex items-center space-x-1 text-gray-400"><span>Slot:</span><button onclick="modifyInventorySlots(${item.id},-1)" class="w-4 h-4 bg-gray-900 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center border border-gray-700 text-[10px]">-</button><span class="text-white font-bold min-w-[14px] text-center">${item.slots}</span><button onclick="modifyInventorySlots(${item.id},1)" class="w-4 h-4 bg-gray-900 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center border border-gray-700 text-[10px]">+</button></div><div class="flex items-center space-x-1 bg-mbPanel px-1.5 py-0.5 border border-gray-700"><span class="text-gray-400 font-bold text-[10px]">Q.tà:</span><button onclick="modifyInventoryQty(${item.id},-1)" class="w-4 h-4 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center border border-red-500 text-[10px]">-</button><span class="text-mbYellow font-bold px-1 min-w-[18px] text-center">${item.qty}</span><button onclick="modifyInventoryQty(${item.id},1)" class="w-4 h-4 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center border border-green-500 text-[10px]">+</button></div><div class="flex items-center space-x-1 bg-mbPanel px-1.5 py-0.5 border border-gray-700"><span class="text-gray-400 font-bold text-[10px]">Max:</span><button onclick="modifyInventoryMaxQty(${item.id},-1)" class="w-4 h-4 bg-gray-800 hover:bg-gray-700 text-mbYellow font-bold flex items-center justify-center border border-gray-600 text-[10px]">-</button><span class="text-mbYellow font-bold px-1 min-w-[18px] text-center">${item.maxQty}</span><button onclick="modifyInventoryMaxQty(${item.id},1)" class="w-4 h-4 bg-gray-800 hover:bg-gray-700 text-mbYellow font-bold flex items-center justify-center border border-gray-600 text-[10px]">+</button></div><button onclick="deleteInventoryItem(${item.id})" class="text-red-500 hover:text-white text-xs p-1 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');
+  c.innerHTML=state.inventory.map((item,idx)=>{const empty=(parseInt(item.qty)||0)===0;const first=idx===0;const last=idx===total-1;return `<div class="p-2 bg-black border border-gray-800 flex flex-wrap items-center justify-between gap-2 font-mono text-xs ${empty?'item-empty':''}"><div class="flex items-center space-x-2 flex-1 min-w-[180px]"><div class="flex flex-col shrink-0 leading-none"><button onclick="moveInventoryItem(${item.id},-1)" ${first?'disabled':''} class="w-5 h-3.5 flex items-center justify-center border border-gray-700 ${first?'bg-black text-gray-700 cursor-not-allowed':'bg-gray-900 text-mbYellow hover:bg-mbYellow hover:text-black'}" title="Sposta su">▲</button><button onclick="moveInventoryItem(${item.id},1)" ${last?'disabled':''} class="w-5 h-3.5 flex items-center justify-center border border-gray-700 ${last?'bg-black text-gray-700 cursor-not-allowed':'bg-gray-900 text-mbYellow hover:bg-mbYellow hover:text-black'}" title="Sposta giù">▼</button></div><label class="inline-flex items-center cursor-pointer shrink-0"><input type="checkbox" onchange="toggleItem3DTrack(${item.id})" ${item.trackIn3D?'checked':''} class="w-3.5 h-3.5 accent-mbYellow"><span class="text-[10px] ml-1 font-bold ${item.trackIn3D?'text-mbYellow':'text-gray-600'}">3D</span></label><input type="text" value="${escapeHtmlNotes(item.name)}" onchange="updateInventoryItemName(${item.id}, this.value)" class="p-1 bg-black border border-gray-700 text-xs text-mbYellow font-bold flex-1">${empty?'<span class="text-[9px] text-red-400 font-bold shrink-0">VUOTO</span>':''}</div><div class="flex flex-wrap items-center space-x-2 sm:space-x-3 text-[11px] shrink-0"><div class="flex items-center space-x-1 text-gray-400"><span>Slot:</span><button onclick="modifyInventorySlots(${item.id},-1)" class="w-4 h-4 bg-gray-900 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center border border-gray-700 text-[10px]">-</button><span class="text-white font-bold min-w-[14px] text-center">${item.slots}</span><button onclick="modifyInventorySlots(${item.id},1)" class="w-4 h-4 bg-gray-900 hover:bg-gray-700 text-gray-300 font-bold flex items-center justify-center border border-gray-700 text-[10px]">+</button></div><div class="flex items-center space-x-1 bg-mbPanel px-1.5 py-0.5 border border-gray-700"><span class="text-gray-400 font-bold text-[10px]">Q.tà:</span><button onclick="modifyInventoryQty(${item.id},-1)" class="w-4 h-4 bg-red-900 hover:bg-red-700 text-white font-bold flex items-center justify-center border border-red-500 text-[10px]">-</button><span class="text-mbYellow font-bold px-1 min-w-[18px] text-center">${item.qty}</span><button onclick="modifyInventoryQty(${item.id},1)" class="w-4 h-4 bg-green-900 hover:bg-green-700 text-white font-bold flex items-center justify-center border border-green-500 text-[10px]">+</button></div><div class="flex items-center space-x-1 bg-mbPanel px-1.5 py-0.5 border border-gray-700"><span class="text-gray-400 font-bold text-[10px]">Max:</span><button onclick="modifyInventoryMaxQty(${item.id},-1)" class="w-4 h-4 bg-gray-800 hover:bg-gray-700 text-mbYellow font-bold flex items-center justify-center border border-gray-600 text-[10px]">-</button><span class="text-mbYellow font-bold px-1 min-w-[18px] text-center">${item.maxQty}</span><button onclick="modifyInventoryMaxQty(${item.id},1)" class="w-4 h-4 bg-gray-800 hover:bg-gray-700 text-mbYellow font-bold flex items-center justify-center border border-gray-600 text-[10px]">+</button></div><button onclick="deleteInventoryItem(${item.id})" class="text-red-500 hover:text-white text-xs p-1 ml-1"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');
 }
 function render3DTrackedResources(){
   const c=document.getElementById('trackedResources3DContainer');
@@ -1974,8 +1974,8 @@ function clearJourneyNoteDraft(){
   if(!t)return;
   if(t.value.trim()&&!confirm('Cancellare il testo non salvato?'))return;
   t.value='';
+  safeSetItem(draftKeyForJourney(),'');
 }
-
 function escapeHtmlNotes(s){
   return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -2040,7 +2040,7 @@ function editJourneyNote(id){
 }
 function setNotesViewMode(m){currentNotesViewMode=m;syncNotesViewUI();}
 
-function saveNotes(){const a=document.getElementById('notesArea');if(!a)return;notesStore[travel3DState.id||"default_journey"]=a.value;safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));}
+
 function renderAllNotesList(){
   const c=document.getElementById('allNotesListContainer');if(!c)return;
   const keys=Object.keys(notesStore);
@@ -2077,7 +2077,7 @@ function deleteNotesArchive(id){
   renderJourneyNotesList();
   triggerProphecyFlash('🗑️ APPUNTI ELIMINATI','fa-trash',1500);
 } 
-function deleteDungeonArchive(id){if(!confirm('Eliminare questa sessione?'))return;delete notesStore[id];safeSetItem('morkborg_notes_store',JSON.stringify(notesStore));renderAllNotesList();}
+
 function openSettingsModal(){syncSettingsUI();document.getElementById('settingsModal').classList.remove('hidden');}
 function closeSettingsModal(){document.getElementById('settingsModal').classList.add('hidden');}
 function updateVisualSetting(k,e){if(!state.visualSettings)state.visualSettings={...defaultState.visualSettings};state.visualSettings[k]=e;saveState();syncSettingsUI();}
@@ -2214,7 +2214,7 @@ function renderMapsGallery(){
   return true;
 });
   if(visibleMaps.length===0){g.innerHTML='<div class="col-span-4 font-mono text-xs text-gray-500 italic p-3 text-center border border-dashed border-gray-800">Nessuna mappa salvata.</div>';return;}
-  g.innerHTML=visibleMaps.map(m=>{const isActive=String(travel3DState.linkedMapId)===String(m.id);const isDungeon=m.isDungeon===true;return `<div class="bg-black border-2 ${isActive?'border-mbPink':(isDungeon?'border-mbPurple':'border-mbYellow')} p-2 space-y-2 font-mono text-xs relative">${isActive?'<span class="absolute -top-2 left-2 bg-mbPink text-black font-black text-[9px] px-1.5 py-0.5 uppercase border border-black">TERRENO 3D</span>':''}${isDungeon?'<span class="absolute -top-2 right-2 bg-mbPurple text-black font-black text-[9px] px-1.5 py-0.5 uppercase border border-black">🏰 COMPLETATA</span>':''}<img src="${m.url}" onclick="selectMap('${m.url}','${m.id}')" class="w-full h-28 object-cover border border-gray-800 cursor-pointer hover:opacity-80"><div class="text-white font-bold truncate text-[11px]" title="${m.name}">${m.name}</div><div class="grid grid-cols-3 gap-1"><button onclick="selectMap('${m.url}','${m.id}')" class="py-1 bg-mbYellow text-black font-bold text-[10px] uppercase hover:bg-white">USA</button><button onclick="toggleMapType('${m.id}')" class="py-1 ${isDungeon?'bg-mbPurple text-black':'bg-black border border-mbPurple text-mbPurple'} font-bold text-[10px] uppercase hover:bg-white hover:text-black">🏰</button><button onclick="deleteSavedMap('${m.id}')" class="py-1 bg-red-900 text-white font-bold text-[10px] uppercase hover:bg-red-700 flex items-center justify-center"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');
+  g.innerHTML=visibleMaps.map(m=>{const isActive=String(travel3DState.linkedMapId)===String(m.id);const isDungeon=m.isDungeon===true;return `<div class="bg-black border-2 ${isActive?'border-mbPink':(isDungeon?'border-mbPurple':'border-mbYellow')} p-2 space-y-2 font-mono text-xs relative">${isActive?'<span class="absolute -top-2 left-2 bg-mbPink text-black font-black text-[9px] px-1.5 py-0.5 uppercase border border-black">TERRENO 3D</span>':''}${isDungeon?'<span class="absolute -top-2 right-2 bg-mbPurple text-black font-black text-[9px] px-1.5 py-0.5 uppercase border border-black">🏰 COMPLETATA</span>':''}<img src="${m.url}" onclick="selectMap(null,'${m.id}')" class="w-full h-28 object-cover border border-gray-800 cursor-pointer hover:opacity-80"><div class="text-white font-bold truncate text-[11px]" title="${escapeHtmlNotes(m.name)}">${escapeHtmlNotes(m.name)}</div><div class="grid grid-cols-3 gap-1"><button onclick="selectMap(null,'${m.id}')" class="py-1 bg-mbYellow text-black font-bold text-[10px] uppercase hover:bg-white">USA</button><button onclick="toggleMapType('${m.id}')" class="py-1 ${isDungeon?'bg-mbPurple text-black':'bg-black border border-mbPurple text-mbPurple'} font-bold text-[10px] uppercase hover:bg-white hover:text-black">🏰</button><button onclick="deleteSavedMap('${m.id}')" class="py-1 bg-red-900 text-white font-bold text-[10px] uppercase hover:bg-red-700 flex items-center justify-center"><i class="fa-solid fa-trash"></i></button></div></div>`;}).join('');
   updateSubtabCounts();
 }
 function renderDungeonMapGallery(){const g=document.getElementById('dungeonMapGallery');if(!g)return;const dm=savedMaps.filter(m=>{
@@ -2227,7 +2227,7 @@ function renderDungeonMapGallery(){const g=document.getElementById('dungeonMapGa
 function updateSubtabCounts(){const c=document.getElementById('subtabMapsCount');if(c)c.innerText=savedMaps.filter(m=>!m.isDungeon||m.dungeonCompletedAt).length;const d=document.getElementById('subtabDungeonBadge');if(d){const n=savedMaps.filter(m=>m.isDungeon===true).length;if(dungeonState.active){d.classList.remove('hidden');d.innerText='ON';d.className='text-[10px] bg-mbPink text-black px-1 font-black animate-pulse';}else if(n>0){d.classList.remove('hidden');d.innerText=n;d.className='text-[10px] bg-mbPurple text-black px-1 font-black';}else d.classList.add('hidden');}}
 function toggleMapType(mapId){const m=savedMaps.find(x=>String(x.id)===String(mapId));if(!m)return;m.isDungeon=!m.isDungeon;if(!m.isDungeon)delete m.dungeonCompletedAt;safeSetItem('morkborg_maps',JSON.stringify(savedMaps));renderMapsGallery();renderDungeonMapGallery();updateSubtabCounts();}
 function deleteSavedMap(id){const m=savedMaps.find(x=>String(x.id)===String(id));if(!m)return;if(!confirm(`Eliminare la mappa "${m.name}"?`))return;savedMaps=savedMaps.filter(x=>String(x.id)!==String(id));safeSetItem('morkborg_maps',JSON.stringify(savedMaps));if(String(travel3DState.linkedMapId)===String(id)){travel3DState.linkedMapId='none';const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value='none';rebuild3DRoute();save3DTravelState();}if(String(travel3DState.dungeonMapId)===String(id)){travel3DState.dungeonMapId=null;save3DTravelState();const dimg=document.getElementById('dungeonMapImg');if(dimg)dimg.src='';const dcanvas=document.getElementById('dungeonFogCanvas');if(dcanvas)dcanvas.classList.add('hidden');}const img=document.getElementById('activeMapImg');if(img&&img.src===m.url){img.src='';img.classList.add('hidden');const stage=document.getElementById('sharedMapStage');const noMap=document.getElementById('noMapText');if(stage)stage.classList.add('hidden');if(noMap)noMap.classList.remove('hidden');}updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();triggerProphecyFlash('🗑️ MAPPA ELIMINATA','fa-trash',1800);}
-function selectMap(url,knownId){let entry=knownId?savedMaps.find(m=>String(m.id)===String(knownId)):savedMaps.find(m=>m.url===url);if(!entry){entry={id:uid(),name:'Mappa',url:url,isDungeon:false};savedMaps.push(entry);safeSetItem('morkborg_maps',JSON.stringify(savedMaps));updateMapDropdownOptions();renderMapsGallery();}const img=document.getElementById('activeMapImg');const stage=document.getElementById('sharedMapStage');const noMap=document.getElementById('noMapText');if(noMap)noMap.classList.add('hidden');if(stage)stage.classList.remove('hidden');if(img){img.src=url;img.classList.remove('hidden');}travel3DState.linkedMapId=String(entry.id);const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value=String(entry.id);rebuild3DRoute();save3DTravelState();renderMapsGallery();if(mpIsHost()&&mpIsConnected()){if(typeof mpSetSharedMap==='function')mpSetSharedMap(entry);}renderMapTokens();}
+function selectMap(url,knownId){let entry=knownId?savedMaps.find(m=>String(m.id)===String(knownId)):savedMaps.find(m=>m.url===url);if(!entry&&!url)return;if(!entry){entry={id:uid(),name:'Mappa',url:url,isDungeon:false};savedMaps.push(entry);safeSetItem('morkborg_maps',JSON.stringify(savedMaps));updateMapDropdownOptions();renderMapsGallery();}const finalUrl=url||entry.url;const img=document.getElementById('activeMapImg');const stage=document.getElementById('sharedMapStage');const noMap=document.getElementById('noMapText');if(noMap)noMap.classList.add('hidden');if(stage)stage.classList.remove('hidden');if(img){img.src=finalUrl;img.classList.remove('hidden');}travel3DState.linkedMapId=String(entry.id);const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value=String(entry.id);rebuild3DRoute();save3DTravelState();renderMapsGallery();if(mpIsHost()&&mpIsConnected()){if(typeof mpSetSharedMap==='function')mpSetSharedMap(entry);}renderMapTokens();}
 function updateMapDropdownOptions(){const s=document.getElementById('travelLinkedMapSelect');if(!s)return;let h='<option value="none">-- Griglia Standard --</option>';savedMaps.forEach(m=>{
   if(m.isDungeon && !m.dungeonCompletedAt) return;   // nascondi dungeon non completati
   if(m.ghost && !m.dungeonCompletedAt) return;        // nascondi fantasmi
@@ -2271,7 +2271,7 @@ function updateDungeonUI(){
   const notes=document.getElementById('dungeonFreeNotes');
   if(btn){if(mpIsHost()||!mpIsConnected()){btn.disabled=false;btn.innerText=dungeonState.active?'DISATTIVA MODALITÀ':'ATTIVA MODALITÀ';btn.className=dungeonState.active?'px-3 py-1.5 bg-red-700 text-white font-mono font-bold text-xs hover:bg-red-500 uppercase':'px-3 py-1.5 bg-mbPurple text-black font-mono font-bold text-xs hover:bg-white uppercase';}else{btn.disabled=true;btn.innerText=dungeonState.active?'🏰 DUNGEON ATTIVO':'IN ATTESA MASTER';btn.className='px-3 py-1.5 bg-black border border-mbPurple text-mbPurple font-mono font-bold text-xs uppercase cursor-not-allowed';}}
   if(dungeonState.active){if(ctrl)ctrl.classList.remove('hidden');if(empty)empty.classList.add('hidden');if(mapContainer)mapContainer.classList.remove('hidden');}else{if(ctrl)ctrl.classList.add('hidden');if(empty)empty.classList.remove('hidden');if(mapContainer)mapContainer.classList.add('hidden');}
-  if(cntE)cntE.innerText=dungeonState.encounters.length;
+  if(cntE)cntE.innerText=dungeonState.encounters.filter(e=>mpIsHost()||!e.hidden).length;
   if(cntP)cntP.innerText=dungeonState.revealedPoints.length;
   if(rad)rad.value=dungeonState.radius;
   if(radV)radV.innerText=dungeonState.radius+'%';
@@ -2286,7 +2286,7 @@ function updateDungeonUI(){
   redrawFog();renderDungeonEncountersList();updateSubtabCounts();
 }
 function toggleDungeonMode(){if(mpIsConnected()&&!mpIsHost())return;if(!dungeonState.active){syncDungeonMapFromActive();const img=document.getElementById('dungeonMapImg');if(!img||!img.src){alert('Carica o seleziona una mappa dungeon prima!');return;}if(travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.dungeonCompletedAt){delete dm.dungeonCompletedAt;safeSetItem('morkborg_maps',JSON.stringify(savedMaps));renderMapsGallery();renderDungeonMapGallery();updateSubtabCounts();}}
-dungeonState.active=true;dungeonState.startedAt=Date.now();
+if(travel3DState.dungeonMapId)dungeonLoadFromMap(travel3DState.dungeonMapId); dungeonState.active=true;dungeonState.startedAt=Date.now();
 /* FIX: nessun auto-reveal - la mappa resta completamente nera finché il Master non clicca */
 setTimeout(()=>{setupFogCanvas();redrawFog();renderMapTokens();},100);
 triggerProphecyFlash('🏰 DUNGEON ATTIVO — La mappa è coperta','fa-dungeon');}else{if(!confirm('Chiudere la sessione dungeon?'))return;archiveDungeonSession();dungeonState.active=false;triggerProphecyFlash('🚪 DUNGEON CHIUSO','fa-door-open',2000);}saveDungeonState();updateDungeonUI();renderMapTokens();if(typeof mpNotifyStateChange==='function')mpNotifyStateChange();}
@@ -2616,20 +2616,20 @@ function addConditionPreset(n,d,e){if(!Array.isArray(state.conditions))state.con
 function addCustomCondition(){const n=document.getElementById('newCondName').value.trim();const d=document.getElementById('newCondDuration').value.trim()||'1 Turno';const e=document.getElementById('newCondEffect').value.trim()||'Effetto non specificato';if(!n)return;if(!Array.isArray(state.conditions))state.conditions=[];state.conditions.push({id:uid(),name:n,duration:d,effect:e});document.getElementById('newCondName').value='';saveState();}
 function deleteCondition(id){state.conditions=state.conditions.filter(c=>c.id!==id);saveState();}
 function renderConditions(){const h=document.getElementById('headerConditionBadge'),l=document.getElementById('conditionsListContainer');if(!Array.isArray(state.conditions))state.conditions=[];if(h){if(state.conditions.length===0)h.innerHTML='<span class="px-2 py-0.5 bg-green-950 text-green-400 border border-green-600 font-bold text-[11px] flex items-center space-x-1"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span><span>IN SALUTE</span></span>';else h.innerHTML=state.conditions.map(c=>`<span class="px-2 py-0.5 bg-mbPink text-black font-black text-[11px] flex items-center space-x-1 uppercase animate-pulse border border-white"><i class="fa-solid fa-triangle-exclamation"></i><span>${c.name}</span></span>`).join('');}if(l){if(state.conditions.length===0){l.innerHTML='<div class="font-mono text-xs text-green-400 italic p-2 border border-green-900 bg-green-950/20">🟢 Nessuno stato alterato.</div>';return;}l.innerHTML=state.conditions.map(c=>`<div class="p-2 bg-black border-2 border-mbPink flex items-center justify-between gap-2 font-mono text-xs"><div><span class="font-bold text-mbPink">${c.name} (${c.duration})</span> <p class="text-gray-300 text-[11px]">${c.effect}</p></div><button onclick="deleteCondition(${c.id})" class="px-2 py-1 bg-green-600 text-white font-bold text-[10px]">✓ CURATO</button></div>`).join('');}}
-function insertNoteTimestamp(){const a=document.getElementById('notesArea');if(!a)return;a.value+=`\n\n--- SESSIONE ${state.sessionNumber||1} [${new Date().toLocaleString('it-IT')}] ---\n`;saveNotes();}
+
 function switchTab(t){
   document.querySelectorAll('.tab-view').forEach(v=>v.classList.add('hidden'));
   document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active','border-b-2','border-mbYellow','text-mbYellow','bg-mbPanel');b.classList.add('text-gray-400');});
   document.getElementById(`view-${t}`)?.classList.remove('hidden');
   document.getElementById(`tab-${t}`)?.classList.add('active','border-b-2','border-mbYellow','text-mbYellow','bg-mbPanel');
   if(t==='travel3d')setTimeout(()=>{init3DTravelViewport();rebuild3DRoute();render3DTrackedResources();applyMasterOnly3DState();},50);
-  else if(t==='ar'){setTimeout(()=>{initThreeJS();resizeARRenderer();},60);}
+ 
   else if(t==='monsters'){updateMonsterJourneyDropdownFilter();populateMonsterJourneySelects();renderBestiary();}
   else if(t==='notes')syncNotesViewUI();
   else if(t==='maps'){updateSubtabCounts();updateDungeonUI();if(currentMapSubtab==='dungeon'){renderDungeonMapGallery();syncDungeonMapFromActive();setTimeout(()=>{setupFogCanvas();redrawFog();renderMapTokens();},80);}}
 }
 function modifyHP(d){state.hp=Math.max(0,Math.min(state.maxHp,state.hp+d));document.getElementById('inputHp').value=state.hp;saveState();if(d<0)triggerDamageFX();else if(d>0)triggerHealFX();}
-function modifyMaxHP(d){state.maxHp=Math.max(1,state.maxHp+d);document.getElementById('inputMaxHp').value=state.maxHp;if(state.hp>state.maxHp)state.hp=state.maxHp;saveState();}
+function modifyMaxHP(d){state.maxHp=Math.max(1,state.maxHp+d);document.getElementById('inputMaxHp').value=state.maxHp;if(state.hp>state.maxHp){state.hp=state.maxHp;document.getElementById('inputHp').value=state.hp;}saveState();}
 function modifyMaxOmens(d){const c=parseInt(document.getElementById('inputMaxOmens').value)||1;document.getElementById('inputMaxOmens').value=Math.max(1,Math.min(12,c+d));updateMaxOmensFromInput();}
 function updateMaxOmensFromInput(){const v=parseInt(document.getElementById('inputMaxOmens').value)||1;state.maxOmens=Math.max(1,Math.min(12,v));if(!Array.isArray(state.omens))state.omens=[];while(state.omens.length<state.maxOmens)state.omens.push(true);if(state.omens.length>state.maxOmens)state.omens=state.omens.slice(0,state.maxOmens);saveState();updateOmensUI();}
 function modifySilver(d){state.silver=Math.max(0,(parseInt(state.silver)||0)+d);document.getElementById('inputSilver').value=state.silver;saveState();}
@@ -2637,44 +2637,6 @@ function modifyBaseSlots(d){state.baseSlots=Math.max(1,(parseInt(state.baseSlots
 function modifyBonusSlots(d){state.bonusSlots=Math.max(0,(parseInt(state.bonusSlots)||0)+d);document.getElementById('inputBonusSlots').value=state.bonusSlots;saveState();}
 function changeInputValue(id,d,m=0){const e=document.getElementById(id);if(!e)return;let v=parseInt(e.value);if(isNaN(v))v=m;e.value=Math.max(m,v+d);}
 function updateCharacterDisplays(){const mH=Math.max(1,state.maxHp||1);const p=Math.max(0,Math.min(100,((state.hp||0)/mH)*100));const ah=document.getElementById('arHpDisplay'),ab=document.getElementById('arHpBar'),cb=document.getElementById('charHpBar');if(ah)ah.innerText=`${state.hp||0} / ${mH}`;if(ab)ab.style.width=`${p}%`;if(cb)cb.style.width=`${p}%`;const ao=document.getElementById('arOmensDisplay');if(ao&&Array.isArray(state.omens)){const a=state.omens.filter(Boolean).length;ao.innerText=`${a} / ${state.maxOmens||state.omens.length}`;}const sd=document.querySelectorAll('.stat-display-num');let ct=2;if(mH>15)ct=5;else if(mH>=8)ct=3;const ic=(state.hp<=ct);if(ic&&state.visualSettings&&state.visualSettings.critGlitch)sd.forEach(e=>e.classList.add('crit-glitch-text'));else sd.forEach(e=>e.classList.remove('crit-glitch-text'));}
-let realCamStream=null,currentSimMarker='character';
-async function toggleRealCamera(){const v=document.getElementById('webcamVideo'),b=document.getElementById('toggleRealCamBtn'),l=document.getElementById('camBtnLabel'),s=document.getElementById('camStatusText');if(!v)return;if(realCamStream){realCamStream.getTracks().forEach(t=>t.stop());realCamStream=null;v.srcObject=null;v.classList.add('hidden');if(l)l.innerText='ATTIVA CAM';if(s)s.innerText='MODALITÀ: SIMULATORE AR';if(b)b.classList.remove('bg-red-600');return;}try{if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert('Fotocamera non supportata.');return;}realCamStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});v.srcObject=realCamStream;v.classList.remove('hidden');if(l)l.innerText='DISATTIVA';if(s)s.innerText='MODALITÀ: FOTOCAMERA ATTIVA';if(b)b.classList.add('bg-red-600');}catch(e){alert('Impossibile accedere alla fotocamera.');realCamStream=null;}}
-function changeSimulatedMarker(v){currentSimMarker=v||'character';const t=document.getElementById('arHudTitle');if(!t)return;if(currentSimMarker==='map')t.innerText='MAPPA AR';else if(currentSimMarker==='monster')t.innerText='MOSTRO AR';else t.innerText='PG AR';updateCharacterDisplays();}
-
-let scene,camera,renderer,markerMesh,arInitialized=false;
-function initThreeJS(){
-  if(arInitialized)return;
-  const c=document.getElementById('threeContainer');
-  if(!c)return;
-  const w=c.clientWidth||c.offsetWidth,h=c.clientHeight||c.offsetHeight;
-  if(w===0||h===0)return;
-  arInitialized=true;
-  scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(60,w/h,.1,1000);
-  camera.position.set(0,2,4);
-  camera.lookAt(0,0,0);
-  renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  renderer.setSize(w,h);
-  c.appendChild(renderer.domElement);
-  const g=new THREE.PlaneGeometry(2.5,2.5);
-  const m=new THREE.MeshBasicMaterial({color:0x111111,side:THREE.DoubleSide});
-  markerMesh=new THREE.Mesh(g,m);
-  markerMesh.rotation.x=-Math.PI/2;
-  scene.add(markerMesh);
-  animateThree();
-}
-function resizeARRenderer(){
-  if(!renderer||!camera)return;
-  const c=document.getElementById('threeContainer');
-  if(!c)return;
-  const w=c.clientWidth,h=c.clientHeight;
-  if(w===0||h===0)return;
-  renderer.setSize(w,h);
-  camera.aspect=w/h;
-  camera.updateProjectionMatrix();
-}
-function animateThree(){requestAnimationFrame(animateThree);if(markerMesh)markerMesh.rotation.z+=.003;if(renderer&&scene&&camera)renderer.render(scene,camera);}
 function exportAllData(){
   const payload={
     version:1,
@@ -2749,7 +2711,7 @@ function importAllData(){
 function downloadExportCode(){
   const clone=document.documentElement.cloneNode(true);
   clone.querySelectorAll('textarea').forEach(el=>{el.textContent='';});
-  ['inventoryContainer','powersContainer','conditionsListContainer','bestiaryContainer','psalmsListContainer','gmEventsLogContainer','mapGallery','dungeonMapGallery','dungeonEncountersList','allNotesListContainer','omensContainer','roomPlayersList','mapTokensLayer','dungeonTokensLayer'].forEach(id=>{const el=clone.querySelector('#'+id);if(el)el.innerHTML='';});
+  ['inventoryContainer','trackedResources3DContainer','powersContainer','conditionsListContainer','bestiaryContainer','psalmsListContainer','gmEventsLogContainer','mapGallery','dungeonMapGallery','dungeonEncountersList','journeyNotesList','allNotesListContainer','omensContainer','roomPlayersList','mapTokensLayer','dungeonTokensLayer'].forEach(id=>{const el=clone.querySelector('#'+id);if(el)el.innerHTML='';});
   clone.querySelectorAll('#activeMapImg,#dungeonMapImg,#webcamVideo').forEach(el=>el.removeAttribute('src'));
  clone.querySelectorAll('#threeTravelViewport').forEach(el=>el.removeAttribute('data-marker-init'));
   clone.querySelectorAll('canvas').forEach(el=>{if(!el.id)el.remove();});
@@ -2825,14 +2787,14 @@ function mpWsSend(o){
     return true;
   }catch(e){return false;}
 }
-function mpBroadcastToRoom(payload){if(!mpRoomCode||!mpAuthOk)return;mpWsSend({to:mpRoomChannel(mpRoomCode),mb:JSON.stringify(payload)});}
+function mpBroadcastToRoom(payload){if(!mpRoomCode||!mpAuthOk)return;payload._sender=mpMyId;mpWsSend({to:mpRoomChannel(mpRoomCode),mb:JSON.stringify(payload)});}
 /* ===== HEARTBEAT (battito cardiaco) ===== */
 let mpHeartbeatTimer=null;
 function startHeartbeat(){
   if(mpHeartbeatTimer)clearInterval(mpHeartbeatTimer);
   mpHeartbeatTimer=setInterval(function(){
     if(mpWs&&mpWs.readyState===1&&mpRoomCode&&mpAuthOk){
-      mpWsSend({to:mpRoomChannel(mpRoomCode),mb:JSON.stringify({type:'ping'})});
+      mpBroadcastToRoom({type:'ping'});
     }
   },28000);
 }
@@ -2872,7 +2834,7 @@ if(data.auth){
   if(data.SID!=null&&(data.mb==null||data.mb==='')){if(!mpMySid)mpMySid=data.SID;return;}
   if(data.FROM&&mpMySid&&data.FROM===mpMySid)return;
   let payload=null;if(typeof data.mb==='string'){try{payload=JSON.parse(data.mb);}catch(e){return;}}else if(data.mb&&typeof data.mb==='object')payload=data.mb;else if(data.msg&&typeof data.msg==='object')payload=data.msg;
-  if(!payload||!payload.type)return;
+  if(!payload||!payload.type||payload._sender===mpMyId)return;
   if(payload.type==='hello'&&payload.player){const p=payload.player;if(!p.id)return;if(!mpPlayers[p.id]){const u=Object.values(mpPlayers).map(x=>x.color);p.color=p.color||MP_COLORS.find(c=>!u.includes(c))||MP_COLORS[0];}mpPlayers[p.id]=Object.assign({},mpPlayers[p.id]||{},p);mpUpdateRoomUI();renderMapTokens();if(mpIsHost()){mpHostBroadcast();if(mpShared.map&&mpShared.map.url){setTimeout(()=>mpSendMapToRoom(mpShared.map),500);}else{try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src){const found=savedMaps.find(m=>m.url===ai.src);const m=found||{id:uid(),name:'Mappa',url:ai.src};mpShared.map={id:String(m.id),name:m.name,url:m.url};setTimeout(()=>mpSendMapToRoom(m),500);}}catch(e){}}}return;}
   if(payload.type==='sync'){
   if(payload.players){
@@ -2887,7 +2849,7 @@ if(data.auth){
       myServerSide.tokenY=(myLocal.tokenY!=null)?myLocal.tokenY:.5;
     }
   }
-   if(payload.shared){mpShared=payload.shared;if(!mpIsHost())mpApplySharedState(payload.shared);}
+   if(payload.shared&&!mpIsHost()){mpShared=payload.shared;mpApplySharedState(payload.shared);}
   mpRenderPlayersList();renderMapTokens();return;
 }
   if(payload.type==='hostReturn'){
@@ -2979,22 +2941,22 @@ if(payload.type==='ping'){
   return;
 }
   if(payload.type==='leave'&&payload.id){delete mpPlayers[payload.id];mpUpdateRoomUI();renderMapTokens();return;}
-  if(payload.type==='mapChunk'&&payload.mapId!=null&&payload.index!=null){let b=mpMapChunks[payload.mapId];if(!b)b=mpMapChunks[payload.mapId]={total:0,name:'Mappa',parts:[],received:0};if(b.parts[payload.index]===undefined){b.parts[payload.index]=payload.data||'';b.received=b.parts.filter(x=>typeof x==='string').length;}return;}
- if(payload.type==='mapStart'){mpMapChunks[payload.mapId]={total:payload.total||1,name:payload.name||'Mappa',parts:new Array(payload.total||1),received:0,isDungeon:!!payload.isDungeon};return;}
+  if(payload.type==='mapChunk'&&payload.mapId!=null&&payload.index!=null){let b=mpMapChunks[payload.mapId];if(!b)b=mpMapChunks[payload.mapId]={total:payload.total||1,name:payload.name||'Mappa',parts:new Array(payload.total||1),received:0,isDungeon:!!payload.isDungeon};if(payload.total&&!b.total)b.total=payload.total;if(payload.isDungeon!==undefined)b.isDungeon=!!payload.isDungeon;if(b.parts[payload.index]===undefined){b.parts[payload.index]=payload.data||'';b.received=b.parts.filter(x=>typeof x==='string').length;}return;}
+ if(payload.type==='mapStart'){const ex=mpMapChunks[payload.mapId];if(!ex||ex.total!==payload.total){mpMapChunks[payload.mapId]={total:payload.total||1,name:payload.name||'Mappa',parts:new Array(payload.total||1),received:0,isDungeon:!!payload.isDungeon};}return;}
   if(payload.type==='mapEnd'&&payload.mapId!=null){const b=mpMapChunks[payload.mapId];if(!b)return;const rec=b.parts.filter(x=>typeof x==='string').length;if(b.total&&rec<b.total){const m=[];for(let i=0;i<b.total;i++)if(typeof b.parts[i]!=='string')m.push(i);mpBroadcastToRoom({type:'mapNack',mapId:payload.mapId,missing:m});return;}const url=b.parts.join('');if(!url||url.length<30){delete mpMapChunks[payload.mapId];return;}mpShared.map={id:payload.mapId,name:b.name||'Mappa',url:url,isDungeon:!!b.isDungeon};if(!mpIsHost())mpApplyReceivedMap(payload.mapId,b.name||'Mappa',url,b.isDungeon);triggerProphecyFlash('🗺️ MAPPA CARICATA','fa-map',1500);delete mpMapChunks[payload.mapId];return;}
   if(payload.type==='mapRemoteUrl'){if(payload.url){mpApplyReceivedMap(payload.id||'remote',payload.name||'Mappa Remota',payload.url);mpSetStatus('✅ URL mappa ricevuto');}return;}
-  if(payload.type==='mapNack'&&mpIsHost()&&payload.mapId!=null){const map=mpShared.map;if(!map||String(map.id)!==String(payload.mapId))return;const CH=8000;(payload.missing||[]).forEach(idx=>{const part=map.url.substr(idx*CH,CH);mpBroadcastToRoom({type:'mapChunk',mapId:map.id,index:idx,data:part});});setTimeout(()=>mpBroadcastToRoom({type:'mapEnd',mapId:map.id}),300);return;}
-  if(payload.type==='mapRequest'&&mpIsHost()){if(mpShared.map){mpSendMapToRoom(mpShared.map);}else{try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src){const found=savedMaps.find(m=>m.url===ai.src);const m=found||{id:uid(),name:'Mappa',url:ai.src};mpSendMapToRoom(m);}}catch(e){}}return;}
+  if(payload.type==='mapNack'&&mpIsHost()&&payload.mapId!=null){const map=mpShared.map;if(!map||String(map.id)!==String(payload.mapId))return;const CH=3500;const list=payload.missing||[];let k=0;(function resend(){if(k>=list.length){setTimeout(()=>mpBroadcastToRoom({type:'mapEnd',mapId:map.id}),150);return;}const idx=list[k++];const part=map.url.substr(idx*CH,CH);mpBroadcastToRoom({type:'mapChunk',mapId:map.id,index:idx,data:part,isDungeon:!!map.isDungeon});setTimeout(resend,60);})();return;}
+  if(payload.type==='mapRequest'&&mpIsHost()){if(mpShared.map&&mpShared.map.url){mpSendMapToRoom(mpShared.map);}else{mpForceSendMap();}return;}
 }
 function mpCreateRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomHostNameInput').value||state.name||'Master').trim();mpMyName=name;const code=mpGenerateCode();mpRoomCode=code;mpRole='host';mpMyId='host-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;mpSaveSession();
 mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel=JSON.parse(JSON.stringify(travel3DState));}catch(e){}
 try{const ai=document.getElementById('activeMapImg');if(ai&&ai.src&&ai.src.indexOf('data:')===0){const found=savedMaps.find(m=>m.url===ai.src);if(found)mpShared.map={id:String(found.id),name:found.name||'Mappa',url:found.url,isDungeon:!!found.isDungeon};}}catch(e){}
 /* FIX: se c'è una mappa dungeon attiva, mettila subito in mpShared.map */
-try{if(travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.url)mpShared.map={id:String(dm.id),name:dm.name||'Dungeon',url:dm.url,isDungeon:true};}}catch(e){}mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;startHeartbeat();mpSetStatus('✅ Stanza attiva — '+code);mpPlayers[mpMyId]=mpBuildPlayerSnapshot({isHost:true,color:MP_COLORS[0]});mpUpdateRoomUI();mpHostBroadcast();triggerProphecyFlash('👑 STANZA: '+code,'fa-users');}},1500);});}
+try{if(dungeonState.active&&travel3DState.dungeonMapId){const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));if(dm&&dm.url)mpShared.map={id:String(dm.id),name:dm.name||'Dungeon',url:dm.url,isDungeon:true};}}catch(e){}mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;startHeartbeat();mpSetStatus('✅ Stanza attiva — '+code);mpPlayers[mpMyId]=mpBuildPlayerSnapshot({isHost:true,color:MP_COLORS[0]});mpUpdateRoomUI();mpHostBroadcast();triggerProphecyFlash('👑 STANZA: '+code,'fa-users');}},1500);});}
 function mpJoinRoom(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').catch(()=>{});}const name=(document.getElementById('roomJoinNameInput').value||state.name||'Player').trim();const code=(document.getElementById('roomCodeInput').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code||code.length<4){alert('Inserisci codice (4 caratteri).');return;}mpMyName=name;mpRoomCode=code;mpRole='client';mpMyId='p-'+code+'-'+Math.random().toString(36).slice(2,7);mpPlayers={};mpAuthOk=false;mpSaveSession();
 mpConnectWs(()=>{const ch=mpRoomChannel(code);mpWsSend({setID:ch,passwd:'morkborg'});setTimeout(()=>{if(!mpAuthOk){mpAuthOk=true;startHeartbeat();mpSetStatus('✅ Connesso — '+code);const snap=mpBuildPlayerSnapshot({isHost:false});mpPlayers[mpMyId]=snap;mpBroadcastToRoom({type:'hello',player:snap});setTimeout(()=>mpBroadcastToRoom({type:'mapRequest'}),800);mpUpdateRoomUI();triggerProphecyFlash('🎲 STANZA '+code,'fa-users',2000);}},1500);});}
 function mpApplySharedState(shared){
-if(!shared)return;if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}applyMasterOnly3DState();if(shared.weather&&shared.weather!==state.currentWeather){state.currentWeather=shared.weather;const s=document.getElementById('weatherQuickSelect');if(s)s.value=shared.weather;}if(typeof shared.darknessActive==='boolean'&&shared.darknessActive!==state.darknessActive){state.darknessActive=shared.darknessActive;updateDarknessUI();}if(shared.map&&shared.map.url)mpApplyReceivedMap(shared.map.id,shared.map.name||'Mappa',shared.map.url,!!shared.map.isDungeon);const __now=Date.now();
+if(!shared)return;if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}applyMasterOnly3DState();if(shared.weather&&shared.weather!==state.currentWeather){state.currentWeather=shared.weather;const s=document.getElementById('weatherQuickSelect');if(s)s.value=shared.weather;}if(typeof shared.darknessActive==='boolean'&&shared.darknessActive!==state.darknessActive){state.darknessActive=shared.darknessActive;updateDarknessUI();}if(shared.map){if(shared.map.url){mpApplyReceivedMap(shared.map.id,shared.map.name||'Mappa',shared.map.url,!!shared.map.isDungeon);}else if(shared.map.needsChunks&&!mpIsHost()){const have=savedMaps.find(m=>String(m.id)===String(shared.map.id)&&m.url&&m.url.length>100);if(have){mpApplyReceivedMap(have.id,have.name,have.url,!!shared.map.isDungeon);}else if(!mpMapChunks[shared.map.id]&&(!window.__lastMapReq||Date.now()-window.__lastMapReq>5000)){window.__lastMapReq=Date.now();mpBroadcastToRoom({type:'mapRequest'});}}}const __now=Date.now();
 const lockTravel=!mpIsHost() && __now<mpClientTravelLockUntil;
 const lockNotes=!mpIsHost() && __now<mpClientNotesLockUntil;
 
@@ -3003,7 +2965,7 @@ if(!mpIsHost()&&shared.travel){
     
     const incomingCompleted=shared.travel.dungeonCompletedAt;
 
-    if(!lockTravel){
+    if(masterOnly3D && !lockTravel){
       const __before=JSON.stringify({p:travel3DState.currentPhase,d:travel3DState.currentDay,id:travel3DState.id,cp:(travel3DState.customPoints||[]).length,ev:(travel3DState.events||[]).length,lm:travel3DState.linkedMapId,dm:travel3DState.dungeonMapId});
       travel3DState=Object.assign({},travel3DState,shared.travel);
       const __after=JSON.stringify({p:travel3DState.currentPhase,d:travel3DState.currentDay,id:travel3DState.id,cp:(travel3DState.customPoints||[]).length,ev:(travel3DState.events||[]).length,lm:travel3DState.linkedMapId,dm:travel3DState.dungeonMapId});
@@ -3088,30 +3050,41 @@ if(!mpIsHost()&&shared.dungeon){
   }
  }
 }
-function mpHostBroadcast(){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel={id:travel3DState.id,origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId,events:travel3DState.events,dungeonCompletedAt:(()=>{try{const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));return dm&&dm.dungeonCompletedAt?dm.dungeonCompletedAt:null;}catch(e){return null;}})()};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};let mapOut=null;try{if(mpShared.map&&mpShared.map.url&&mpShared.map.url.length<60000)mapOut=mpShared.map;else if(mpShared.map)mapOut={id:mpShared.map.id,name:mpShared.map.name,url:null,needsChunks:true,isDungeon:!!mpShared.map.isDungeon};}catch(e){}mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:{weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,dungeon:dungeonOut,masterOnly3D:masterOnly3D}});mpRenderPlayersList();renderMapTokens();}
+function mpHostBroadcast(){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;try{mpShared.travel={id:travel3DState.id,origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId,events:travel3DState.events,dungeonCompletedAt:(()=>{try{const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));return dm&&dm.dungeonCompletedAt?dm.dungeonCompletedAt:null;}catch(e){return null;}})()};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};let mapOut=null; if(mpShared.map){   mapOut={id:mpShared.map.id,name:mpShared.map.name,url:null,needsChunks:true,isDungeon:!!mpShared.map.isDungeon}; }mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:{weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,dungeon:dungeonOut,masterOnly3D:masterOnly3D}});mpRenderPlayersList();renderMapTokens();}
 function mpCompressMapUrl(dataUrl,maxW,quality,cb){try{if(!dataUrl||dataUrl.indexOf('data:image')!==0){cb(dataUrl);return;}const img=new Image();img.onload=function(){try{const enc=(w,q)=>{let tw=img.width,th=img.height;if(tw>w){th=Math.round(th*(w/tw));tw=w;}const c=document.createElement('canvas');c.width=tw;c.height=th;c.getContext('2d').drawImage(img,0,0,tw,th);return c.toDataURL('image/jpeg',q);};let out=enc(maxW,quality);if(out.length>120000)out=enc(Math.min(maxW,800),.45);if(out.length>200000)out=enc(Math.min(maxW,600),.38);cb(out&&out.length<dataUrl.length?out:dataUrl);}catch(e){cb(dataUrl);}};img.onerror=()=>cb(dataUrl);img.src=dataUrl;}catch(e){cb(dataUrl);}}
+let __mpSendingMapId=null,__mpSendSeq=0;
 function mpSendMapToRoom(mapObj, onComplete){
   if(!mapObj||!mapObj.url||!mpAuthOk||!mpIsHost())return;
-  console.log('[MP-INVIO]',{id:mapObj.id,name:mapObj.name,isDungeon:mapObj.isDungeon});  mpCompressMapUrl(mapObj.url,800,.5,function(url){
-    const mapId=String(mapObj.id||uid());
+  const targetId=String(mapObj.id||uid());
+  if(__mpSendingMapId===targetId)return;
+  __mpSendingMapId=targetId;
+  const mySeq=++__mpSendSeq;
+  const unlockTimer=setTimeout(()=>{if(__mpSendSeq===mySeq)__mpSendingMapId=null;},12000);
+  mpCompressMapUrl(mapObj.url,750,0.45,function(url){
+    if(__mpSendSeq!==mySeq)return;
     const name=mapObj.name||'Mappa';
     const isDungeon=!!mapObj.isDungeon;
-    mpShared.map={id:mapId,name:name,url:url,isDungeon:isDungeon};
-    const CHUNK=8000;const total=Math.ceil(url.length/CHUNK)||1;
-    mpBroadcastToRoom({type:'mapStart',mapId,name,total,length:url.length,isDungeon:isDungeon});
+    mpShared.map={id:targetId,name:name,url:url,isDungeon:isDungeon};
+    const CHUNK=3500;
+    const total=Math.ceil(url.length/CHUNK)||1;
+    mpBroadcastToRoom({type:'mapStart',mapId:targetId,name,total,length:url.length,isDungeon:isDungeon});
     let i=0;
     (function burst(){
+      if(__mpSendSeq!==mySeq)return;
       if(i>=total){
+        clearTimeout(unlockTimer);
+        __mpSendingMapId=null;
         setTimeout(()=>{
-          mpBroadcastToRoom({type:'mapEnd',mapId});
-          if(onComplete) onComplete(); // <-- NOVITÀ: esegue la callback alla fine
-        },100);
+          mpBroadcastToRoom({type:'mapEnd',mapId:targetId,total,name,isDungeon});
+          if(onComplete) onComplete();
+        },180);
         triggerProphecyFlash('🗺️ MAPPA SINCRONIZZATA','fa-map',1500);
         return;
       }
       const part=url.substr(i*CHUNK,CHUNK);
-      mpBroadcastToRoom({type:'mapChunk',mapId,index:i,data:part});
-      i++;setTimeout(burst,15);
+      mpBroadcastToRoom({type:'mapChunk',mapId:targetId,index:i,total,name,isDungeon,data:part});
+      i++;
+      setTimeout(burst,60);
     })();
   });
 }
@@ -3142,9 +3115,8 @@ function mpApplyReceivedMap(mapId,name,url,isDungeonFromHost){
   }
   console.log('[MP-MAP] Ricevuta:',{mapId,name,isDungeonFromHost,isDun,isHost:mpIsHost()});  
  if(mapId){
-    const ex=savedMaps.some(m=>String(m.id)===String(mapId));
-    const exByUrl=savedMaps.some(m=>m.url===url);
-    if(!ex && !exByUrl){
+const ex=savedMaps.some(m=>String(m.id)===String(mapId));
+    if(!ex){
 savedMaps.push({id:mapId,name:name||'Mappa',url:url,isDungeon:isDun,ghost:isDun});
 const __ok=safeSetItem('morkborg_maps',JSON.stringify(savedMaps));
 if(!__ok){
@@ -3185,7 +3157,7 @@ if(!__ok){
       }
       travel3DState.dungeonMapId=String(mapId);
       const dimg=document.getElementById('dungeonMapImg');
-      if(dimg&&dungeonState.active)dimg.src=url;
+      if(dimg)dimg.src=url;
       const dcanvas=document.getElementById('dungeonFogCanvas');
       if(dcanvas&&dungeonState.active)dcanvas.classList.remove('hidden');
       setupFogCanvas();
@@ -3201,14 +3173,14 @@ if(!__ok){
   if(noMap)noMap.classList.add('hidden');
   if(stage)stage.classList.remove('hidden');
   if(img){if(img.src!==url)img.src=url;img.classList.remove('hidden');}
-  if(mapId&&(!travel3DState.linkedMapId||travel3DState.linkedMapId==='none'||String(travel3DState.linkedMapId)===String(mapId))){
+  if(mapId){
     travel3DState.linkedMapId=String(mapId);
     const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value=String(mapId);
   }
    rebuild3DRoute();
   safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));
   renderMapsGallery();renderMapTokens();updateSubtabCounts();
-}function mpSetSharedMap(mapObj){if(!mpIsHost()||!mapObj)return;mpShared.map={id:mapObj.id,name:mapObj.name,url:mapObj.url,isDungeon:!!mapObj.isDungeon};mpHostBroadcast();mpSendMapToRoom(mapObj);}function mpForceSendMap(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}const img=document.getElementById('activeMapImg');let url=(mpShared.map&&mpShared.map.url)||(img&&img.src)||'';if(!url||url===window.location.href){alert('Seleziona prima una mappa.');return;}const found=savedMaps.find(m=>m.url===url);mpSendMapToRoom(found||{id:uid(),name:'Mappa',url:url});}
+}function mpSetSharedMap(mapObj){if(!mpIsHost()||!mapObj)return;mpShared.map={id:mapObj.id,name:mapObj.name,url:mapObj.url,isDungeon:!!mapObj.isDungeon};mpHostBroadcast();mpSendMapToRoom(mapObj);}function mpForceSendMap(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}let found=null;if(currentMapSubtab==='dungeon'&&travel3DState.dungeonMapId){found=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));}if(!found&&travel3DState.linkedMapId&&travel3DState.linkedMapId!=='none'){found=savedMaps.find(m=>String(m.id)===String(travel3DState.linkedMapId));}if(!found&&mpShared.map&&mpShared.map.id){found=savedMaps.find(m=>String(m.id)===String(mpShared.map.id));}if(!found){const img=document.getElementById('activeMapImg');const url=(img&&img.src)||'';if(!url||url===window.location.href){alert('Seleziona prima una mappa.');return;}found=savedMaps.find(m=>m.url===url)||{id:uid(),name:'Mappa',url:url,isDungeon:false};}mpSendMapToRoom(found);}
 function mpRequestMapNow(){if(!mpIsConnected()){alert('Non sei in una stanza.');return;}mpBroadcastToRoom({type:'mapRequest'});mpSetStatus('🔄 Richiesta mappa inviata...');}
 function mpShowRemoteMapPanel(){const p=document.getElementById('mpRemoteMapPanel');if(p)p.classList.toggle('hidden');}
 function mpSendRemoteMapUrl(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}const u=(document.getElementById('mpRemoteMapUrl')&&document.getElementById('mpRemoteMapUrl').value||'').trim();if(!u||u.indexOf('http')!==0){alert('Inserisci un URL valido.');return;}mpShared.map={id:'remote_'+uid(),name:'Mappa Remota',url:u};mpBroadcastToRoom({type:'mapRemoteUrl',id:mpShared.map.id,name:mpShared.map.name,url:u});mpApplyReceivedMap(mpShared.map.id,mpShared.map.name,u,false);mpSetStatus('✅ URL mappa inviato');}
@@ -3258,11 +3230,7 @@ function __renderMapTokensNow(){
   }
 }  
 
-function mpOnMapClick(e){if(!mpIsConnected())return;const img=document.getElementById('activeMapImg');if(!img||img.classList.contains('hidden'))return;const rect=img.getBoundingClientRect();const x=(e.clientX-rect.left)/rect.width,y=(e.clientY-rect.top)/rect.height;if(x<0||x>1||y<0||y>1)return;if(mpPlayers[mpMyId]){mpPlayers[mpMyId].tokenX=x;mpPlayers[mpMyId].tokenY=y;}
-dungeonLocalToken.x=x;dungeonLocalToken.y=y;
-safeSetItem('morkborg_local_token',JSON.stringify(dungeonLocalToken));
-if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'tokenMove',id:mpMyId,x,y,ts:Date.now()});
-renderMapTokens();}
+
 function mpNotifyStateChange(reason){
   if(mpIsHost()){mpScheduleHostBroadcast(200);return;}
   if(!mpIsConnected())return;
@@ -3323,15 +3291,13 @@ function mpImportManualSync(){let raw=(document.getElementById('mpManualSyncInpu
         if(mpIsHost()){
   mpHostBroadcast();
   mpBroadcastToRoom({type:'hostReturn'});
-          if(travel3DState.dungeonMapId){
-  const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));
-   if(dm&&dm.url){dm.isDungeon=true;setTimeout(()=>mpSendMapToRoom(dm),800);}
-}
-/* NUOVO: reinvia anche la mappa normale attiva */
-if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
-  const nm=savedMaps.find(m=>String(m.id)===String(travel3DState.linkedMapId));
-  if(nm&&nm.url){setTimeout(()=>mpSendMapToRoom(nm),1000);}
-}
+         if(dungeonState.active && travel3DState.dungeonMapId){
+            const dm=savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId));
+            if(dm&&dm.url){dm.isDungeon=true;setTimeout(()=>mpSendMapToRoom(dm),800);}
+          }else if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
+            const nm=savedMaps.find(m=>String(m.id)===String(travel3DState.linkedMapId));
+            if(nm&&nm.url){setTimeout(()=>mpSendMapToRoom(nm),800);}
+          }
         }
         triggerProphecyFlash('🔄 Riconnesso: '+mpRoomCode,'fa-plug',2000);
       }
@@ -3340,24 +3306,7 @@ if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
 }
 
 
-/* PATCH: carica i dati della mappa quando si attiva il dungeon */
-(function(){
-  const __origToggleDungeonMode = toggleDungeonMode;
-  toggleDungeonMode = function(){
-    const wasActive = dungeonState.active;
-    const r = __origToggleDungeonMode.apply(this, arguments);
-    if(!wasActive && dungeonState.active){
-      if(travel3DState.dungeonMapId){
-        dungeonLoadFromMap(travel3DState.dungeonMapId);
-      }
-      saveDungeonState();
-      if(typeof redrawFog==='function') redrawFog();
-      if(typeof renderDungeonEncountersList==='function') renderDungeonEncountersList();
-      if(typeof updateDungeonUI==='function') updateDungeonUI();
-    }
-    return r;
-  };
-})();
+
 function populateMonsterJourneySelects(){
   const fill=(sel,currentVal)=>{
     if(!sel)return;
@@ -3449,7 +3398,7 @@ setInterval(()=>{
   window.addEventListener('resize',()=>{
     setTimeout(()=>{
       setupFogCanvas();
-      resizeARRenderer();
+      
       if(travel3DRenderer&&travel3DCamera){
         const c=document.getElementById('threeTravelViewport');
         if(c&&c.clientWidth>0&&c.clientHeight>0){
