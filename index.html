@@ -552,8 +552,9 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 </div>
 <div id="dungeonMapStage" class="relative" style="display:inline-block;max-width:100%;max-height:75vh;transform-origin:center center;">
 <img id="dungeonMapImg" class="block select-none" style="max-width:100%;max-height:75vh;width:auto;height:auto;" draggable="false">
-<canvas id="dungeonFogCanvas" class="absolute pointer-events-none" style="top:0;left:0;"></canvas>
-<div id="dungeonTokensLayer" class="absolute inset-0 pointer-events-none" style="pointer-events: none;"></div>
+<div id="dungeonEncountersLayer" class="absolute inset-0 pointer-events-none" style="pointer-events: none; z-index: 2;"></div>
+<canvas id="dungeonFogCanvas" class="absolute pointer-events-none" style="top:0;left:0; z-index: 5;"></canvas>
+<div id="dungeonTokensLayer" class="absolute inset-0 pointer-events-none" style="pointer-events: none; z-index: 10;"></div>
 </div>
 </div>
 </div>
@@ -2854,7 +2855,7 @@ function setupFogCanvas(){
       }
       if(dw>0&&dh>0){canvas.style.width=dw+'px';canvas.style.height=dh+'px';}
       else{canvas.style.width='100%';canvas.style.height='100%';}
-      canvas.style.position='absolute';canvas.style.top='0';canvas.style.left='0';
+      canvas.style.position='absolute';canvas.style.top='0';canvas.style.left='0';canvas.style.zIndex='5';
       if(dungeonState.active){
         canvas.classList.remove('hidden');
         redrawFog();
@@ -3242,7 +3243,7 @@ function deleteDungeonEncounter(id){
 document.addEventListener('click',function(e){
   const stage=document.getElementById('dungeonMapStage');
   const img=document.getElementById('dungeonMapImg');
-  if(stage&&dungeonState.active&&img&&img.src&&(e.target===img||e.target.id==='dungeonFogCanvas'||e.target.id==='dungeonTokensLayer'||e.target===stage)){
+  if(stage&&dungeonState.active&&img&&img.src&&(e.target===img||e.target.id==='dungeonFogCanvas'||e.target.id==='dungeonTokensLayer'||e.target.id==='dungeonEncountersLayer'||e.target===stage)){
     if(window.__dungeonMapJustPanned)return;
     const rect=img.getBoundingClientRect();
     const x=(e.clientX-rect.left)/rect.width,y=(e.clientY-rect.top)/rect.height;
@@ -3414,7 +3415,7 @@ function importAllData(){
 function downloadExportCode(){
   const clone=document.documentElement.cloneNode(true);
   clone.querySelectorAll('textarea').forEach(el=>{el.textContent='';});
-  ['inventoryContainer','trackedResources3DContainer','powersContainer','conditionsListContainer','bestiaryContainer','psalmsListContainer','gmEventsLogContainer','mapGallery','dungeonMapGallery','dungeonEncountersList','journeyNotesList','allNotesListContainer','omensContainer','roomPlayersList','mapTokensLayer','dungeonTokensLayer'].forEach(id=>{const el=clone.querySelector('#'+id);if(el)el.innerHTML='';});
+  ['inventoryContainer','trackedResources3DContainer','powersContainer','conditionsListContainer','bestiaryContainer','psalmsListContainer','gmEventsLogContainer','mapGallery','dungeonMapGallery','dungeonEncountersList','journeyNotesList','allNotesListContainer','omensContainer','roomPlayersList','mapTokensLayer','dungeonEncountersLayer','dungeonTokensLayer'].forEach(id=>{const el=clone.querySelector('#'+id);if(el)el.innerHTML='';});
   clone.querySelectorAll('#activeMapImg,#dungeonMapImg,#webcamVideo').forEach(el=>el.removeAttribute('src'));
   const msb=clone.querySelector('#mpMapSyncStatus');if(msb)msb.classList.add('hidden');
   const msm=clone.querySelector('#mpMapSyncMsg');if(msm)msm.textContent='in attesa…';
@@ -4771,10 +4772,31 @@ function renderMapTokens(){
   requestAnimationFrame(()=>{__renderMapTokensScheduled=false;__renderMapTokensNow();});
 }
 function __renderMapTokensNow(){
-  // Token mappa normale rimossi — i token restano solo nel dungeon
+  // Token mappa normale rimossi — i token e gli incontri restano solo nel dungeon
   const dlayer=document.getElementById('dungeonTokensLayer');
+  const elayer=document.getElementById('dungeonEncountersLayer');
+  const isHost=mpIsHost()||!mpIsConnected();
+  if(elayer){
+    elayer.style.pointerEvents='none';
+    elayer.style.zIndex=isHost?'6':'2';
+    let ehtml='';
+    if(dungeonState.active&&Array.isArray(dungeonState.encounters)){
+      ehtml=dungeonState.encounters
+        .filter(e=>isHost||!e.hidden)
+        .map(e=>{
+          const x=e.x*100,y=e.y*100;
+          const hiddenCls=e.hidden?'opacity-30':'';
+          const pe=isHost?'pointer-events:auto;cursor:pointer;':'';
+          const onclick=isHost?`onclick="event.stopPropagation();toggleDungeonEncounterVisibility(${e.id})"`:'';
+          const title=isHost?(e.hidden?'Clicca per rivelare':'Clicca per nascondere'):'';
+          return `<div class="absolute" ${onclick} title="${title}" style="left:${x}%;top:${y}%;width:0;height:0;z-index:2;${pe}"><div class="absolute -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-mbPurple text-black font-bold flex items-center justify-center border-2 border-white shadow-lg text-[12px] ${hiddenCls}" style="top:0;left:0;${pe}">${e.type.split(' ')[0]}</div></div>`;
+        }).join('');
+    }
+    elayer.innerHTML=ehtml;
+  }
   if(dlayer){
     dlayer.style.pointerEvents='none';
+    dlayer.style.zIndex='10';
     let dhtml='';
     if(dungeonState.active){
       if(mpIsConnected()&&Object.keys(mpPlayers).length>0){
@@ -4792,17 +4814,6 @@ function __renderMapTokensNow(){
       const ly=(dungeonLocalToken.y*100).toFixed(4);
       const myColor=(mpPlayers[mpMyId]&&mpPlayers[mpMyId].color)?mpPlayers[mpMyId].color:'#FFE600';
       dhtml+=`<div class="absolute" style="left:${lx}%;top:${ly}%;width:0;height:0;z-index:10;"><div class="absolute -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full border-2 border-white shadow-2xl flex items-center justify-center text-black font-black text-sm" style="background:${myColor};top:0;left:0;">${initial}</div><div class="absolute -translate-x-1/2 mt-0.5 px-1 bg-black/90 text-[10px] font-bold text-mbYellow border border-gray-600 rounded whitespace-nowrap" style="top:16px;left:0;">${myName} ★</div></div>`;
-           const isHost=mpIsHost();
-      dhtml+=dungeonState.encounters
-        .filter(e=>isHost||!e.hidden)
-        .map(e=>{
-          const x=e.x*100,y=e.y*100;
-          const hiddenCls=e.hidden?'opacity-30':'';
-          const pe=isHost?'pointer-events:auto;cursor:pointer;':'';
-          const onclick=isHost?`onclick="event.stopPropagation();toggleDungeonEncounterVisibility(${e.id})"`:'';
-          const title=isHost?(e.hidden?'Clicca per rivelare':'Clicca per nascondere'):'';
-          return `<div class="absolute" ${onclick} title="${title}" style="left:${x}%;top:${y}%;width:0;height:0;z-index:6;${pe}"><div class="absolute -translate-x-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-mbPurple text-black font-bold flex items-center justify-center border-2 border-white shadow-lg text-[12px] ${hiddenCls}" style="top:0;left:0;${pe}">${e.type.split(' ')[0]}</div></div>`;
-        }).join('');
     }
     dlayer.innerHTML=dhtml;
   }
@@ -4957,24 +4968,4 @@ setInterval(()=>{
     if(document.visibilityState==='visible'){
       setTimeout(()=>{try{mpTryAutoReconnect();}catch(e){console.warn(e);}},500);
     }
-  });
-  window.addEventListener('resize',()=>{
-    setTimeout(()=>{
-      setupFogCanvas();
-      
-      if(travel3DRenderer&&travel3DCamera){
-        const c=document.getElementById('threeTravelViewport');
-        if(c&&c.clientWidth>0&&c.clientHeight>0){
-          travel3DRenderer.setSize(c.clientWidth,c.clientHeight);
-          travel3DCamera.aspect=c.clientWidth/c.clientHeight;
-          travel3DCamera.updateProjectionMatrix();
-        }
-      }
-    },100);
-  });
-  window.addEventListener('beforeunload',()=>{dungeonSaveToActiveMap(true);});
-};
-</script>
-
-
-</body></html>
+  }
