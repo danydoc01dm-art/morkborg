@@ -964,9 +964,9 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="bg-black/70 border border-gray-700 p-2.5 space-y-1.5 text-xs">
 <div class="flex items-center justify-between">
 <span class="text-gray-300 font-bold uppercase text-[10px]">🌐 SERVER RELAY WEBSOCKET</span>
-<span id="roomRelayStatusBadge" class="text-[9px] text-green-400 font-bold">DEFAULT (ACHEX)</span>
+<span id="roomRelayStatusBadge" class="text-[9px] text-green-400 font-bold">DEDICATO (RENDER)</span>
 </div>
-<input type="text" id="roomCustomRelayInput" onchange="saveCustomRelay(this.value)" placeholder="wss://cloud.achex.ca (opzionale: ws://IP_LOCALE:8080)" class="w-full p-1.5 bg-black border border-gray-700 text-gray-200 text-[11px] font-mono">
+<input type="text" id="roomCustomRelayInput" onchange="saveCustomRelay(this.value)" placeholder="wss://morkborg-relay.onrender.com (opzionale: ws://IP_LOCALE:8080)" class="w-full p-1.5 bg-black border border-gray-700 text-gray-200 text-[11px] font-mono">
 <p class="text-[9px] text-gray-500 italic">Lascia vuoto per il relay cloud gratuito, o inserisci l'indirizzo locale per sessioni Wi-Fi a zero lag.</p>
 </div>
 <p id="roomStatusText" class="text-gray-500 text-[11px] text-center italic">In attesa...</p>
@@ -12288,7 +12288,7 @@ function downloadExportCode(){
 
 /* MULTIPLAYER */
 const MP_COLORS=['#FFE600','#FF0055','#22c55e','#3b82f6','#a855f7','#f97316','#06b6d4','#f43f5e'];
-const MP_DEFAULT_WS_URLS=['wss://cloud.achex.ca','wss://ws.achex.ca'];
+const MP_DEFAULT_WS_URLS=['wss://morkborg-relay.onrender.com','wss://cloud.achex.ca','wss://ws.achex.ca'];
 let MP_WS_URLS=[...MP_DEFAULT_WS_URLS];
 
 function mpGetActiveWsUrls(){
@@ -12325,7 +12325,7 @@ function updateCustomRelayBadge(){
     badge.innerText = 'PERSONALIZZATO';
   } else {
     badge.className = 'text-[9px] text-green-400 font-bold';
-    badge.innerText = 'DEFAULT (ACHEX)';
+    badge.innerText = 'DEDICATO (RENDER)';
   }
 }
 
