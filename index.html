@@ -1239,15 +1239,7 @@ function setWeather(w,fromRemote){
   if(w==='neve'||w==='bufera')playSynthSound('snow');
   else if(w==='pioggia')playSynthSound('weather');
   else if(w==='temporale')playSynthSound('thunder');
-  if(!fromRemote && typeof mpIsConnected==='function'&&mpIsConnected()){
-    if(mpIsHost()){
-      mpShared.weather=w;
-      mpBroadcastToRoom({type:'weather',weather:w});
-      if(typeof mpScheduleHostBroadcast==='function')mpScheduleHostBroadcast(50);
-    }else{
-      mpBroadcastToRoom({type:'clientWeatherReq',weather:w});
-    }
-  }
+  // Meteo locale e personale: ogni giocatore sceglie liberamente il proprio meteo
 }
 
 function cycleNextWeather(){
@@ -12779,14 +12771,7 @@ if(data.auth){
    if(payload.shared&&!mpIsHost()){mpShared=payload.shared;mpApplySharedState(payload.shared);}
   mpRenderPlayersList();renderMapTokens();return;
 }
-  if(payload.type==='weather'&&payload.weather){
-    setWeather(payload.weather,true);
-    return;
-  }
-  if(payload.type==='clientWeatherReq'&&payload.weather&&mpIsHost()){
-    setWeather(payload.weather);
-    return;
-  }
+  // Meteo locale: ignorati payload weather remoti
   if(payload.type==='hostReturn'){
     const snap=mpBuildPlayerSnapshot({isHost:false});
     mpPlayers[mpMyId]=Object.assign({},mpPlayers[mpMyId]||{},snap);
@@ -13184,7 +13169,7 @@ function mpApplySharedState(shared){
   if(!shared)return;
   if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}
   applyMasterOnly3DState();
-  if(shared.weather&&shared.weather!==state.currentWeather){setWeather(shared.weather,true);}
+  // Meteo locale: non sovrascrivere la preferenza del giocatore
   if(!mpIsHost()){
     const curActiveDungeonId = travel3DState.dungeonMapId ? String(travel3DState.dungeonMapId) : ((shared.dungeonMap&&shared.dungeonMap.id)?String(shared.dungeonMap.id):null);
     const curActiveTravelId = (travel3DState.linkedMapId && travel3DState.linkedMapId !== 'none') ? String(travel3DState.linkedMapId) : null;
