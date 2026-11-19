@@ -44,6 +44,7 @@ input[type=text]:focus,input[type=number]:focus,textarea:focus,select:focus{bord
 .map-fullscreen-active #dungeonViewport,.map-fullscreen-active #activeMapContainer{height:calc(100vh - 45px)!important;max-height:calc(100vh - 45px)!important}
 #travel3DStageCard.travel3d-fullscreen{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;max-height:100vh!important;margin:0!important;z-index:9996!important;background:#050505!important;display:flex!important;flex-direction:column!important;padding:8px!important;box-sizing:border-box!important}
 #travel3DStageCard.travel3d-fullscreen #threeTravelViewport{flex:1 1 auto!important;height:auto!important;min-height:0!important}
+#threeTravelViewport,#threeTravelViewport canvas,#dungeonViewport,#dungeonMapContainer,#dungeonMapStage,#activeMapContainer,#sharedMapStage{touch-action:none!important;-webkit-touch-callout:none!important;-webkit-user-select:none!important;user-select:none!important;overscroll-behavior:contain!important}
 body.travel3d-fullscreen-body{overflow:hidden!important}
 body.travel3d-fullscreen-body header{display:none!important}
 body.travel3d-fullscreen-body main{z-index:9996!important}
@@ -341,8 +342,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="p-2 bg-mbPanel border border-gray-800 space-y-1"><div class="flex items-center justify-between"><span class="text-gray-400 font-bold block">TERRENO 3D:</span><button type="button" onclick="saveCurrentTravelMapToGallery()" class="text-mbYellow hover:text-white font-bold text-[10px] uppercase flex items-center gap-1" title="Salva questa mappa nella tua galleria personale"><i class="fa-solid fa-floppy-disk"></i> SALVA</button></div><select id="travelLinkedMapSelect" onchange="onTerrainMapSelectChange(this.value)" class="w-full p-1 bg-black border border-mbYellow text-white font-bold" title=""><option value="none">-- Griglia Standard --</option></select></div>
 </div>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-<div id="travel3DStageCard" class="lg:col-span-9 xl:col-span-10 bg-black border-4 border-mbYellow p-2 space-y-2 relative shadow-2xl transition-all duration-300">
+<div id="travel3DStageCard" class="w-full bg-black border-4 border-mbYellow p-2 space-y-2 relative shadow-2xl transition-all duration-300">
 <!-- 3D SUBMODE HEADER TABS & CONTEXT SELECTOR -->
 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-mbYellow pb-1.5 px-1 font-mono text-xs">
 <div class="flex items-center space-x-1">
@@ -502,32 +502,67 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="flex flex-wrap items-center gap-1.5"><button id="villageInteriorRoomSwitchBtn" onclick="switchInteriorRoom()" class="hidden px-2.5 py-1.5 bg-purple-700 text-white font-bold hover:bg-white hover:text-black flex items-center space-x-1 border border-purple-400"><span>🪜 CAMBIA STANZA</span></button><button id="villageInteriorPrisonBtn" onclick="switchInteriorRoom(activeInteriorRoom === 'prison' ? 'sub' : 'prison')" class="hidden px-2.5 py-1.5 bg-red-950 text-red-200 font-bold hover:bg-white hover:text-black flex items-center space-x-1 border border-red-600"><span>⛓️ PRIGIONI</span></button><button id="villageExitInteriorBtn" onclick="exitVillageInterior()" class="hidden px-2.5 py-1.5 bg-mbYellow text-black font-bold hover:bg-white flex items-center space-x-1 border border-yellow-200"><i class="fa-solid fa-door-open"></i><span>⬅️ ESCI IN PIAZZA</span></button><button onclick="set3DSubMode('road')" class="px-2.5 py-1.5 bg-mbPink text-black font-bold hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-person-walking-arrow-right"></i><span>ESCI SUL SENTIERO</span></button></div>
 </div>
 </div>
-<div class="lg:col-span-3 xl:col-span-2 bg-mbPanel border-2 border-mbYellow p-2 space-y-2 font-mono text-xs shadow-xl">
-<div class="border-b border-mbYellow pb-0.5 text-center font-glitch text-sm text-mbYellow">4 FASI</div>
-<div class="grid grid-cols-2 gap-1 text-center text-[9px] font-bold">
-<div id="phase3d1" class="p-1 border border-gray-800 bg-black text-gray-500 font-bold">1. MATT.</div>
-<div id="phase3d2" class="p-1 border border-mbYellow bg-mbYellow text-black font-bold animate-pulse">2. POM.</div>
-<div id="phase3d3" class="p-1 border border-gray-800 bg-black text-gray-500 font-bold">3. SERA</div>
-<div id="phase3d4" class="p-1 border border-gray-800 bg-black text-gray-500 font-bold">4. NOTTE</div>
-</div>
-<div class="p-1.5 bg-black border border-mbPink space-y-1 text-xs">
-<div class="text-mbPink font-bold uppercase border-b border-mbPink/40 pb-0.5 text-[10px]" id="current3DPhaseTitle">☀️ FASE 2: POMERIGGIO</div>
-<p id="current3DPhaseDesc" class="text-gray-300 text-[10px] leading-tight">Avanzamento nel territorio.</p>
-</div>
-<div id="master3DCtrlGroup2" class="space-y-1" title="">
-<button onclick="advance3DPhase()" class="w-full py-1.5 bg-mbPink text-black font-bold text-xs uppercase hover:bg-white flex items-center justify-center space-x-1"><i class="fa-solid fa-forward"></i><span>+ AVANZA FASE</span></button>
-<div class="grid grid-cols-2 gap-1">
-<button onclick="rewind3DPhase()" class="py-1 bg-gray-900 border border-gray-700 text-gray-300 hover:bg-white hover:text-black font-bold text-[10px] flex items-center justify-center space-x-1"><i class="fa-solid fa-backward"></i><span>RETRO</span></button>
-<button onclick="simulate3DFullDay()" class="py-1 bg-mbYellow text-black font-glitch text-[11px] hover:bg-white flex items-center justify-center space-x-1"><i class="fa-solid fa-forward-fast"></i><span>SIMULA</span></button>
-</div>
-</div>
-<div class="p-1.5 bg-black border border-gray-800 space-y-1 text-[10px]">
-<div class="flex justify-between text-gray-300 border-b border-gray-800 pb-0.5"><span>HP:</span><span id="travel3DHpDisplay" class="text-mbYellow font-bold">8 / 9</span></div>
-<span class="text-mbYellow font-bold block text-[9px] uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> RISORSE:</span>
-<div id="trackedResources3DContainer" class="space-y-1 max-h-24 overflow-y-auto pr-1"></div>
-</div>
-</div>
-</div>
+<!-- DASHBOARD DI VIAGGIO: 4 FASI, CONTROLLI & RISORSE (FULL WIDTH) -->
+<div class="w-full bg-mbPanel border-2 border-mbYellow p-3 shadow-2xl font-mono text-xs space-y-3">
+  <!-- RIGA SUPERIORE: INTESTAZIONE & 4 FASI ESTESE -->
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-mbYellow/40 pb-2.5">
+    <div class="flex items-center space-x-2">
+      <span class="font-glitch text-base text-mbYellow tracking-wider flex items-center gap-2">
+        <i class="fa-solid fa-hourglass-half text-mbPink animate-pulse"></i> 4 FASI DEL GIORNO
+      </span>
+      <span class="text-[10px] text-gray-400 uppercase hidden sm:inline">(Ciclo di Marcia &amp; Riposo)</span>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1 max-w-2xl text-center text-xs font-bold uppercase">
+      <div id="phase3d1" class="p-2 border border-gray-800 bg-black text-gray-500 font-bold text-center tracking-wider">1. MATTINA</div>
+      <div id="phase3d2" class="p-2 border-2 border-mbYellow bg-mbYellow text-black font-bold text-center tracking-wider animate-pulse">2. POMERIGGIO</div>
+      <div id="phase3d3" class="p-2 border border-gray-800 bg-black text-gray-500 font-bold text-center tracking-wider">3. SERA</div>
+      <div id="phase3d4" class="p-2 border border-gray-800 bg-black text-gray-500 font-bold text-center tracking-wider">4. NOTTE</div>
+    </div>
+  </div>
+
+  <!-- RIGA INFERIORE: 3 MODULI ORIZZONTALI (STATO FASE | CONTROLLI MASTER | HP & RISORSE) -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+    <!-- MODULO 1: FASE CORRENTE E DESCRIZIONE -->
+    <div class="md:col-span-5 bg-black border border-mbPink p-2.5 flex flex-col justify-between space-y-2">
+      <div class="flex items-center justify-between border-b border-mbPink/40 pb-1">
+        <span class="text-mbPink font-bold uppercase text-xs tracking-wider" id="current3DPhaseTitle">☀️ FASE 2: POMERIGGIO</span>
+        <span class="text-[10px] text-gray-400 font-mono">FASE ATTIVA</span>
+      </div>
+      <p id="current3DPhaseDesc" class="text-gray-300 text-xs leading-relaxed flex-1 py-1">Avanzamento nel territorio.</p>
+    </div>
+
+    <!-- MODULO 2: CONTROLLI MASTER (AVANZA / RETRO / SIMULA) -->
+    <div id="master3DCtrlGroup2" class="md:col-span-4 bg-black border border-gray-800 p-2.5 flex flex-col justify-between space-y-2">
+      <button onclick="advance3DPhase()" class="w-full py-2 bg-mbPink text-black font-bold text-xs uppercase hover:bg-white flex items-center justify-center space-x-1.5 transition-colors shadow-md">
+        <i class="fa-solid fa-forward"></i>
+        <span>+ AVANZA FASE</span>
+      </button>
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="rewind3DPhase()" class="py-1.5 bg-gray-900 border border-gray-700 text-gray-300 hover:bg-white hover:text-black font-bold text-[11px] flex items-center justify-center space-x-1 transition-colors">
+          <i class="fa-solid fa-backward"></i>
+          <span>RETRO</span>
+        </button>
+        <button onclick="simulate3DFullDay()" class="py-1.5 bg-mbYellow text-black font-glitch text-xs hover:bg-white flex items-center justify-center space-x-1 transition-colors">
+          <i class="fa-solid fa-forward-fast"></i>
+          <span>SIMULA GIORNO</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- MODULO 3: VITA & RISORSE MONITORATE -->
+    <div class="md:col-span-3 bg-black border border-gray-800 p-2.5 flex flex-col justify-between space-y-2 text-xs">
+      <div class="flex justify-between items-center text-gray-300 border-b border-gray-800 pb-1">
+        <span class="font-bold text-gray-400 flex items-center gap-1"><i class="fa-solid fa-heart-pulse text-red-500"></i> HP:</span>
+        <span id="travel3DHpDisplay" class="text-mbYellow font-bold text-sm">8 / 9</span>
+      </div>
+      <div>
+        <span class="text-mbYellow font-bold block text-[10px] uppercase mb-1">
+          <i class="fa-solid fa-boxes-stacked mr-1"></i> RISORSE:
+        </span>
+        <div id="trackedResources3DContainer" class="space-y-1 max-h-20 overflow-y-auto pr-1"></div>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="bg-mbPanel border-2 border-mbPink p-3 space-y-3 font-mono text-xs shadow-xl">
 <div class="border-b border-mbPink pb-1"><span class="font-glitch text-base text-mbPink"><i class="fa-solid fa-user-ninja mr-1"></i> REGISTRA EVENTO</span></div>
@@ -10567,7 +10602,7 @@ function update3DTravelDisplays(){
   if(phaseDesc) phaseDesc.innerText = pi.desc;
   for(let i = 1; i <= 4; i++){
     const el = document.getElementById(`phase3d${i}`);
-    if(el) el.className = (i === travel3DState.currentPhase) ? "p-1.5 border border-mbYellow bg-mbYellow text-black font-bold animate-pulse" : "p-1.5 border border-gray-800 bg-black text-gray-500 font-bold";
+    if(el) el.className = (i === travel3DState.currentPhase) ? "p-2 border-2 border-mbYellow bg-mbYellow text-black font-bold text-center tracking-wider animate-pulse shadow-md" : "p-2 border border-gray-800 bg-black text-gray-500 font-bold text-center tracking-wider hover:border-gray-600 transition-colors";
   }
 
   const hpEl = document.getElementById('travel3DHpDisplay');
@@ -11527,81 +11562,7 @@ function initDungeonPanZoom(){
   let startClientX=0,startClientY=0;
   let isDragging=false,isPinching=false;
 
-  vp.addEventListener('touchstart',e=>{
-    if(e.touches.length===2){
-      isPinching=true;isDragging=false;
-      startDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      startScale=dungeonZoomState.scale;
-      startPanX=dungeonZoomState.panX;startPanY=dungeonZoomState.panY;
-      startClientX=(e.touches[0].clientX+e.touches[1].clientX)/2;
-      startClientY=(e.touches[0].clientY+e.touches[1].clientY)/2;
-    }else if(e.touches.length===1){
-      isDragging=(dungeonZoomState.scale>1.0);isPinching=false;
-      startClientX=e.touches[0].clientX;startClientY=e.touches[0].clientY;
-      startPanX=dungeonZoomState.panX;startPanY=dungeonZoomState.panY;
-    }
-  },{passive:true});
-
-  vp.addEventListener('touchmove',e=>{
-    if(isPinching&&e.touches.length===2){
-      if(e.cancelable)e.preventDefault();
-      const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(dist>5&&startDist>5){
-        const factor=dist/startDist;
-        dungeonZoomState.scale=Math.min(4.0,Math.max(1.0,+(startScale*factor).toFixed(2)));
-        const midX=(e.touches[0].clientX+e.touches[1].clientX)/2;
-        const midY=(e.touches[0].clientY+e.touches[1].clientY)/2;
-        dungeonZoomState.panX=startPanX+(midX-startClientX);
-        dungeonZoomState.panY=startPanY+(midY-startClientY);
-        applyDungeonTransform(false);
-        window.__dungeonMapJustPanned=true;
-      }
-    }else if(isDragging&&e.touches.length===1&&dungeonZoomState.scale>1.0){
-      const dx=e.touches[0].clientX-startClientX;
-      const dy=e.touches[0].clientY-startClientY;
-      if(Math.hypot(dx,dy)>10){
-        if(e.cancelable)e.preventDefault();
-        window.__dungeonMapJustPanned=true;
-        dungeonZoomState.panX=startPanX+dx;
-        dungeonZoomState.panY=startPanY+dy;
-        applyDungeonTransform(false);
-      }
-    }
-  },{passive:false});
-
-  const endTouch=()=>{
-    isDragging=false;isPinching=false;
-    if(dungeonZoomState.scale<=1.0){
-      dungeonZoomState.panX=0;dungeonZoomState.panY=0;
-      applyDungeonTransform(true);
-    }
-    if(window.__dungeonMapJustPanned){
-      if(__dungeonPanTimer)clearTimeout(__dungeonPanTimer);
-      __dungeonPanTimer=setTimeout(()=>{window.__dungeonMapJustPanned=false;},250);
-    }
-  };
-  vp.addEventListener('touchend',endTouch);
-  vp.addEventListener('touchcancel',endTouch);
-
-  vp.addEventListener('wheel',e=>{
-    if(e.ctrlKey||e.metaKey||dungeonZoomState.scale>1.0){
-      e.preventDefault();
-      dungeonZoomChange(e.deltaY<0?0.25:-0.25);
-    }
-  },{passive:false});
-}
-
-function initSharedMapPanZoom(){
-  const vp=document.getElementById('activeMapContainer');
-  const stage=document.getElementById('sharedMapStage');
-  if(!vp||!stage||vp.__panZoomInited)return;
-  vp.__panZoomInited=true;
-
-  let startDist=0,startScale=1,startPanX=0,startPanY=0;
-  let startClientX=0,startClientY=0;
-  let isDragging=false,isPinching=false;
-
-  vp.addEventListener('touchstart',e=>{
+      vp.addEventListener('touchstart',e=>{
     if(e.touches.length===2){
       isPinching=true;isDragging=false;
       startDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
@@ -11610,11 +11571,11 @@ function initSharedMapPanZoom(){
       startClientX=(e.touches[0].clientX+e.touches[1].clientX)/2;
       startClientY=(e.touches[0].clientY+e.touches[1].clientY)/2;
     }else if(e.touches.length===1){
-      isDragging=(sharedMapZoomState.scale>1.0);isPinching=false;
+      isDragging=true;isPinching=false;
       startClientX=e.touches[0].clientX;startClientY=e.touches[0].clientY;
       startPanX=sharedMapZoomState.panX;startPanY=sharedMapZoomState.panY;
     }
-  },{passive:true});
+  },{passive:false});
 
   vp.addEventListener('touchmove',e=>{
     if(isPinching&&e.touches.length===2){
@@ -11629,14 +11590,16 @@ function initSharedMapPanZoom(){
         sharedMapZoomState.panY=startPanY+(midY-startClientY);
         applySharedMapTransform(false);
       }
-    }else if(isDragging&&e.touches.length===1&&sharedMapZoomState.scale>1.0){
+    }else if(isDragging&&e.touches.length===1){
       const dx=e.touches[0].clientX-startClientX;
       const dy=e.touches[0].clientY-startClientY;
-      if(Math.hypot(dx,dy)>10){
+      if(Math.hypot(dx,dy)>12){
         if(e.cancelable)e.preventDefault();
-        sharedMapZoomState.panX=startPanX+dx;
-        sharedMapZoomState.panY=startPanY+dy;
-        applySharedMapTransform(false);
+        if(sharedMapZoomState.scale>1.0){
+          sharedMapZoomState.panX=startPanX+dx;
+          sharedMapZoomState.panY=startPanY+dy;
+          applySharedMapTransform(false);
+        }
       }
     }
   },{passive:false});
