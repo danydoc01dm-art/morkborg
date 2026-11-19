@@ -93,6 +93,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="flex items-center space-x-1.5 sm:space-x-2">
 <button id="headerDarknessBtn" onclick="toggleDarknessLocation()" class="px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-gray-400 text-xs font-mono font-bold flex items-center space-x-1"><i id="darknessIcon" class="fa-solid fa-moon"></i><span id="headerDarknessText" class="hidden sm:inline">BUIO</span></button>
 <select id="weatherQuickSelect" onchange="setWeather(this.value)" class="bg-black text-mbYellow font-mono text-xs p-1 border border-mbYellow font-bold"><option value="sereno">☀️ Sereno</option><option value="pioggia">🌧️ Pioggia</option><option value="temporale">🌩️ Temporale</option><option value="nebbia">🌫️ Nebbia</option><option value="neve">❄️ Neve</option><option value="bufera">🌨️ Bufera</option><option value="cenere">🌋 Cenere</option></select><button onclick="openSettingsModal()" class="px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-xs font-mono flex items-center text-mbYellow font-bold" title="Impostazioni"><i class="fa-solid fa-gear"></i></button>
+<button id="headerQuickSaveBtn" onclick="exportAllData()" class="px-2 py-1 bg-mbPanel border border-mbYellow hover:bg-mbYellow hover:text-black text-mbYellow text-xs font-mono font-bold flex items-center space-x-1" title="Salva ed Esporta Backup (.json)"><i class="fa-solid fa-floppy-disk"></i><span class="hidden sm:inline">SALVA</span></button>
 <button id="headerRoomBtn" onclick="openRoomModal()" class="px-2 py-1 bg-mbPanel border border-green-500 hover:bg-green-900 text-green-400 text-xs font-mono font-bold flex items-center space-x-1" title="Stanza Multiplayer"><i class="fa-solid fa-users"></i><span class="hidden sm:inline" id="headerRoomBtnText">STANZA</span><span id="headerRoomPingBadge" class="hidden text-[10px] ml-1 px-1 py-0.5 rounded bg-black/70 font-mono font-bold"></span></button>
 <button onclick="switchTab('export')" class="px-2 sm:px-2.5 py-1 bg-mbPink text-black font-bold font-mono text-xs hover:bg-mbYellow uppercase tracking-wider flex items-center space-x-1"><i class="fa-solid fa-code"></i><span class="hidden sm:inline">EXPORT</span></button>
 </div>
@@ -341,13 +342,18 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 </div>
 </div>
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-<div id="travel3DStageCard" class="lg:col-span-8 bg-black border-4 border-mbYellow p-2 space-y-2 relative shadow-2xl">
+<div id="travel3DStageCard" class="lg:col-span-9 xl:col-span-10 bg-black border-4 border-mbYellow p-2 space-y-2 relative shadow-2xl transition-all duration-300">
 <!-- 3D SUBMODE HEADER TABS & CONTEXT SELECTOR -->
 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-mbYellow pb-1.5 px-1 font-mono text-xs">
 <div class="flex items-center space-x-1">
 <button id="viewBtnRoute" onclick="set3DSubMode('route')" class="px-2.5 py-1 bg-mbYellow text-black font-bold uppercase hover:bg-white flex items-center space-x-1" title="Visualizza il plastico tattico con nodi e rotte"><i class="fa-solid fa-map"></i><span>PLASTICO</span></button>
 <button id="viewBtnRoad" onclick="set3DSubMode('road')" class="px-2.5 py-1 bg-black text-gray-400 border border-gray-700 font-bold uppercase hover:text-white flex items-center space-x-1" title="Visualizza la compagnia in marcia sul sentiero"><i class="fa-solid fa-person-hiking"></i><span>SENTIERO</span></button>
 <button id="viewBtnVillage" onclick="set3DSubMode('village')" class="px-2.5 py-1 bg-black text-gray-400 border border-gray-700 font-bold uppercase hover:text-white flex items-center space-x-1" title="Entra nella piazza dell'insediamento fortificato"><i class="fa-solid fa-archway"></i><span>BORGO</span></button>
+<select id="travel3DLabelModeSelect" onchange="setTravel3DLabelMode(this.value)" class="bg-black text-mbYellow border border-gray-700 text-[10px] font-bold px-1.5 py-1 uppercase ml-1 cursor-pointer hover:border-mbYellow" title="Modalita etichette: SU TOCCO (pulita per schermi piccoli), TUTTE, oppure NASCOSTE">
+<option value="hover" selected>🏷️ SU TOCCO</option>
+<option value="all">🏷️ TUTTE</option>
+<option value="none">🏷️ NASCOSTE</option>
+</select>
 </div>
 <div class="flex items-center space-x-2">
 <div id="roadBiomeSelector" class="hidden flex items-center space-x-1">
@@ -378,7 +384,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 </div>
 </div>
 
-<div id="threeTravelViewport" class="relative w-full h-[440px] bg-neutral-950 overflow-hidden border border-gray-800 cursor-crosshair select-none">
+<div id="threeTravelViewport" class="relative w-full h-[560px] sm:h-[600px] bg-neutral-950 overflow-hidden border border-gray-800 cursor-crosshair select-none">
 <div id="drawModeHint" class="absolute top-2 left-2 z-10 max-w-[52%] bg-black/85 border border-mbPink p-2 font-mono text-[11px] text-mbYellow pointer-events-none font-bold">💡 trascina per ruotare</div>
 <div id="travel3DHud" class="absolute top-2 right-2 z-20 w-[206px] max-w-[48%] bg-black/90 border border-mbYellow/70 p-2 shadow-2xl pointer-events-auto font-mono text-[10px]">
   <div class="flex items-center justify-between gap-2 border-b border-gray-700 pb-1">
@@ -496,29 +502,30 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="flex flex-wrap items-center gap-1.5"><button id="villageInteriorRoomSwitchBtn" onclick="switchInteriorRoom()" class="hidden px-2.5 py-1.5 bg-purple-700 text-white font-bold hover:bg-white hover:text-black flex items-center space-x-1 border border-purple-400"><span>🪜 CAMBIA STANZA</span></button><button id="villageInteriorPrisonBtn" onclick="switchInteriorRoom(activeInteriorRoom === 'prison' ? 'sub' : 'prison')" class="hidden px-2.5 py-1.5 bg-red-950 text-red-200 font-bold hover:bg-white hover:text-black flex items-center space-x-1 border border-red-600"><span>⛓️ PRIGIONI</span></button><button id="villageExitInteriorBtn" onclick="exitVillageInterior()" class="hidden px-2.5 py-1.5 bg-mbYellow text-black font-bold hover:bg-white flex items-center space-x-1 border border-yellow-200"><i class="fa-solid fa-door-open"></i><span>⬅️ ESCI IN PIAZZA</span></button><button onclick="set3DSubMode('road')" class="px-2.5 py-1.5 bg-mbPink text-black font-bold hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-person-walking-arrow-right"></i><span>ESCI SUL SENTIERO</span></button></div>
 </div>
 </div>
-<div class="lg:col-span-4 bg-mbPanel border-2 border-mbYellow p-3 space-y-3 font-mono text-xs">
-<div class="border-b border-mbYellow pb-1 text-center font-glitch text-lg text-mbYellow">4 FASI</div>
-<div class="grid grid-cols-4 gap-1 text-center text-[10px] font-bold">
-<div id="phase3d1" class="p-1.5 border border-gray-800 bg-black text-gray-500 font-bold">1. MATT.</div>
-<div id="phase3d2" class="p-1.5 border border-mbYellow bg-mbYellow text-black font-bold animate-pulse">2. POM.</div>
-<div id="phase3d3" class="p-1.5 border border-gray-800 bg-black text-gray-500 font-bold">3. SERA</div>
-<div id="phase3d4" class="p-1.5 border border-gray-800 bg-black text-gray-500 font-bold">4. NOTTE</div>
+<div class="lg:col-span-3 xl:col-span-2 bg-mbPanel border-2 border-mbYellow p-2 space-y-2 font-mono text-xs shadow-xl">
+<div class="border-b border-mbYellow pb-0.5 text-center font-glitch text-sm text-mbYellow">4 FASI</div>
+<div class="grid grid-cols-2 gap-1 text-center text-[9px] font-bold">
+<div id="phase3d1" class="p-1 border border-gray-800 bg-black text-gray-500 font-bold">1. MATT.</div>
+<div id="phase3d2" class="p-1 border border-mbYellow bg-mbYellow text-black font-bold animate-pulse">2. POM.</div>
+<div id="phase3d3" class="p-1 border border-gray-800 bg-black text-gray-500 font-bold">3. SERA</div>
+<div id="phase3d4" class="p-1 border border-gray-800 bg-black text-gray-500 font-bold">4. NOTTE</div>
 </div>
-<div class="p-2.5 bg-black border border-mbPink space-y-2 text-xs">
-<div class="text-mbPink font-bold uppercase border-b border-mbPink/40 pb-1" id="current3DPhaseTitle">☀️ FASE 2: POMERIGGIO</div>
-<p id="current3DPhaseDesc" class="text-gray-300 text-[11px] leading-relaxed">Avanzamento nel territorio.</p>
+<div class="p-1.5 bg-black border border-mbPink space-y-1 text-xs">
+<div class="text-mbPink font-bold uppercase border-b border-mbPink/40 pb-0.5 text-[10px]" id="current3DPhaseTitle">☀️ FASE 2: POMERIGGIO</div>
+<p id="current3DPhaseDesc" class="text-gray-300 text-[10px] leading-tight">Avanzamento nel territorio.</p>
 </div>
-<div id="master3DCtrlGroup2" class="space-y-1.5" title="">
-<button onclick="advance3DPhase()" class="w-full py-2 bg-mbPink text-black font-bold text-xs uppercase hover:bg-white flex items-center justify-center space-x-1"><i class="fa-solid fa-forward"></i><span>+ AVANZA FASE</span></button>
-<div class="grid grid-cols-2 gap-1.5">
-<button onclick="rewind3DPhase()" class="py-1.5 bg-gray-900 border border-gray-700 text-gray-300 hover:bg-white hover:text-black font-bold text-[11px] flex items-center justify-center space-x-1"><i class="fa-solid fa-backward"></i><span>RETRO</span></button>
-<button onclick="simulate3DFullDay()" class="py-1.5 bg-mbYellow text-black font-glitch text-xs hover:bg-white flex items-center justify-center space-x-1"><i class="fa-solid fa-forward-fast"></i><span>SIMULA</span></button>
+<div id="master3DCtrlGroup2" class="space-y-1" title="">
+<button onclick="advance3DPhase()" class="w-full py-1.5 bg-mbPink text-black font-bold text-xs uppercase hover:bg-white flex items-center justify-center space-x-1"><i class="fa-solid fa-forward"></i><span>+ AVANZA FASE</span></button>
+<div class="grid grid-cols-2 gap-1">
+<button onclick="rewind3DPhase()" class="py-1 bg-gray-900 border border-gray-700 text-gray-300 hover:bg-white hover:text-black font-bold text-[10px] flex items-center justify-center space-x-1"><i class="fa-solid fa-backward"></i><span>RETRO</span></button>
+<button onclick="simulate3DFullDay()" class="py-1 bg-mbYellow text-black font-glitch text-[11px] hover:bg-white flex items-center justify-center space-x-1"><i class="fa-solid fa-forward-fast"></i><span>SIMULA</span></button>
 </div>
 </div>
-<div class="p-2.5 bg-black border border-gray-800 space-y-2 text-[11px]">
-<div class="flex justify-between text-gray-300 border-b border-gray-800 pb-1"><span>HP:</span><span id="travel3DHpDisplay" class="text-mbYellow font-bold">8 / 9</span></div>
-<span class="text-mbYellow font-bold block text-[10px] uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> RISORSE:</span>
-<div id="trackedResources3DContainer" class="space-y-1 max-h-36 overflow-y-auto pr-1"></div>
+<div class="p-1.5 bg-black border border-gray-800 space-y-1 text-[10px]">
+<div class="flex justify-between text-gray-300 border-b border-gray-800 pb-0.5"><span>HP:</span><span id="travel3DHpDisplay" class="text-mbYellow font-bold">8 / 9</span></div>
+<span class="text-mbYellow font-bold block text-[9px] uppercase"><i class="fa-solid fa-boxes-stacked mr-1"></i> RISORSE:</span>
+<div id="trackedResources3DContainer" class="space-y-1 max-h-24 overflow-y-auto pr-1"></div>
+</div>
 </div>
 </div>
 </div>
@@ -1479,11 +1486,7 @@ function is2DWeatherActiveForTab(){
   return (scope === 'all');
 }
 
-function isWeatherActiveForCurrentTab(){
-  const cur = typeof currentActiveTab === 'string' ? currentActiveTab : 'hud';
-  if(cur === 'travel3d') return is3DWeatherActive();
-  return is2DWeatherActiveForTab();
-}
+// [cleaned unused legacy function]
 
 function updateAndDrawFX(){
   if(document.visibilityState==='hidden'){__fxRunning=false;return;}
@@ -2312,17 +2315,37 @@ function dispose3DObject(root){
   });
 }
 
-function make3DTextSprite(text, color = '#FFE600', bg = 'rgba(0,0,0,0.86)', worldHeight = 0.55){
+let travel3DLabelMode = safeGetItem('morkborg_label_mode') || 'hover';
+function setTravel3DLabelMode(mode){
+  travel3DLabelMode = mode || 'hover';
+  safeSetItem('morkborg_label_mode', travel3DLabelMode);
+  const sel = document.getElementById('travel3DLabelModeSelect');
+  if(sel) sel.value = travel3DLabelMode;
+  if(typeof applyTravel3DLabelMode === 'function') applyTravel3DLabelMode();
+}
+function applyTravel3DLabelMode(){
+  const mode = travel3DLabelMode || 'hover';
+  if(Array.isArray(villageLabels)){
+    villageLabels.forEach(l => {
+      if(!l) return;
+      if(mode === 'none') l.visible = false;
+      else if(mode === 'all') { l.visible = true; if(l.material) l.material.opacity = 0.85; }
+      else { l.visible = !!(hoveredVillagePOI && l.userData && l.userData.poiId === hoveredVillagePOI); }
+    });
+  }
+}
+
+function make3DTextSprite(text, color = '#FFE600', bg = 'rgba(10,10,14,0.78)', worldHeight = 0.38){
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  const fontSize = 48;
+  const fontSize = 34;
   const font = `bold ${fontSize}px "Syne Mono", monospace`;
   const rawText = String(text);
   const labelText = rawText.length > 24 ? rawText.slice(0, 23) + '…' : rawText;
   ctx.font = font;
-  const pad = 26;
-  const width = Math.max(220, Math.ceil(ctx.measureText(labelText).width) + pad * 2);
-  const height = fontSize + pad * 2;
+  const padH = 10, padW = 14;
+  const width = Math.ceil(ctx.measureText(labelText).width) + padW * 2;
+  const height = fontSize + padH * 2;
   canvas.width = width;
   canvas.height = height;
   const c = canvas.getContext('2d');
@@ -2332,30 +2355,19 @@ function make3DTextSprite(text, color = '#FFE600', bg = 'rgba(0,0,0,0.86)', worl
   c.fillStyle = bg;
   c.fillRect(0, 0, width, height);
   c.strokeStyle = color;
-  c.lineWidth = 6;
-  c.strokeRect(4, 4, width - 8, height - 8);
+  c.lineWidth = 2.5;
+  c.strokeRect(2, 2, width - 4, height - 4);
   c.fillStyle = color;
-  c.fillText(labelText, width / 2, height / 2 + 2);
+  c.fillText(labelText, width / 2, height / 2 + 1);
   const tex = new THREE.CanvasTexture(canvas);
   tex.minFilter = THREE.LinearFilter;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
   sprite.scale.set(worldHeight * (width / height), worldHeight, 1);
+  sprite.userData = { is3DTextSprite: true, aspect: width / height, baseY: 0, text: labelText };
   return sprite;
 }
 
-function getRouteMetrics(){
-  const pts = Array.isArray(travel3DState.customPoints) ? travel3DState.customPoints : [];
-  if(pts.length === 0) return null;
-  let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
-  pts.forEach(p => {
-    minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-    minZ = Math.min(minZ, p.z); maxZ = Math.max(maxZ, p.z);
-  });
-  const center = { x: (minX + maxX) / 2, z: (minZ + maxZ) / 2 };
-  const spanX = Math.max(1, maxX - minX);
-  const spanZ = Math.max(1, maxZ - minZ);
-  return { pts, center, spanX, spanZ, span: Math.max(spanX, spanZ) };
-}
+// [cleaned unused legacy function]
 
 function get3DCameraPose(mode){
   if(mode === 'route'){
@@ -5252,32 +5264,7 @@ function buildRoadCampMesh(){
   roadCampGroup.visible = !!travel3DState.campActive;
 }
 
-function buildVillageSmokeSystem(){
-  const count = 36;
-  villageSmokeGeo = new THREE.BufferGeometry();
-  const pos = new Float32Array(count * 3);
-  const origins = [
-    { x: Math.sin(0) * 15, y: 6.2, z: Math.cos(0) * 15 },
-    { x: Math.sin(1.25) * 15, y: 5.1, z: Math.cos(1.25) * 15 }
-  ];
-  for(let i = 0; i < count; i++){
-    const o = origins[i % 2];
-    pos[i * 3] = o.x + (Math.random() - 0.5) * 0.9;
-    pos[i * 3 + 1] = o.y + Math.random() * 6.5;
-    pos[i * 3 + 2] = o.z + (Math.random() - 0.5) * 0.9;
-  }
-  villageSmokeGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  villageSmokeParticles = new THREE.Points(villageSmokeGeo, new THREE.PointsMaterial({
-    map: getScenicSharedTexture('glow'),
-    color: 0x777784,
-    size: 1.4,
-    transparent: true,
-    opacity: 0.24,
-    depthWrite: false
-  }));
-  villageSmokeParticles.userData = { origins: origins };
-  travel3DVillageGroup.add(villageSmokeParticles);
-}
+// [cleaned unused legacy function]
 
 const VILLAGE_LAYOUTS = {
   galgenbeck: {
@@ -5642,7 +5629,7 @@ function buildVillageScene(variant){
     villageBuildingMeshes.push(bMesh);
 
     const labelColor = '#' + poi.color.toString(16).padStart(6, '0');
-    const poiLabel = make3DTextSprite(poiName, labelColor, 'rgba(0,0,0,0.88)', 1.0);
+    const poiLabel = make3DTextSprite(poiName, labelColor, 'rgba(10,10,14,0.78)', 0.52);
     const labelY = poi.id === 'cathedral' ? 12.8 : (poi.id === 'market' ? 4.8 : (poi.id === 'gallows' ? 6.2 : 7.0));
     poiLabel.position.set(slot.x, labelY, slot.z);
     poiLabel.userData = { isVillageLabel: true, poiId: poi.id, baseY: labelY, phase: slot.x * 0.2, aspect: poiLabel.scale.x / poiLabel.scale.y };
@@ -6578,9 +6565,7 @@ function toggleRoadWalking(){
   setRoadWalking(!isRoadWalking, true);
 }
 
-function toggleRoadWeatherParticles(){
-  cycleNextWeather();
-}
+// [cleaned unused legacy function]
 
 function toggleCampFire(fromRemote){
   if(fromRemote === undefined) fromRemote = false;
@@ -6714,9 +6699,7 @@ function toggleCampSleep(){
   setCampSleep(!travel3DState.campSleeping);
 }
 
-function campRestRecover(){
-  setCampSleep(true);
-}
+// [cleaned unused legacy function]
 
 let knownMonsterHpMap = (function(){
   try {
@@ -7748,9 +7731,7 @@ function scenicMonsterTakeHit(broadcast){
   }
 }
 
-function scenicAttackMonster(dmgType){
-  scenicMonsterTakeHit(true);
-}
+// [cleaned unused legacy function]
 
 function scenicForceKillMonster(){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
@@ -8536,10 +8517,7 @@ function borgoPayRoyalTax(){
   spawnScenicFloatingBadge('👑 Ti presenti davanti agli esattori di Re Fathmu IX...', '#facc15');
 }
 
-function borgoDescendCatacombs(){
-  playSynthSound('psalm');
-  triggerProphecyFlash('🖤 Dal fondo della grata sale odore di fango nero, incenso marcio e passi lenti nelle catacombe del Re Ombra...', 'fa-skull', 5000);
-}
+// [cleaned unused legacy function]
 
 function borgoBribeService(targetLabel){
   playSynthSound('click');
@@ -10360,11 +10338,20 @@ function animateVillageLoop(dtFactor){
     villageLabels.forEach(l => {
       if(!l.userData) return;
       l.position.y = l.userData.baseY + Math.sin(travel3DClock * 1.6 + l.userData.phase) * 0.12;
-      const dist = travel3DCamera ? travel3DCamera.position.distanceTo(l.position) : 30;
-      const h = Math.max(0.7, Math.min(2.2, dist * 0.06));
-      l.scale.set(h * (l.userData.aspect || 5), h, 1);
+            const dist = travel3DCamera ? travel3DCamera.position.distanceTo(l.position) : 30;
+      const h = Math.max(0.35, Math.min(0.72, dist * 0.032));
+      l.scale.set(h * (l.userData.aspect || 3.8), h, 1);
       const isHover = hoveredVillagePOI && l.userData.poiId === hoveredVillagePOI;
-      if(l.material) l.material.opacity = isHover ? 1 : 0.92;
+      const curMode = travel3DLabelMode || 'hover';
+      if(curMode === 'none'){
+        l.visible = false;
+      } else if(curMode === 'all'){
+        l.visible = true;
+        if(l.material) l.material.opacity = isHover ? 1 : 0.8;
+      } else {
+        l.visible = !!isHover;
+        if(l.material) l.material.opacity = isHover ? 1 : 0;
+      }
     });
   }
 
@@ -12565,9 +12552,14 @@ function startHeartbeat(){
   mpHeartbeatTimer=setInterval(function(){
     if(!mpWs||mpWs.readyState!==1||!mpRoomCode||!mpAuthOk)return;
     const now=Date.now();
-    const otherIds=Object.keys(mpPlayers).filter(pid=>pid!==mpMyId);
+        const otherIds=Object.keys(mpPlayers).filter(pid=>pid!==mpMyId);
     if(otherIds.length===0){
       mpLastPongAt=now;
+      // Anti-Standby Render: impulso ogni 2 minuti anche a stanza vuota
+      if(!window.__mpLastSoloPing || (now - window.__mpLastSoloPing) > 120000){
+        window.__mpLastSoloPing = now;
+        try{mpWsSend({to:mpRoomChannel(mpRoomCode),mb:JSON.stringify({type:'keepalive',ts:now,_sender:mpMyId})});}catch(e){}
+      }
       return;
     }
     if(__mpActiveTx || Object.keys(mpMapChunks).length>0){
@@ -13914,7 +13906,7 @@ function mpRequestMapNow(){if(!mpIsConnected()){alert('Non sei in una stanza.');
 function mpShowRemoteMapPanel(){const p=document.getElementById('mpRemoteMapPanel');if(p)p.classList.toggle('hidden');}
 function mpSendRemoteMapUrl(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}const rawU=(document.getElementById('mpRemoteMapUrl')&&document.getElementById('mpRemoteMapUrl').value||'').trim();const u=sanitizeImgUrl(rawU);if(!u||!/^https?:\/\//i.test(u)){alert('Inserisci un URL http:// o https:// valido.');return;}if(location.protocol==='https:'&&/^http:\/\//i.test(u)){alert('⚠️ Su siti HTTPS usa preferibilmente un URL https:// altrimenti il browser può bloccare l\'immagine.');}const obj={id:'remote_'+uid(),name:'Mappa Remota',url:u,isDungeon:false,isRemote:true};mpShared.travelMap=obj;mpShared.map=obj;mpHostBroadcast();mpBroadcastToRoom({type:'mapRemoteUrl',id:obj.id,name:obj.name,url:u,isDungeon:false});mpApplyReceivedMap(obj.id,obj.name,u,false,{force:true});mpSetStatus('✅ URL mappa inviato');}
 function mpPushMyCharacter(){const snap=mpBuildPlayerSnapshot();mpPlayers[mpMyId]=Object.assign({},mpPlayers[mpMyId]||{},snap,{isHost:mpIsHost()});if(mpIsHost())mpHostBroadcast();else mpBroadcastToRoom({type:'playerUpdate',player:mpPlayers[mpMyId]});triggerProphecyFlash('📤 SCHEDA INVIATA','fa-upload',2000);mpUpdateRoomUI();renderMapTokens();}
-function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}stopHeartbeat();if(__mpAuthFallbackTimer){clearTimeout(__mpAuthFallbackTimer);__mpAuthFallbackTimer=null;}if(__mpClientReqTimer){clearTimeout(__mpClientReqTimer);__mpClientReqTimer=null;}if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}__lastClientTravelPhase=null;__lastAnimatedPhaseKey=null;try{if(mpWs){mpWs.onclose=null;mpWs.onerror=null;mpWs.onmessage=null;mpWs.close();}}catch(e){}mpWs=null;mpRole=null;mpIsCreator=false;mpHostId=null;__mpLastBroadcastJourneysHash=null;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;__mpConnecting=false;mpPlayers={};mpShared={map:null,travelMap:null,dungeonMap:null,travel:null,weather:'sereno',darknessActive:false};mpClearMapRuntimeState();mpSendQueue=[];mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');renderMapTokens();updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();updateSubtabCounts();restoreActiveAndDungeonMaps();rebuild3DRoute();}
+function mpLeaveRoom(){try{mpBroadcastToRoom({type:'leave',id:mpMyId});}catch(e){}stopHeartbeat();if(__mpAuthFallbackTimer){clearTimeout(__mpAuthFallbackTimer);__mpAuthFallbackTimer=null;}if(__mpClientReqTimer){clearTimeout(__mpClientReqTimer);__mpClientReqTimer=null;}if(mpBroadcastTimer){clearInterval(mpBroadcastTimer);mpBroadcastTimer=null;}__lastClientTravelPhase=null;__lastAnimatedPhaseKey=null;try{if(mpWs){mpWs.onclose=null;mpWs.onerror=null;mpWs.onmessage=null;mpWs.close();}}catch(e){}mpWs=null;mpRole=null;mpIsCreator=false;mpHostId=null;__mpLastBroadcastJourneysHash=null;mpRoomCode=null;mpMyId=null;mpMySid=null;mpAuthOk=false;__mpConnecting=false;mpPlayers={};mpShared={map:null,travelMap:null,dungeonMap:null,travel:null,weather:'sereno',darknessActive:false};mpClearMapRuntimeState();mpSendQueue=[];const wasHost=mpIsHost();mpClearSession();mpUpdateRoomUI();mpSetStatus('Disconnesso');if(wasHost)setTimeout(()=>{triggerProphecyFlash('💾 CONSIGLIO: ESPORTA I DATI DELLA SESSIONE','fa-floppy-disk',4000);},600);renderMapTokens();updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();updateSubtabCounts();restoreActiveAndDungeonMaps();rebuild3DRoute();}
 let __renderMapTokensScheduled=false;
 function renderMapTokens(){
   if(__renderMapTokensScheduled)return;
@@ -14135,7 +14127,26 @@ setInterval(()=>{
       }
     },100);
   });
-  window.addEventListener('beforeunload',()=>{dungeonSaveToActiveMap(true);});
+    // Protezione anti-chiusura accidentale durante il multiplayer
+  window.addEventListener('beforeunload', (e) => {
+    try { dungeonSaveToActiveMap(true); } catch(err){}
+    if (typeof mpIsConnected === 'function' && mpIsConnected()) {
+      e.preventDefault();
+      e.returnValue = 'Sessione multiplayer attiva.';
+      return e.returnValue;
+    }
+  });
+  // Risincronizzazione e risveglio fluido al ritorno da Discord / altre schede
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      if (typeof resize3DTravelViewport === 'function') resize3DTravelViewport();
+      if (typeof fxWake === 'function') fxWake();
+      if (typeof update3DTravelDisplays === 'function') update3DTravelDisplays();
+      if (typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpScheduleHostBroadcast === 'function' && mpIsHost()) {
+        mpScheduleHostBroadcast(80);
+      }
+    }
+  });
 };
 </script>
 
