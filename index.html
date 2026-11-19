@@ -398,7 +398,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 </div>
 </div>
 
-<div id="threeTravelViewport" class="relative w-full h-[320px] sm:h-[360px] md:h-[380px] bg-neutral-950 overflow-hidden border border-gray-800 cursor-crosshair select-none">
+<div id="threeTravelViewport" class="relative w-full h-[450px] sm:h-[480px] bg-neutral-950 overflow-hidden border border-gray-800 cursor-crosshair select-none" data-height-mode="med">
 <div id="drawModeHint" class="absolute top-2 left-2 z-10 max-w-[52%] bg-black/85 border border-mbPink p-2 font-mono text-[11px] text-mbYellow pointer-events-none font-bold">💡 trascina per ruotare</div>
 <div id="travel3DHud" class="absolute top-2 right-2 z-20 w-[206px] max-w-[48%] bg-black/90 border border-mbYellow/70 p-2 shadow-2xl pointer-events-auto font-mono text-[10px]">
   <div class="flex items-center justify-between gap-2 border-b border-gray-700 pb-1">
@@ -413,6 +413,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
   <div class="flex items-center justify-between gap-1 mt-1.5 pointer-events-auto">
     <div class="flex items-center gap-1">
       <button id="travel3DFocusBtn" type="button" onclick="focus3DCurrentDay()" class="w-6 h-6 bg-black border border-mbYellow/70 text-mbYellow font-bold hover:bg-mbYellow hover:text-black" title="Centra il giorno corrente">◎</button>
+      <button id="travel3DHeightBtn" type="button" onclick="cycle3DViewportHeight()" class="w-6 h-6 bg-black border border-mbYellow/70 text-mbYellow font-bold hover:bg-mbYellow hover:text-black text-[11px]" title="Altezza visuale (360px / 480px / 580px)">↕</button>
       <button id="travel3DFullscreenBtn" type="button" onclick="toggle3DViewportFullscreen()" class="w-6 h-6 bg-black border border-mbYellow/70 text-mbYellow font-bold hover:bg-mbYellow hover:text-black" title="Schermo intero">⛶</button>
     </div>
     <span class="text-gray-500 text-[9px] tracking-wide">1·2·3 / F</span>
@@ -518,9 +519,9 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 </div>
 <!-- DASHBOARD DI VIAGGIO: FASI A SINISTRA, RISORSE DA CENTRO A DESTRA -->
 <div class="w-full bg-mbPanel border-2 border-mbYellow p-3 shadow-2xl font-mono text-xs">
-  <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
     <!-- COLONNA SINISTRA: TUTTO SULLE FASI (INTESTAZIONE, 4 FASI, CONTROLLI AVANZAMENTO) -->
-    <div class="md:col-span-5 lg:col-span-4 bg-black border border-mbYellow p-3 flex flex-col justify-between space-y-2.5">
+    <div class="bg-black border border-mbYellow p-3 flex flex-col justify-between space-y-2">
       <div class="border-b border-mbYellow/40 pb-1.5 flex items-center justify-between">
         <span class="font-glitch text-sm text-mbYellow tracking-wider flex items-center gap-1.5">
           <i class="fa-solid fa-hourglass-half text-mbPink animate-pulse"></i> 4 FASI DEL GIORNO
@@ -560,7 +561,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
     </div>
 
     <!-- COLONNA CENTRO-DESTRA: VITA & RISORSE (AMPIO SPAZIO ORIZZONTALE) -->
-    <div class="md:col-span-7 lg:col-span-8 bg-black border border-gray-800 p-3 flex flex-col justify-between space-y-2">
+    <div class="bg-black border border-gray-800 p-3 flex flex-col justify-between space-y-2">
       <!-- HEADER RISORSE CON HP E TITOLO -->
       <div class="flex items-center justify-between border-b border-gray-800 pb-2">
         <div class="flex items-center space-x-2">
@@ -578,7 +579,7 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 
       <!-- CONTENITORE DELLE RISORSE IN GRIGLIA A PIU COLONNE -->
       <div class="flex-1">
-        <div id="trackedResources3DContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-44 overflow-y-auto pr-1"></div>
+        <div id="trackedResources3DContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-36 overflow-y-auto pr-1"></div>
       </div>
     </div>
   </div>
@@ -2509,6 +2510,24 @@ function sync3DFullscreenUI(active){
   setTimeout(resize3DTravelViewport, 180);
 }
 
+function cycle3DViewportHeight(){
+  const vp = document.getElementById('threeTravelViewport');
+  if(!vp) return;
+  const cur = vp.getAttribute('data-height-mode') || 'med';
+  let nextMode, nextH, label;
+  if(cur === 'med'){
+    nextMode = 'tall'; nextH = '580px'; label = 'ALTA (580px)';
+  } else if(cur === 'tall'){
+    nextMode = 'short'; nextH = '360px'; label = 'COMPATTA (360px)';
+  } else {
+    nextMode = 'med'; nextH = '480px'; label = 'MEDIA (480px)';
+  }
+  vp.style.height = nextH;
+  vp.setAttribute('data-height-mode', nextMode);
+  try{ safeSetItem('morkborg_3d_vp_h', nextMode); }catch(e){}
+  if(typeof spawnScenicFloatingBadge === 'function') spawnScenicFloatingBadge('VISUALE ' + label, '#FFE600');
+  if(typeof resize3DTravelViewport === 'function') resize3DTravelViewport();
+}
 function toggle3DViewportFullscreen(){
   const card = document.getElementById('travel3DStageCard');
   if(!card) return;
