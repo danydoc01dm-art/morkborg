@@ -1010,70 +1010,50 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="flex justify-between items-center border-b border-green-500 pb-2"><span class="font-glitch text-lg text-green-400">👥 STANZA MULTIPLAYER</span><button onclick="closeRoomModal()" class="text-red-400 font-bold text-base"><i class="fa-solid fa-xmark"></i></button></div>
 <p class="text-gray-400 text-[11px]">Sincronizzazione in tempo reale (Scheda, Mappe, Dungeon e Suite 3D).</p>
 <div id="roomSetupPanel" class="space-y-3">
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-<div class="bg-mbPanel p-3 border border-green-800 space-y-2">
-<span class="text-green-400 font-bold block uppercase">👑 Crea</span>
-<input type="text" id="roomHostNameInput" placeholder="Nome" class="w-full p-2 bg-black border border-green-700 text-green-300 text-xs">
-<button onclick="mpCreateRoom()" class="w-full py-2 bg-green-600 text-black font-bold hover:bg-green-400 uppercase">+ CREA</button>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+<div class="bg-mbPanel p-3.5 border-2 border-green-700 space-y-2.5">
+<span class="text-green-400 font-bold block uppercase text-xs">👑 Crea Stanza (Master)</span>
+<input type="text" id="roomHostNameInput" placeholder="Tuo Nome" class="w-full p-2 bg-black border border-green-700 text-green-300 text-xs font-bold">
+<button onclick="mpCreateRoom()" class="w-full py-2.5 bg-green-600 text-black font-bold hover:bg-green-400 uppercase text-xs flex items-center justify-center space-x-1"><i class="fa-solid fa-crown mr-1"></i><span>+ CREA</span></button>
 </div>
-<div class="bg-mbPanel p-3 border border-mbYellow space-y-2">
-<span class="text-mbYellow font-bold block uppercase">🎲 Entra</span>
-<input type="text" id="roomJoinNameInput" placeholder="Nome" class="w-full p-2 bg-black border border-mbYellow text-mbYellow text-xs">
-<input type="text" id="roomCodeInput" placeholder="CODICE" class="w-full p-2 bg-black border border-mbYellow text-mbYellow text-xs font-bold uppercase text-center" maxlength="6">
-<button onclick="mpJoinRoom()" class="w-full py-2 bg-mbYellow text-black font-bold hover:bg-white uppercase">► ENTRA</button>
+<div class="bg-mbPanel p-3.5 border-2 border-mbYellow space-y-2.5">
+<span class="text-mbYellow font-bold block uppercase text-xs">🎲 Entra in Stanza</span>
+<input type="text" id="roomJoinNameInput" placeholder="Tuo Nome" class="w-full p-2 bg-black border border-mbYellow text-mbYellow text-xs font-bold">
+<input type="text" id="roomCodeInput" placeholder="CODICE (es. EFHY)" class="w-full p-2 bg-black border border-mbYellow text-mbYellow text-xs font-bold uppercase text-center tracking-widest" maxlength="6">
+<button onclick="mpJoinRoom()" class="w-full py-2.5 bg-mbYellow text-black font-bold hover:bg-white uppercase text-xs flex items-center justify-center space-x-1"><i class="fa-solid fa-right-to-bracket mr-1"></i><span>► ENTRA</span></button>
 </div>
 </div>
-<div class="bg-black/70 border border-gray-700 p-2.5 space-y-1.5 text-xs">
-<div class="flex items-center justify-between">
-<span class="text-gray-300 font-bold uppercase text-[10px]">🌐 SERVER RELAY WEBSOCKET</span>
-<span id="roomRelayStatusBadge" class="text-[9px] text-green-400 font-bold">DEDICATO (RENDER)</span>
+<div class="flex items-center justify-between px-3 py-2 bg-black border border-gray-800 text-[11px]">
+<span class="text-gray-400">🌐 Server Relay: <span class="text-green-400 font-bold">Dedicato (Render Frankfurt)</span></span>
+<span id="roomStatusText" class="text-gray-500 italic">In attesa...</span>
 </div>
-<input type="text" id="roomCustomRelayInput" onchange="saveCustomRelay(this.value)" placeholder="wss://morkborg-relay.onrender.com (opzionale: ws://IP_LOCALE:8080)" class="w-full p-1.5 bg-black border border-gray-700 text-gray-200 text-[11px] font-mono">
-<p class="text-[9px] text-gray-500 italic">Lascia vuoto per il relay cloud gratuito, o inserisci l'indirizzo locale per sessioni Wi-Fi a zero lag.</p>
-</div>
-<p id="roomStatusText" class="text-gray-500 text-[11px] text-center italic">In attesa...</p>
-<div class="border border-mbYellow bg-mbPanel p-3 space-y-2">
-<span class="text-mbYellow font-bold uppercase text-[11px] block">📦 Sync manuale</span>
-<button onclick="mpExportManualSync()" class="w-full py-2 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px]">📋 COPIA STATO</button>
-<textarea id="mpManualSyncInput" placeholder="Incolla stato..." class="w-full p-2 bg-black border border-mbYellow text-[10px] text-gray-300 h-16 font-mono"></textarea>
-<button onclick="mpImportManualSync()" class="w-full py-2 bg-green-700 text-white font-bold hover:bg-green-500 uppercase text-[11px]">📥 APPLICA</button>
-</div>
+<input type="hidden" id="roomCustomRelayInput">
+<span id="roomRelayStatusBadge" class="hidden"></span>
+<textarea id="mpManualSyncInput" class="hidden"></textarea>
 </div>
 <div id="roomConnectedPanel" class="space-y-3 hidden">
-<div class="bg-mbPanel p-3 border border-green-500 flex flex-wrap items-center justify-between gap-2">
-<div><span class="text-gray-400 text-[10px] uppercase">Codice</span>
-<div class="flex items-center space-x-2">
-<span id="roomCodeDisplay" class="font-glitch text-2xl text-green-400 tracking-widest">----</span>
-<button onclick="mpCopyRoomCode()" class="px-2 py-1 bg-black border border-green-500 text-green-400 text-[10px] font-bold hover:bg-green-900">COPIA</button>
+<div class="bg-mbPanel p-3.5 border-2 border-green-500 flex flex-wrap items-center justify-between gap-3">
+<div><span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider block">Codice Stanza (da condividere)</span>
+<div class="flex items-center space-x-2 mt-1">
+<span id="roomCodeDisplay" class="font-glitch text-3xl text-green-400 tracking-widest">----</span>
+<button onclick="mpCopyRoomCode()" class="px-3 py-1.5 bg-black border border-green-500 text-green-400 text-xs font-bold hover:bg-green-900 uppercase flex items-center gap-1"><i class="fa-solid fa-copy"></i><span>COPIA</span></button>
 </div>
 </div>
-<div class="text-right"><span class="text-gray-400 text-[10px] uppercase">Ruolo</span><div id="roomRoleDisplay" class="text-mbYellow font-bold">👑 MASTER</div></div>
+<div class="text-right"><span class="text-gray-400 text-[10px] uppercase font-bold tracking-wider block">Il tuo Ruolo</span><div id="roomRoleDisplay" class="text-mbYellow font-bold text-sm mt-1">👑 MASTER</div></div>
 </div>
-<div class="flex items-center justify-between px-2.5 py-1.5 bg-black border border-gray-800 text-xs">
-<span class="text-gray-400 uppercase text-[10px]">Stato Connessione:</span>
-<span id="roomConnectedPingDisplay" class="font-bold text-green-400 text-[11px]">🟢 In sincronizzazione...</span>
+<div class="flex items-center justify-between px-3 py-2 bg-black border border-gray-800 text-xs">
+<span class="text-gray-400 uppercase text-[10px] font-bold">Stato Connessione:</span>
+<span id="roomConnectedPingDisplay" class="font-bold text-green-400 text-xs">🟢 Connesso</span>
 </div>
-<button id="roomReclaimHostBtn" onclick="mpReclaimHost()" class="hidden w-full py-2 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px]">👑 RIPRENDI RUOLO MASTER</button>
-<div class="space-y-1"><span class="text-green-400 font-bold uppercase text-[11px]">Giocatori</span>
-<div id="roomPlayersList" class="space-y-1 max-h-48 overflow-y-auto"></div></div>
-<div id="roomMasterOnly3DPanel" class="bg-mbPanel p-3 border border-mbYellow space-y-2">
-<span class="text-mbYellow font-bold text-[11px] uppercase block">🎛️ CONTROLLI 3D:</span>
-<label class="flex items-center justify-between p-2 bg-black border border-gray-700 cursor-pointer rounded"><span class="text-gray-200 text-[11px]">🔒 Solo Master controlla fase/rotta 3D</span><input type="checkbox" id="toggleMasterOnly3D" onchange="toggleMasterOnly3D(this.checked)" class="w-4 h-4 accent-green-500" checked=""></label>
-<p class="text-gray-500 text-[10px] italic">Se disattivi, i giocatori possono controllare il 3D liberamente.</p>
+<button id="roomReclaimHostBtn" onclick="mpReclaimHost()" class="hidden w-full py-2 bg-mbYellow text-black font-bold hover:bg-white uppercase text-xs">👑 RIPRENDI RUOLO MASTER</button>
+<div class="space-y-1.5"><span class="text-green-400 font-bold uppercase text-xs flex items-center gap-1"><i class="fa-solid fa-users"></i> Giocatori nella Stanza</span>
+<div id="roomPlayersList" class="space-y-1.5 max-h-52 overflow-y-auto p-1 bg-black border border-gray-800"></div></div>
+<div id="roomMasterOnly3DPanel" class="bg-mbPanel p-3 border border-mbYellow space-y-1.5">
+<span class="text-mbYellow font-bold text-xs uppercase block">🎛️ PERMESSI MASTER 3D:</span>
+<label class="flex items-center justify-between p-2 bg-black border border-gray-700 cursor-pointer"><span class="text-gray-200 text-xs">🔒 Solo Master controlla fase/rotta 3D</span><input type="checkbox" id="toggleMasterOnly3D" onchange="toggleMasterOnly3D(this.checked)" class="w-4 h-4 accent-green-500" checked=""></label>
+<p class="text-gray-400 text-[10px] italic">Se disattivi, tutti i giocatori possono controllare il 3D liberamente.</p>
 </div>
-<div class="grid grid-cols-2 gap-2">
-<button onclick="mpPushMyCharacter()" class="py-2 bg-mbYellow text-black font-bold hover:bg-white uppercase text-[11px]">📤 INVIA SCHEDA</button>
-<button onclick="mpForceSendMap()" class="py-2 bg-green-700 text-white font-bold hover:bg-green-500 uppercase text-[11px]">🗺️ INVIA MAPPA</button>
-</div>
-<div class="grid grid-cols-2 gap-2">
-<button onclick="saveCurrentTravelMapToGallery()" class="py-2 bg-mbPink text-black font-bold hover:bg-white uppercase text-[10px]" title="Salva la mappa attiva/ricevuta nella tua galleria personale"><i class="fa-solid fa-floppy-disk mr-1"></i> SALVA MAPPA</button>
-<button onclick="downloadActiveMapImage()" class="py-2 bg-black border border-mbYellow text-mbYellow font-bold hover:bg-mbYellow hover:text-black uppercase text-[10px]" title="Scarica l'immagine JPEG"><i class="fa-solid fa-download mr-1"></i> SCARICA</button>
-</div>
-<div class="grid grid-cols-2 gap-2">
-<button onclick="mpShowRemoteMapPanel()" class="py-2 bg-black border border-green-500 text-green-400 font-bold hover:bg-green-900 uppercase text-[10px]">🔗 FALLBACK URL</button>
-<button onclick="mpRequestMapNow()" class="py-2 bg-black border border-mbYellow text-mbYellow font-bold hover:bg-mbYellow hover:text-black uppercase text-[10px]">🔄 RICHIEDI</button>
-</div>
-<button onclick="mpLeaveRoom()" class="w-full py-2 bg-red-900 text-white font-bold hover:bg-red-700 uppercase text-[11px]">⏏ ESCI</button>
+<button onclick="mpLeaveRoom()" class="w-full py-2.5 bg-red-900 text-white font-bold hover:bg-red-700 uppercase text-xs flex items-center justify-center space-x-1.5 shadow-md"><i class="fa-solid fa-right-from-bracket mr-1"></i><span>DISCONNETTI ED ESCI DALLA STANZA</span></button>
 </div>
 </div>
 </div>
