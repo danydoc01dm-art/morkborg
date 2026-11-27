@@ -96,7 +96,6 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <select id="weatherQuickSelect" onchange="setWeather(this.value)" class="bg-black text-mbYellow font-mono text-xs p-1 border border-mbYellow font-bold"><option value="sereno">☀️ Sereno</option><option value="pioggia">🌧️ Pioggia</option><option value="temporale">🌩️ Temporale</option><option value="nebbia">🌫️ Nebbia</option><option value="neve">❄️ Neve</option><option value="bufera">🌨️ Bufera</option><option value="cenere">🌋 Cenere</option></select><button onclick="openSettingsModal()" class="px-2 py-1 bg-mbPanel border border-mbBorder hover:border-mbYellow text-xs font-mono flex items-center text-mbYellow font-bold" title="Impostazioni"><i class="fa-solid fa-gear"></i></button>
 <button id="headerQuickSaveBtn" onclick="exportAllData()" class="px-2 py-1 bg-mbPanel border border-mbYellow hover:bg-mbYellow hover:text-black text-mbYellow text-xs font-mono font-bold flex items-center space-x-1" title="Salva ed Esporta Backup (.json)"><i class="fa-solid fa-floppy-disk"></i><span class="hidden sm:inline">SALVA</span></button>
 <button id="headerRoomBtn" onclick="openRoomModal()" class="px-2 py-1 bg-mbPanel border border-green-500 hover:bg-green-900 text-green-400 text-xs font-mono font-bold flex items-center space-x-1" title="Stanza Multiplayer"><i class="fa-solid fa-users"></i><span class="hidden sm:inline" id="headerRoomBtnText">STANZA</span><span id="headerRoomPingBadge" class="hidden text-[10px] ml-1 px-1 py-0.5 rounded bg-black/70 font-mono font-bold"></span></button>
-<button onclick="switchTab('export')" class="px-2 sm:px-2.5 py-1 bg-mbPink text-black font-bold font-mono text-xs hover:bg-mbYellow uppercase tracking-wider flex items-center space-x-1"><i class="fa-solid fa-code"></i><span class="hidden sm:inline">EXPORT</span></button>
 </div>
 </header>
 <main class="flex-1 flex flex-col max-w-7xl w-full mx-auto p-2 sm:p-3 space-y-3 z-10">
@@ -319,40 +318,28 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
       <span id="travelSummaryDays" class="text-mbYellow font-bold">(0 GIORNI)</span>
     </div>
     <div class="flex items-center space-x-2 font-bold text-[11px]">
-      <button type="button" onclick="event.stopPropagation(); openRoomModal();" class="px-2 py-0.5 bg-green-700 text-white hover:bg-green-500 border border-green-400 uppercase">👥 STANZA</button>
       <button type="button" onclick="event.stopPropagation(); saveCurrentJourneyProfile();" class="px-2 py-0.5 bg-green-600 text-white hover:bg-green-500 uppercase">💾 SALVA</button>
       <span class="text-mbPink font-bold text-[10px] uppercase ml-1">⚙️ IMPOSTA ROTTA ▾</span>
     </div>
   </summary>
   <div class="p-2.5 space-y-2 border-t border-mbPink bg-black">
-    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2">
-      <div id="travelRoomBar" class="bg-green-950/50 p-1.5 border border-green-600 flex items-center gap-2">
-        <span class="text-green-400 font-bold uppercase"><i class="fa-solid fa-users mr-1"></i> MP:</span>
-        <span id="travelRoomStatus" class="text-gray-300">Nessuna stanza</span>
-        <button onclick="openRoomModal()" class="px-1.5 py-0.5 bg-green-600 text-black font-bold hover:bg-green-400 text-[10px] uppercase">Apri</button>
-      </div>
-      <div class="flex items-center space-x-1.5">
-        <button onclick="createNewJourneyProfile()" id="travelNewJourneyBtn" class="px-2.5 py-1 bg-mbYellow text-black font-bold hover:bg-white text-[11px] uppercase"><i class="fa-solid fa-plus-circle mr-1"></i>NUOVA</button>
-        <button onclick="saveCurrentJourneyProfile()" id="travelSaveJourneyBtn" class="px-2.5 py-1 bg-green-600 text-white font-bold hover:bg-green-500 text-[11px] uppercase"><i class="fa-solid fa-floppy-disk mr-1"></i>SALVA</button>
-      </div>
-    </div>
     <div class="bg-mbPanel p-1.5 border border-mbPink flex flex-wrap items-center justify-between gap-2">
-      <span class="text-mbPink font-bold uppercase text-[11px]"><i class="fa-solid fa-folder-open mr-1"></i> DIARIO:</span>
-      <div class="flex-1 min-w-[220px]">
-        <div id="savedJourneysDropdown" class="w-full">
+      <div class="flex items-center gap-2 flex-1 min-w-[220px]">
+        <span class="text-mbPink font-bold uppercase text-[11px] shrink-0"><i class="fa-solid fa-folder-open mr-1"></i> DIARIO:</span>
+        <div id="savedJourneysDropdown" class="flex-1">
           <div class="flex items-center space-x-1">
             <select id="savedJourneysSelect" onchange="loadJourneyProfileFromSelect(this.value)" class="flex-1 bg-black text-mbYellow p-1 border border-mbPink font-bold text-xs"><option value="default_journey" selected="">📖 Galgenbeck ➔ Schleswig (0 Punti)</option></select>
-            <button onclick="reloadSelectedJourney()" class="px-2 py-1 bg-mbYellow text-black font-bold text-xs border border-mbYellow hover:bg-white" title="Ricarica la rotta"><i class="fa-solid fa-rotate"></i></button>
             <button onclick="confirmDeleteSelectedJourney()" class="px-2.5 py-1 bg-red-900 hover:bg-red-700 text-white font-bold text-xs border border-red-500" title="Elimina la rotta"><i class="fa-solid fa-trash-can"></i></button>
           </div>
         </div>
       </div>
+      <button onclick="createNewJourneyProfile()" id="travelNewJourneyBtn" class="px-2.5 py-1 bg-mbYellow text-black font-bold hover:bg-white text-[11px] uppercase shrink-0"><i class="fa-solid fa-plus-circle mr-1"></i>NUOVA ROTTA</button>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
       <div class="p-1.5 bg-mbPanel border border-gray-800 space-y-0.5"><span class="text-gray-400 font-bold block text-[10px]">PARTENZA:</span><input type="text" id="travelOrigin" onchange="save3DTravelState()" value="Galgenbeck" class="w-full p-1 bg-black border border-mbYellow text-mbYellow font-bold text-xs"></div>
       <div class="p-1.5 bg-mbPanel border border-gray-800 space-y-0.5"><span class="text-gray-400 font-bold block text-[10px]">DESTINAZIONE:</span><input type="text" id="travelDestination" onchange="save3DTravelState()" value="Schleswig" class="w-full p-1 bg-black border border-mbPink text-mbPink font-bold text-xs"></div>
       <div class="p-1.5 bg-mbPanel border border-gray-800 space-y-0.5"><span class="text-gray-400 font-bold block text-[10px]">GIORNI:</span><input type="number" id="travel3DDays" readonly="" value="0" class="w-full p-1 bg-black border border-mbYellow text-mbYellow font-bold text-center opacity-80 text-xs"></div>
-      <div class="p-1.5 bg-mbPanel border border-gray-800 space-y-0.5"><div class="flex items-center justify-between"><span class="text-gray-400 font-bold block text-[10px]">TERRENO 3D:</span><button type="button" onclick="saveCurrentTravelMapToGallery()" class="text-mbYellow hover:text-white font-bold text-[9px] uppercase"><i class="fa-solid fa-floppy-disk"></i> SALVA</button></div><select id="travelLinkedMapSelect" onchange="onTerrainMapSelectChange(this.value)" class="w-full p-1 bg-black border border-mbYellow text-white font-bold text-xs"><option value="none">-- Griglia Standard --</option></select></div>
+      <div class="p-1.5 bg-mbPanel border border-gray-800 space-y-0.5"><span class="text-gray-400 font-bold block text-[10px]">TERRENO 3D:</span><select id="travelLinkedMapSelect" onchange="onTerrainMapSelectChange(this.value)" class="w-full p-1 bg-black border border-mbYellow text-white font-bold text-xs"><option value="none">-- Griglia Standard --</option></select></div>
     </div>
   </div>
 </details>
@@ -488,18 +475,6 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 </div>
 <button onclick="openScenicMonsterModal()" class="px-2.5 py-1.5 bg-mbPink text-black font-bold hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-skull"></i><span>⚔️ SCEGLI MOSTRO</span></button>
 <button onclick="triggerQuickScenicEncounter()" class="px-2.5 py-1.5 bg-red-700 text-white font-bold hover:bg-red-600 flex items-center space-x-1 border border-red-400" title="Genera istantaneamente un incontro ostile tipico del bioma"><i class="fa-solid fa-dice-d20"></i><span>🎲 INCONTRO RAPIDO</span></button>
-<div class="flex items-center space-x-1 bg-black border border-gray-700 px-2 py-1" title="Meteo atmosferico (sincronizzato con la pagina)">
-  <span class="text-gray-400 text-[10px] font-bold"><i class="fa-solid fa-cloud-sun text-mbYellow mr-1"></i>METEO:</span>
-  <select id="roadWeatherSelect" onchange="setWeather(this.value)" class="bg-black text-mbYellow font-mono text-xs font-bold border-0 p-0 outline-none cursor-pointer">
-    <option value="sereno">☀️ Sereno</option>
-    <option value="pioggia">🌧️ Pioggia</option>
-    <option value="temporale">🌩️ Temporale</option>
-    <option value="nebbia">🌫️ Nebbia</option>
-    <option value="neve">❄️ Neve</option>
-    <option value="bufera">🌨️ Bufera</option>
-    <option value="cenere">🌋 Cenere</option>
-  </select>
-</div>
 </div>
 </div>
 
@@ -674,20 +649,12 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div class="flex flex-wrap items-center justify-between gap-2">
 <h2 class="font-glitch text-xl text-mbYellow"><i class="fa-solid fa-map mr-2"></i>GESTORE MAPPE</h2>
 <div class="flex flex-wrap gap-2">
-<button onclick="saveCurrentTravelMapToGallery()" class="px-3 py-1.5 bg-mbPink text-black font-mono font-bold text-xs hover:bg-white flex items-center space-x-1" title="Salva la mappa attiva nella tua galleria personale"><i class="fa-solid fa-floppy-disk"></i> SALVA ATTIVA</button>
 <button onclick="downloadActiveMapImage()" class="px-3 py-1.5 bg-black border border-mbYellow text-mbYellow font-mono font-bold text-xs hover:bg-mbYellow hover:text-black flex items-center space-x-1" title="Scarica il file immagine JPEG"><i class="fa-solid fa-download"></i> SCARICA</button>
 <button onclick="mpRequestMapNow()" class="px-3 py-1.5 bg-green-700 text-white font-mono font-bold text-xs hover:bg-green-500 flex items-center space-x-1"><i class="fa-solid fa-rotate"></i> RICHIEDI</button>
 <label class="px-3 py-1.5 bg-mbYellow text-black font-mono font-bold text-xs cursor-pointer hover:bg-white"><i class="fa-solid fa-upload mr-1"></i> CARICA MAPPA<input type="file" id="mapUploader" accept="image/*" onchange="handleMapUpload(event)" class="hidden"></label>
 </div>
 </div>
 <p class="text-gray-500 text-[10px] italic">💡 La mappa selezionata diventa il terreno del plastico 3D. Le mappe dungeon appaiono qui solo dopo essere state completate.</p>
-</div>
-<div id="mpRemoteMapPanel" class="hidden bg-black p-2 border border-green-700 font-mono text-xs space-y-2">
-<div class="flex items-center justify-between"><span class="text-green-400 font-bold"><i class="fa-solid fa-link mr-1"></i> FALLBACK URL</span><button onclick="document.getElementById('mpRemoteMapPanel').classList.add('hidden')" class="text-red-400 font-bold text-[10px]">×</button></div>
-<div class="grid grid-cols-12 gap-1.5">
-<input type="text" id="mpRemoteMapUrl" placeholder="https://i.ibb.co/..." class="col-span-9 p-2 bg-black border border-green-700 text-green-300 text-[10px]">
-<button onclick="mpSendRemoteMapUrl()" class="col-span-3 py-2 bg-green-700 text-white font-bold hover:bg-green-500 uppercase text-[10px]">📡 MANDA</button>
-</div>
 </div>
 <div class="bg-black border-2 border-mbBorder p-2 flex flex-col items-center justify-center min-h-[350px] relative select-none">
 <div class="absolute top-2 right-2 flex flex-col space-y-1 z-30 font-mono select-none">
@@ -833,12 +800,9 @@ body.travel3d-fullscreen-body main{z-index:9996!important}
 <div><h2 class="font-glitch text-2xl text-mbYellow">EXPORT</h2><p class="font-mono text-xs text-gray-300">Scarica una copia aggiornata della tua app.</p></div>
 <button onclick="downloadExportCode()" class="px-4 py-2 bg-mbPink text-black font-mono font-bold text-xs hover:bg-white flex items-center space-x-1"><i class="fa-solid fa-download"></i><span>SCARICA index.html</span></button>
 </div>
- <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-  <button onclick="exportAllData()" class="px-4 py-2 bg-green-600 text-white font-mono font-bold text-xs hover:bg-green-500 flex items-center justify-center space-x-1">
-    <i class="fa-solid fa-file-export"></i><span>💾 ESPORTA DATI</span>
-  </button>
-  <button onclick="importAllData()" class="px-4 py-2 bg-blue-600 text-white font-mono font-bold text-xs hover:bg-blue-500 flex items-center justify-center space-x-1">
-    <i class="fa-solid fa-file-import"></i><span>📥 IMPORTA DATI</span>
+<div>
+  <button onclick="importAllData()" class="w-full px-4 py-2 bg-blue-600 text-white font-mono font-bold text-xs hover:bg-blue-500 flex items-center justify-center space-x-1">
+    <i class="fa-solid fa-file-import"></i><span>📥 IMPORTA DATI (.json)</span>
   </button>
 </div>
 <div class="bg-black p-3 border border-mbYellow space-y-3 font-mono text-xs">
@@ -10783,7 +10747,6 @@ function renderJourneysDropdown(){
   d.innerHTML=`
     <div class="flex items-center space-x-1">
       <select id="savedJourneysSelect" onchange="loadJourneyProfileFromSelect(this.value)" class="flex-1 bg-black text-mbYellow p-1 border border-mbPink font-bold text-xs">${options}</select>
-      <button id="travelReloadJourneyBtn" onclick="reloadSelectedJourney()" class="px-2 py-1 bg-mbYellow text-black font-bold text-xs border border-mbYellow hover:bg-white" title="Ricarica la rotta selezionata"><i class="fa-solid fa-rotate"></i></button>
       <button id="travelDeleteJourneyBtn" onclick="confirmDeleteSelectedJourney()" class="px-2.5 py-1 bg-red-900 hover:bg-red-700 text-white font-bold text-xs flex items-center space-x-1 border border-red-500" title="Elimina la rotta selezionata"><i class="fa-solid fa-trash-can"></i></button>
     </div>
   `;
