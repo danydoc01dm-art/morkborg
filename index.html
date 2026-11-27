@@ -3506,6 +3506,14 @@ function set3DSubMode(mode, save = true, instant = false){
     apply3DCameraForMode(travel3DViewSubmode, !!instant);
   }
 
+  if(travel3DViewSubmode === 'route'){
+    if(travel3DState && travel3DState.linkedMapId && travel3DState.linkedMapId !== 'none'){
+      if(!travel3DTerrainMesh || !travel3DTerrainMesh.material || !travel3DTerrainMesh.material.map){
+        rebuild3DRoute();
+      }
+      if(typeof mpEnsureClientTravelMapDownloaded === 'function') mpEnsureClientTravelMapDownloaded();
+    }
+  }
   apply3DSceneLighting(!!instant);
   if(travel3DViewSubmode === 'village') closeActionDock();
   if(travel3DViewSubmode === 'road') updateRoadWalkingUI();
@@ -11221,6 +11229,9 @@ function loadState(){
       renderDungeonMapGallery();
       restoreActiveAndDungeonMaps();
       rebuild3DRoute();
+      if(typeof mpIsHost==='function'&&mpIsHost()&&typeof mpIsConnected==='function'&&mpIsConnected()){
+        mpScheduleHostBroadcast(120);
+      }
     }else if(savedMaps.length>0){
       idbSaveMaps(savedMaps);
     }
@@ -12177,11 +12188,10 @@ function switchTab(t){
   if(fxCtx && fxCanvas) fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
   fxWake();
   if(typeof updateWeatherParticleAppearance==='function')updateWeatherParticleAppearance();
-  if(t==='travel3d')setTimeout(()=>{init3DTravelViewport();rebuild3DRoute();render3DTrackedResources();applyMasterOnly3DState();apply3DSceneLighting(true);},50);
- 
+  if(t==='travel3d')setTimeout(()=>{init3DTravelViewport();rebuild3DRoute();render3DTrackedResources();applyMasterOnly3DState();apply3DSceneLighting(true);if(typeof mpEnsureClientTravelMapDownloaded==='function')mpEnsureClientTravelMapDownloaded();},50);
   else if(t==='monsters'){updateMonsterJourneyDropdownFilter();populateMonsterJourneySelects();renderBestiary();}
   else if(t==='notes')syncNotesViewUI();
-  else if(t==='maps'){updateSubtabCounts();updateDungeonUI();if(currentMapSubtab==='dungeon'){renderDungeonMapGallery();syncDungeonMapFromActive();requestAnimationFrame(()=>{setupFogCanvas();redrawFog();renderMapTokens();});}}
+  else if(t==='maps'){updateSubtabCounts();updateDungeonUI();if(typeof mpEnsureClientTravelMapDownloaded==='function')mpEnsureClientTravelMapDownloaded();if(currentMapSubtab==='dungeon'){renderDungeonMapGallery();syncDungeonMapFromActive();requestAnimationFrame(()=>{setupFogCanvas();redrawFog();renderMapTokens();});}}
 }
 function modifyHP(d){state.hp=Math.max(0,Math.min(state.maxHp,state.hp+d));document.getElementById('inputHp').value=state.hp;saveState();if(d<0)triggerDamageFX();else if(d>0)triggerHealFX();}
 function modifyMaxHP(d){state.maxHp=Math.max(1,state.maxHp+d);document.getElementById('inputMaxHp').value=state.maxHp;if(state.hp>state.maxHp){state.hp=state.maxHp;document.getElementById('inputHp').value=state.hp;}saveState();}
@@ -13244,6 +13254,9 @@ function mpApplySharedState(shared){
       pushRef(shared.travelMap);
       if(shared.map&&!shared.map.isDungeon) pushRef(shared.map);
     }
+    if(shared.travel && shared.travel.linkedMapId && shared.travel.linkedMapId!=='none'){
+      pushRef({id:String(shared.travel.linkedMapId),name:'Mappa',isDungeon:false,needsChunks:true});
+    }
     const missingIds=[];
     const nowReq=Date.now();
     mapRefs.forEach(ref=>{
@@ -13779,6 +13792,21 @@ function mpSendMapToRoom(mapObj, onComplete, opts){
 function mpClientHasMap(mapId){
   const m=savedMaps.find(x=>String(x.id)===String(mapId));
   return !!(m&&m.url&&(m.url.indexOf('http')===0||m.url.length>100));
+}
+let __mpLastManualPlasticoReqAt=0;
+function mpEnsureClientTravelMapDownloaded(){
+  if(typeof mpIsConnected!=='function'||!mpIsConnected()||typeof mpIsHost!=='function'||mpIsHost())return;
+  const mid=(travel3DState&&travel3DState.linkedMapId&&travel3DState.linkedMapId!=='none')?String(travel3DState.linkedMapId):null;
+  if(!mid)return;
+  if(mpClientHasMap(mid))return;
+  if(mpMapChunks && mpMapChunks[mid])return;
+  const now=Date.now();
+  if(now-__mpLastManualPlasticoReqAt<4000)return;
+  __mpLastManualPlasticoReqAt=now;
+  __mpLastMapReqById[mid]=now;
+  mpSetMapSyncBanner('📡 Scaricamento mappa Plastico dal Master...',{tone:'info'});
+  mpBroadcastToRoom({type:'mapRequest',mapIds:[mid],force:true});
+  mpScheduleClientMapRetry([mid]);
 }
 function mpFinalizeMapChunks(mapId,b){
   if(!b||!Array.isArray(b.parts))return false;
