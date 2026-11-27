@@ -2578,11 +2578,20 @@ function populate3DTravelInputs(){
 }
 
 function save3DTravelState(){
+  const isClientRo = (typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost());
   const o = document.getElementById('travelOrigin'), d = document.getElementById('travelDestination'), m = document.getElementById('travelLinkedMapSelect');
-  if(o) travel3DState.origin = o.value;
-  if(d) travel3DState.destination = d.value;
+  if(!isClientRo){
+    if(o) travel3DState.origin = o.value;
+    if(d) travel3DState.destination = d.value;
+    if(m && m.value){
+      const curId = travel3DState.linkedMapId;
+      const hasCurOpt = !curId || curId === 'none' || Array.from(m.options).some(opt => String(opt.value) === String(curId));
+      if(m.value !== 'none' || hasCurOpt){
+        travel3DState.linkedMapId = m.value;
+      }
+    }
+  }
   travel3DState.totalDays = travel3DState.customPoints ? travel3DState.customPoints.length : 0;
-  if(m) travel3DState.linkedMapId = m.value;
   const mD = Math.max(1, travel3DState.totalDays || 1);
   if(travel3DState.currentDay > mD) travel3DState.currentDay = mD;
   if(travel3DState.currentDay < 1) travel3DState.currentDay = 1;
@@ -10726,17 +10735,29 @@ function loadJourneyProfileFromSelect(id){
       notesSelectedJourneyId=id;
     }
     if(activeVillageInterior) exitVillageInterior();
+    updateMapDropdownOptions();
     populate3DTravelInputs();
     save3DTravelState();
+    restoreActiveAndDungeonMaps();
     rebuild3DRoute();
     if(travel3DRoadGroup) buildRoadScene();
     if(travel3DVillageGroup) buildVillageScene(travel3DState.village);
     set3DSubMode(travel3DState.viewMode || 'route', false, true);
     updateActionDockUI();
     renderBestiary();
+    renderMapsGallery();
+    renderDungeonMapGallery();
     syncNotesViewUI();
     renderJourneysDropdown();
-    if(mpIsHost()&&mpIsConnected())mpHostBroadcast();
+    if(mpIsHost()&&mpIsConnected()){
+      mpHostBroadcast();
+      if(travel3DState.linkedMapId && travel3DState.linkedMapId!=='none'){
+        const lm=savedMaps.find(x=>String(x.id)===String(travel3DState.linkedMapId));
+        if(lm&&lm.url&&typeof mpSendMapToRoom==='function'){
+          mpSendMapToRoom({id:String(lm.id),name:lm.name||'Mappa',url:lm.url,isDungeon:false},null,{force:false,replaceSameSlot:true});
+        }
+      }
+    }
   }
 }
 function renderJourneysDropdown(){
@@ -11427,7 +11448,7 @@ function renderDungeonMapGallery(){const g=document.getElementById('dungeonMapGa
 function updateSubtabCounts(){const c=document.getElementById('subtabMapsCount');if(c)c.innerText=savedMaps.filter(m=>mpIsHost()||!m.ghost||m.dungeonCompletedAt).length;const d=document.getElementById('subtabDungeonBadge');if(d){const n=savedMaps.filter(m=>m.isDungeon===true&&(mpIsHost()||!m.ghost||m.dungeonCompletedAt)).length;if(dungeonState.active){d.classList.remove('hidden');d.innerText='ON';d.className='text-[10px] bg-mbPink text-black px-1 font-black animate-pulse';}else if(n>0){d.classList.remove('hidden');d.innerText=n;d.className='text-[10px] bg-mbPurple text-black px-1 font-black';}else d.classList.add('hidden');}}
 function toggleMapType(mapId){const m=savedMaps.find(x=>String(x.id)===String(mapId));if(!m)return;m.isDungeon=!m.isDungeon;saveMapsToStorage([m.id]);renderMapsGallery();renderDungeonMapGallery();updateMapDropdownOptions();updateSubtabCounts();triggerProphecyFlash(m.isDungeon?'🏰 Mappa impostata come DUNGEON':'🗺️ Mappa impostata come VIAGGIO 3D',m.isDungeon?'fa-dungeon':'fa-map',1800);}
 function deleteSavedMap(id){const m=savedMaps.find(x=>String(x.id)===String(id));if(!m)return;if(!confirm(`Eliminare la mappa "${m.name}"?`))return;savedMaps=savedMaps.filter(x=>String(x.id)!==String(id));saveMapsToStorage();if(String(travel3DState.linkedMapId)===String(id)){travel3DState.linkedMapId='none';const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value='none';rebuild3DRoute();save3DTravelState();if(typeof mpShared!=='undefined'&&mpShared.travelMap&&String(mpShared.travelMap.id)===String(id))mpShared.travelMap=null;}if(String(travel3DState.dungeonMapId)===String(id)){travel3DState.dungeonMapId=null;dungeonState.active=false;saveDungeonState(false);save3DTravelState();const dimg=document.getElementById('dungeonMapImg');if(dimg)dimg.removeAttribute('src');const dcanvas=document.getElementById('dungeonFogCanvas');if(dcanvas)dcanvas.classList.add('hidden');if(typeof mpShared!=='undefined'&&mpShared.dungeonMap&&String(mpShared.dungeonMap.id)===String(id))mpShared.dungeonMap=null;updateDungeonUI();}const img=document.getElementById('activeMapImg');if(img&&img.src===m.url){img.removeAttribute('src');img.classList.add('hidden');const stage=document.getElementById('sharedMapStage');const noMap=document.getElementById('noMapText');if(stage)stage.classList.add('hidden');if(noMap)noMap.classList.remove('hidden');}if(typeof mpShared!=='undefined'&&mpShared.map&&String(mpShared.map.id)===String(id))mpShared.map=null;updateMapDropdownOptions();renderMapsGallery();renderDungeonMapGallery();if(mpIsHost()&&mpIsConnected())mpScheduleHostBroadcast(150);triggerProphecyFlash('🗑️ MAPPA ELIMINATA','fa-trash',1800);}
-function selectMap(url,knownId){let entry=knownId?savedMaps.find(m=>String(m.id)===String(knownId)):savedMaps.find(m=>m.url===url);if(!entry&&!url)return;if(!entry){entry={id:uid(),name:'Mappa',url:url,isDungeon:false};savedMaps.push(entry);saveMapsToStorage([entry.id]);updateMapDropdownOptions();renderMapsGallery();}const finalUrl=url||entry.url;const img=document.getElementById('activeMapImg');const stage=document.getElementById('sharedMapStage');const noMap=document.getElementById('noMapText');if(noMap)noMap.classList.add('hidden');if(stage)stage.classList.remove('hidden');if(img){if(img.src!==finalUrl)img.src=finalUrl;img.classList.remove('hidden');}travel3DState.linkedMapId=String(entry.id);const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value=String(entry.id);rebuild3DRoute();save3DTravelState();renderMapsGallery();if(mpIsHost()&&mpIsConnected()){if(typeof mpSetSharedMap==='function')mpSetSharedMap(entry);}renderMapTokens();}
+function selectMap(url,knownId){let entry=knownId?savedMaps.find(m=>String(m.id)===String(knownId)):savedMaps.find(m=>m.url===url);if(!entry&&!url)return;if(!entry){entry={id:uid(),name:'Mappa',url:url,isDungeon:false};savedMaps.push(entry);saveMapsToStorage([entry.id]);updateMapDropdownOptions();renderMapsGallery();}const finalUrl=url||entry.url;const img=document.getElementById('activeMapImg');const stage=document.getElementById('sharedMapStage');const noMap=document.getElementById('noMapText');if(noMap)noMap.classList.add('hidden');if(stage)stage.classList.remove('hidden');if(img){if(img.src!==finalUrl)img.src=finalUrl;img.classList.remove('hidden');}travel3DState.linkedMapId=String(entry.id);const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value=String(entry.id);rebuild3DRoute();save3DTravelState();renderMapsGallery();if(mpIsHost()&&mpIsConnected()){if(typeof mpSetSharedMap==='function')mpSetSharedMap({id:String(entry.id),name:entry.name||'Mappa',url:entry.url,isDungeon:false});}renderMapTokens();}
 function updateMapDropdownOptions(){const s=document.getElementById('travelLinkedMapSelect');if(!s)return;let h='<option value="none">-- Griglia Standard --</option>';savedMaps.forEach(m=>{
   if(m.isDungeon && !m.dungeonCompletedAt) return;   // nascondi dungeon non completati
   if(m.ghost && !m.dungeonCompletedAt) return;        // nascondi fantasmi
@@ -13991,11 +14012,14 @@ function mpApplyReceivedMap(mapId,name,url,isDungeonFromHost,opts){
   if(img){if(img.src!==url)img.src=url;img.classList.remove('hidden');}
   if(mapId){
     travel3DState.linkedMapId=String(mapId);
+  }
+  updateMapDropdownOptions();
+  if(mapId){
     const sel=document.getElementById('travelLinkedMapSelect');if(sel)sel.value=String(mapId);
   }
-   rebuild3DRoute();
+  rebuild3DRoute();
   safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));
-  renderMapsGallery();renderMapTokens();updateSubtabCounts();updateMapDropdownOptions();
+  renderMapsGallery();renderMapTokens();updateSubtabCounts();
 }
 function mpSetSharedMap(mapObj){if(!mpIsHost()||!mapObj)return;const isDun=!!mapObj.isDungeon;const copy={id:String(mapObj.id||uid()),name:mapObj.name||'Mappa',url:mapObj.url,isDungeon:isDun};if(isDun)mpShared.dungeonMap=copy;else mpShared.travelMap=copy;mpShared.map=copy;mpHostBroadcast();mpSendMapToRoom(copy,null,{force:true,replaceSameSlot:true});}
 function mpForceSendMap(){if(!mpIsHost()||!mpAuthOk){alert('Solo il Master può inviare la mappa.');return;}mpRefreshHostSharedMaps();const {travelM,dungeonM}=mpResolveHostMaps();const list=[];if((currentMapSubtab==='dungeon'||dungeonState.active)&&dungeonM){list.push(dungeonM);if(travelM&&travelM.id!==dungeonM.id)list.push(travelM);}else{if(travelM)list.push(travelM);if(dungeonM&&(!travelM||dungeonM.id!==travelM.id))list.push(dungeonM);}if(list.length===0){alert('Seleziona prima una mappa.');return;}list.forEach((m,idx)=>mpSendMapToRoom(m,null,{force:idx===0}));}
