@@ -1267,6 +1267,13 @@ function triggerProphecyFlash(t,ic='fa-scroll',ms=2500){const b=document.getElem
 function hideProphecyFlash(){const b=document.getElementById('prophecyBanner');if(b)b.classList.add('hidden');if(__prophecyTimer){clearTimeout(__prophecyTimer);__prophecyTimer=null;}}
 
 function setWeather(w,fromRemote){
+  if(!fromRemote && typeof mpIsConnected==='function' && mpIsConnected() && typeof mpIsHost==='function' && !mpIsHost()){
+    const masterW=(typeof mpShared!=='undefined'&&mpShared&&mpShared.weather)||state.currentWeather||'sereno';
+    const s=document.getElementById('weatherQuickSelect');if(s)s.value=masterW;
+    const sRoad=document.getElementById('roadWeatherSelect');if(sRoad)sRoad.value=masterW;
+    if(typeof triggerProphecyFlash==='function')triggerProphecyFlash('🔒 METEO CONTROLLATO DAL MASTER','fa-cloud',1600);
+    return;
+  }
   state.currentWeather=w;
   const s=document.getElementById('weatherQuickSelect');
   if(s)s.value=w;
@@ -1281,7 +1288,11 @@ function setWeather(w,fromRemote){
   if(w==='neve'||w==='bufera')playSynthSound('snow');
   else if(w==='pioggia')playSynthSound('weather');
   else if(w==='temporale')playSynthSound('thunder');
-  // Meteo locale e personale: ogni giocatore sceglie liberamente il proprio meteo
+  if(!fromRemote && typeof mpIsConnected==='function' && mpIsConnected() && typeof mpIsHost==='function' && mpIsHost()){
+    mpShared.weather=w;
+    mpBroadcastToRoom({type:'weather',weather:w});
+    if(typeof mpScheduleHostBroadcast==='function')mpScheduleHostBroadcast(50);
+  }
 }
 
 function cycleNextWeather(){
@@ -1661,7 +1672,7 @@ function updateAndDrawFX(){
 /* STATO */
 const defaultState={name:"KATLA",classTitle:"",sessionNumber:1,bio:"",hp:10,maxHp:18,maxOmens:4,baseSlots:8,bonusSlots:0,omens:[true,true,true,true],piaghe:[false,false,false,false,false,false],conditions:[],psalms:[],silver:0,str:"+0",agi:"+0",pres:"+0",tough:"+0",powers:[],darknessActive:false,darknessRadiusPercent:40,currentWeather:"sereno",visualSettings:{screenShake:true,critGlitch:true,psalmTilt:true,autoNightDarkness:true,sunMoonCycle:true,omenBurn:true,weather:true,weatherScope:"all",combatFx:true,conditionFog:true,damageHealFx:true},audioSettings:{master:true,combat:true,damageHeal:true,psalms:true,weather:true},weaponName:"",weaponDesc:"",weapon2Name:"",weapon2Desc:"",armorName:"",armorDesc:"",inventory:[]};
 let state={...defaultState,visualSettings:{...defaultState.visualSettings},audioSettings:{...defaultState.audioSettings},omens:[...defaultState.omens],piaghe:[...defaultState.piaghe],conditions:[],psalms:[],powers:[],inventory:[]};
-let travel3DState={id:"default_journey",origin:"Galgenbeck",destination:"Schleswig",linkedMapId:"none",dungeonMapId:null,totalDays:0,currentDay:1,currentPhase:1,customPoints:[],events:[],viewMode:"route",biome:"sarkash",village:"galgenbeck",campActive:false,campFireLit:false,campSleeping:false,activeEncounterMonsterId:null,roadSpeed:0.04,isRoadWalking:true};
+let travel3DState={id:"default_journey",origin:"Galgenbeck",destination:"Schleswig",linkedMapId:"none",dungeonMapId:null,totalDays:0,currentDay:1,currentPhase:1,customPoints:[],events:[],viewMode:"route",biome:"sarkash",village:"galgenbeck",campActive:false,campFireLit:false,campSleeping:false,activeEncounterMonsterId:null,activeEncounterMonster:null,roadSpeed:0.04,isRoadWalking:true};
 let savedJourneys=[],monsters=[],notesStore={},currentNotesViewMode='current';
 let monsterFilterSettings={alignment:'all',journey:'all',bossOnly:false,dungeonOnly:false};
 let savedMaps=[],isGridVisible=true,currentMapSubtab='maps',currentActiveTab='hud';
@@ -1697,6 +1708,24 @@ function applyMasterOnly3DState(){
       rCampBtn.style.opacity=block?'0.4':'';
       rCampBtn.title=block?'🔒 Solo il Master può gestire il bivacco':'Allestisci o leva il bivacco';
     }
+  }
+  const isWeatherLocked=(typeof mpIsConnected==='function'&&mpIsConnected()&&typeof mpIsHost==='function'&&!mpIsHost());
+  const wQuickSel=document.getElementById('weatherQuickSelect');
+  if(wQuickSel){
+    wQuickSel.disabled=isWeatherLocked;
+    wQuickSel.style.opacity=isWeatherLocked?'0.55':'';
+    wQuickSel.title=isWeatherLocked?'🔒 Meteo sincronizzato dal Master':'';
+  }
+  const hudW=document.getElementById('travel3DHudWeather');
+  if(hudW){
+    hudW.style.pointerEvents=isWeatherLocked?'none':'';
+    hudW.title=isWeatherLocked?'🔒 Meteo controllato dal Master':'Clicca per cambiare meteo';
+  }
+  const rwSel=document.getElementById('roadWeatherSelect');
+  if(rwSel&&isWeatherLocked){
+    rwSel.style.pointerEvents='none';
+    rwSel.style.opacity='0.4';
+    rwSel.title='🔒 Meteo controllato dal Master';
   }
   const rBiomeSel = document.getElementById('roadBiomeSelect');
   if(rBiomeSel){
@@ -2952,6 +2981,7 @@ function createNewJourneyProfile(){
     campActive: false,
     campFireLit: false,
     activeEncounterMonsterId: null,
+    activeEncounterMonster: null,
     roadSpeed: roadSpeed || 0.04
   };
   resetMarkerFilter();
@@ -4629,7 +4659,7 @@ function buildRoadScene(){
   travel3DRoadGroup.add(roadTravelerGroup);
 
   if(travel3DState.activeEncounterMonsterId){
-    const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+    const m = getActiveScenicEncounterMonster();
     if(m){
       buildScenicMonster3D(m);
       if(isScenicMonsterDefeated(m) && activeMonsterMesh){
@@ -6830,6 +6860,24 @@ function isScenicMonsterDefeated(m){
   return false;
 }
 
+function getActiveScenicEncounterMonster(){
+  const id = travel3DState && travel3DState.activeEncounterMonsterId;
+  if(!id) return null;
+  if(travel3DState.activeEncounterMonster && String(travel3DState.activeEncounterMonster.id) === String(id)){
+    return travel3DState.activeEncounterMonster;
+  }
+  return monsters.find(x => String(x.id) === String(id)) || null;
+}
+
+function persistActiveScenicMonsterState(m){
+  const target = m || getActiveScenicEncounterMonster();
+  if(target && !target.ephemeral && monsters.some(x => String(x.id) === String(target.id))){
+    if(typeof saveMonsters === 'function') saveMonsters();
+    if(typeof renderBestiary === 'function') renderBestiary();
+  }
+  if(typeof save3DTravelState === 'function') save3DTravelState();
+}
+
 const BLOB_ARMOR_LADDER = ['0', '-d2', '-d4', '-d6', '-d8', '-d10', '-d12', '-d20'];
 
 function computeBlobScaleFromMonster(m){
@@ -6917,7 +6965,7 @@ function setScenicModalArmorValue(armorStr){
 
 function adjustActiveBlobArmor(delta){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   if(!m || m.archetype !== 'blob' || isScenicMonsterDefeated(m)) return;
   const curNorm = String(m.armor || '0').toLowerCase().trim();
   let idx = BLOB_ARMOR_LADDER.findIndex(x => x.toLowerCase() === curNorm);
@@ -6933,8 +6981,7 @@ function adjustActiveBlobArmor(delta){
   const nextIdx = Math.max(0, Math.min(BLOB_ARMOR_LADDER.length - 1, idx + delta));
   if(nextIdx === idx) return;
   m.armor = BLOB_ARMOR_LADDER[nextIdx];
-  saveMonsters();
-  renderBestiary();
+  persistActiveScenicMonsterState(m);
   const prevZ = activeMonsterMesh ? activeMonsterMesh.position.z : undefined;
   buildScenicMonster3D(m, { preserveZ: prevZ });
   updateActionDockUI();
@@ -7029,6 +7076,7 @@ function confirmSpawnScenicMonster(){
         targetMonster.hp = 1;
         targetMonster.maxHp = 0;
       }
+      travel3DState.activeEncounterMonster = null;
       saveMonsters();
       renderBestiary();
     }
@@ -7055,12 +7103,11 @@ function confirmSpawnScenicMonster(){
       alignment: 'evil',
       isBoss: false,
       state: 'active',
+      ephemeral: true,
       specialAttacks: [],
       journeyId: travel3DState.id || 'default_journey'
     };
-    monsters.push(targetMonster);
-    saveMonsters();
-    renderBestiary();
+    travel3DState.activeEncounterMonster = targetMonster;
   }
   travel3DState.activeEncounterMonsterId = targetMonster.id;
   travel3DState.activeRoadEncounter = null;
@@ -7121,7 +7168,7 @@ const SCENIC_BIOME_ENCOUNTERS = {
 function triggerQuickScenicEncounter(){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
   if(travel3DState.activeEncounterMonsterId){
-    const activeM = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+    const activeM = getActiveScenicEncounterMonster();
     if(activeM && !isScenicMonsterDefeated(activeM)){
       spawnScenicFloatingBadge('⚠️ C\'È GIÀ UN MOSTRO ATTIVO: ' + activeM.name, '#ff0055');
       return;
@@ -7150,14 +7197,12 @@ function triggerQuickScenicEncounter(){
     alignment: 'evil',
     isBoss: false,
     state: 'active',
+    ephemeral: true,
     specialAttacks: [],
     journeyId: travel3DState.id || 'default_journey'
   };
 
-  monsters.push(targetMonster);
-  saveMonsters();
-  renderBestiary();
-
+  travel3DState.activeEncounterMonster = targetMonster;
   travel3DState.activeEncounterMonsterId = targetMonster.id;
   travel3DState.activeRoadEncounter = null;
   setRoadWalking(false, false);
@@ -7646,7 +7691,7 @@ function spawnScenicFloatingBadge(text, colorHex){
 function scenicMonsterAttack(broadcast){
   if(broadcast === undefined) broadcast = true;
   if(broadcast && typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   if(!m || !activeMonsterMesh) return;
 
   const mesh = activeMonsterMesh;
@@ -7712,7 +7757,7 @@ function scenicMonsterAttack(broadcast){
 function scenicCombatParry(broadcast){
   if(broadcast === undefined) broadcast = true;
   if(broadcast && typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   if(!m || !activeMonsterMesh) return;
 
   const mesh = activeMonsterMesh;
@@ -7766,7 +7811,7 @@ function scenicCombatParry(broadcast){
 function scenicMonsterTakeHit(broadcast){
   if(broadcast === undefined) broadcast = true;
   if(broadcast && typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   if(!m || !activeMonsterMesh || isScenicMonsterDefeated(m)) return;
 
   heroSwingWeapon();
@@ -7796,8 +7841,7 @@ function scenicMonsterTakeHit(broadcast){
       m.damageTaken = (m.damageTaken || 0) + 1;
       spawnScenicFloatingBadge('🩸 +1 DANNO (TOTALE: ' + m.damageTaken + ')', '#ff0055');
     }
-    saveMonsters();
-    renderBestiary();
+    persistActiveScenicMonsterState(m);
   } else {
     spawnScenicFloatingBadge('🩸 COLPO A SEGNO!', '#ff0055');
   }
@@ -7815,7 +7859,7 @@ function scenicMonsterTakeHit(broadcast){
 
   if(broadcast && m.hpKnown && m.hp <= 0){
     m.defeated = true;
-    saveMonsters();
+    persistActiveScenicMonsterState(m);
     setTimeout(() => defeatScenicMonster(m, broadcast), 400);
   } else {
     if(broadcast && mpIsConnected()){
@@ -7831,18 +7875,17 @@ function scenicMonsterTakeHit(broadcast){
 
 function scenicForceKillMonster(){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   if(!m) return;
   m.defeated = true;
   m.hp = 0;
-  saveMonsters();
-  renderBestiary();
+  persistActiveScenicMonsterState(m);
   defeatScenicMonster(m, true);
 }
 
 function saveDiscoveredMonsterHp(){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   const inp = document.getElementById('discoveredMonsterHpInput');
   if(!m || !inp) return;
   const val = parseInt(inp.value, 10);
@@ -7855,8 +7898,7 @@ function saveDiscoveredMonsterHp(){
   m.hpKnown = true;
   m.defeated = true;
   saveKnownMonsterHp(m.name, val);
-  saveMonsters();
-  renderBestiary();
+  persistActiveScenicMonsterState(m);
   playSynthSound('heal');
   spawnScenicFloatingBadge('📖 PF REGISTRATI: ' + m.name.toUpperCase() + ' (' + val + ' PF)', '#22c55e');
   updateActionDockUI();
@@ -7887,8 +7929,7 @@ function defeatScenicMonster(m, broadcast){
   if(broadcast === undefined) broadcast = true;
   m.defeated = true;
   m.state = 'defeated';
-  if(typeof saveMonsters === 'function') saveMonsters();
-  if(typeof renderBestiary === 'function') renderBestiary();
+  persistActiveScenicMonsterState(m);
   setRoadWalking(false, false);
   playSynthSound('psalm');
   const collapseMsg = m.archetype === 'blob'
@@ -7915,7 +7956,7 @@ function updateActionDockUI(){
   const isClientReadOnly = (typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost());
 
   if(travel3DViewSubmode === 'road'){
-    const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+    const m = getActiveScenicEncounterMonster();
     if(m && !isScenicMonsterDefeated(m)){
       const known = !!m.hpKnown;
       let statusBlockHtml = '';
@@ -7997,8 +8038,9 @@ function updateActionDockUI(){
       return;
     } else if(m && isScenicMonsterDefeated(m)){
       const suggestedHp = Math.max(1, m.damageTaken || 1);
+      const hpStoreLabel = (!m.ephemeral && monsters.some(x => String(x.id) === String(m.id))) ? 'Vita registrata nel Bestiario' : 'Vita memorizzata';
       const discoveredText = m.hpKnown
-        ? `Vita registrata nel Bestiario: <strong class="text-mbYellow">${m.maxHp} PF</strong> (al prossimo incontro il contatore andrà alla rovescia).`
+        ? `${hpStoreLabel}: <strong class="text-mbYellow">${m.maxHp} PF</strong> (al prossimo incontro il contatore andrà alla rovescia).`
         : `Danni totali inflitti: <strong class="text-mbYellow">${m.damageTaken || 0}</strong>. Inserisci i PF reali scoperti per ricordarli nei prossimi scontri.`;
 
       const discoverInputHtml = (!isClientReadOnly && !m.hpKnown)
@@ -8103,6 +8145,7 @@ function closeActionDock(){
 function dismissScenicMonster(){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
   travel3DState.activeEncounterMonsterId = null;
+  travel3DState.activeEncounterMonster = null;
   setRoadWalking(false, false);
   save3DTravelState();
   if(roadEncounterGroup){
@@ -8129,6 +8172,7 @@ function spawnRoadTravelerEncounter(type, cycleHookOnly){
     idx = ((travel3DState.activeRoadEncounter.hookIdx || 0) + 1) % hooks.length;
   }
   travel3DState.activeEncounterMonsterId = null;
+  travel3DState.activeEncounterMonster = null;
   if(roadEncounterGroup){
     while(roadEncounterGroup.children.length > 0){
       const ch = roadEncounterGroup.children[0];
@@ -8324,14 +8368,12 @@ function escalateRoadTravelerToCombat(){
     alignment: 'neutral',
     isBoss: false,
     state: 'active',
+    ephemeral: true,
     specialAttacks: [],
     journeyId: travel3DState.id || 'default_journey'
   };
 
-  monsters.push(targetMonster);
-  saveMonsters();
-  renderBestiary();
-
+  travel3DState.activeEncounterMonster = targetMonster;
   travel3DState.activeEncounterMonsterId = targetMonster.id;
   travel3DState.activeRoadEncounter = null;
   setRoadWalking(false, false);
@@ -8384,7 +8426,7 @@ function buildRoadTraveler3D(enc){
 
 function scenicPromptCustomDmg(){
   if(typeof mpIsConnected === 'function' && mpIsConnected() && typeof mpIsHost === 'function' && !mpIsHost()) return;
-  const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+  const m = getActiveScenicEncounterMonster();
   if(!m) return;
   if(!m.hpKnown){
     const val = prompt(`Modifica danni inflitti a ${m.name} (es. +3 per aggiungere danni, -1 per correggere):`, "+2");
@@ -8392,8 +8434,7 @@ function scenicPromptCustomDmg(){
     const num = parseInt(val, 10);
     if(isNaN(num)) return;
     m.damageTaken = Math.max(0, (m.damageTaken || 0) + num);
-    saveMonsters();
-    renderBestiary();
+    persistActiveScenicMonsterState(m);
     updateActionDockUI();
     if(num > 0){
       playSynthSound('attack');
@@ -8412,8 +8453,7 @@ function scenicPromptCustomDmg(){
   if(isNaN(num)) return;
   m.hp = Math.max(0, Math.min(m.maxHp, m.hp + num));
   m.damageTaken = Math.max(0, (m.maxHp || 0) - m.hp);
-  saveMonsters();
-  renderBestiary();
+  persistActiveScenicMonsterState(m);
   updateActionDockUI();
   if(num < 0){
     playSynthSound('attack');
@@ -10150,7 +10190,8 @@ function animateRoadLoop(dtFactor){
   if(activeRoadCelestial){
     animateCelestialGroup(activeRoadCelestial, performance.now(), travel3DClock, dtFactor);
   }
-  const hasActiveCombat = travel3DState.activeEncounterMonsterId && monsters.some(x => x.id === travel3DState.activeEncounterMonsterId && !isScenicMonsterDefeated(x));
+  const _activeMon = getActiveScenicEncounterMonster();
+  const hasActiveCombat = !!(_activeMon && !isScenicMonsterDefeated(_activeMon));
   const hasActiveRoadTraveler = !!travel3DState.activeRoadEncounter;
 
   if(isRoadWalking && !travel3DState.campActive && !hasActiveCombat && !hasActiveRoadTraveler){
@@ -10286,7 +10327,7 @@ function animateRoadLoop(dtFactor){
   }
 
   if(activeMonsterMesh && travel3DState.activeEncounterMonsterId){
-    const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+    const m = getActiveScenicEncounterMonster();
     if(m && !isScenicMonsterDefeated(m)){
       const stopZ = (typeof activeMonsterMesh.userData.stopZ === 'number') ? activeMonsterMesh.userData.stopZ : -4.5;
       if(activeMonsterMesh.position.z < stopZ){
@@ -10759,7 +10800,7 @@ function confirmDeleteSelectedJourney(){
   if(!s||!s.value)return;
   deleteJourneyById(s.value);
 }
-function deleteJourneyById(id){if(!id)return;if(!confirm("Eliminare la rotta?"))return;savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));if(String(travel3DState.id)===String(id)){if(savedJourneys.length>0){travel3DState=JSON.parse(JSON.stringify(savedJourneys[0]));}else{travel3DState={id:"default_journey",origin:"Galgenbeck",destination:"Schleswig",linkedMapId:"none",dungeonMapId:null,totalDays:0,currentDay:1,currentPhase:1,customPoints:[],events:[],viewMode:"route",biome:"sarkash",village:"galgenbeck",campActive:false,campFireLit:false,activeEncounterMonsterId:null,roadSpeed:0.04};}if(activeVillageInterior)exitVillageInterior();safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));populate3DTravelInputs();rebuild3DRoute();if(travel3DRoadGroup)buildRoadScene();if(travel3DVillageGroup)buildVillageScene(travel3DState.village);set3DSubMode(travel3DState.viewMode||'route',false,true);updateActionDockUI();}renderJourneysDropdown();updateMonsterJourneyDropdownFilter();syncNotesViewUI();if(mpIsHost()&&mpIsConnected())mpHostBroadcast();}
+function deleteJourneyById(id){if(!id)return;if(!confirm("Eliminare la rotta?"))return;savedJourneys=savedJourneys.filter(j=>String(j.id)!==String(id));safeSetItem('morkborg_saved_journeys',JSON.stringify(savedJourneys));if(String(travel3DState.id)===String(id)){if(savedJourneys.length>0){travel3DState=JSON.parse(JSON.stringify(savedJourneys[0]));}else{travel3DState={id:"default_journey",origin:"Galgenbeck",destination:"Schleswig",linkedMapId:"none",dungeonMapId:null,totalDays:0,currentDay:1,currentPhase:1,customPoints:[],events:[],viewMode:"route",biome:"sarkash",village:"galgenbeck",campActive:false,campFireLit:false,activeEncounterMonsterId:null,activeEncounterMonster:null,roadSpeed:0.04};}if(activeVillageInterior)exitVillageInterior();safeSetItem('morkborg_travel_3d_active',JSON.stringify(travel3DState));populate3DTravelInputs();rebuild3DRoute();if(travel3DRoadGroup)buildRoadScene();if(travel3DVillageGroup)buildVillageScene(travel3DState.village);set3DSubMode(travel3DState.viewMode||'route',false,true);updateActionDockUI();}renderJourneysDropdown();updateMonsterJourneyDropdownFilter();syncNotesViewUI();if(mpIsHost()&&mpIsConnected())mpHostBroadcast();}
 
 /* INVENTARIO */
 function updateInventoryItemName(id,n){const it=state.inventory.find(i=>String(i.id)===String(id));if(it){it.name=n.trim()||"Oggetto";saveState();render3DTrackedResources();}}
@@ -12822,7 +12863,11 @@ if(data.auth){
    if(payload.shared&&!mpIsHost()){mpShared=payload.shared;mpApplySharedState(payload.shared);}
   mpRenderPlayersList();renderMapTokens();return;
 }
-  // Meteo locale: ignorati payload weather remoti
+  if(payload.type==='weather'&&payload.weather){
+    if(!mpIsAuthorizedHostSender(payload))return;
+    setWeather(payload.weather,true);
+    return;
+  }
   if(payload.type==='hostReturn'){
     const snap=mpBuildPlayerSnapshot({isHost:false});
     mpPlayers[mpMyId]=Object.assign({},mpPlayers[mpMyId]||{},snap);
@@ -12958,7 +13003,7 @@ if(payload.type==='scenicCombatAction'){
   } else if(payload.action==='takeHit'){
     scenicMonsterTakeHit(false);
   } else if(payload.action==='defeat'){
-    const m = monsters.find(x => x.id === travel3DState.activeEncounterMonsterId);
+    const m = getActiveScenicEncounterMonster();
     if(m) defeatScenicMonster(m, false);
   }
   return;
@@ -13220,7 +13265,9 @@ function mpApplySharedState(shared){
   if(!shared)return;
   if(typeof shared.masterOnly3D==='boolean'){masterOnly3D=shared.masterOnly3D;const el=document.getElementById('toggleMasterOnly3D');if(el)el.checked=masterOnly3D;}
   applyMasterOnly3DState();
-  // Meteo locale: non sovrascrivere la preferenza del giocatore
+  if(!mpIsHost()&&shared.weather&&shared.weather!==state.currentWeather){
+    setWeather(shared.weather,true);
+  }
   if(!mpIsHost()){
     const curActiveDungeonId = travel3DState.dungeonMapId ? String(travel3DState.dungeonMapId) : ((shared.dungeonMap&&shared.dungeonMap.id)?String(shared.dungeonMap.id):null);
     const curActiveTravelId = (travel3DState.linkedMapId && travel3DState.linkedMapId !== 'none') ? String(travel3DState.linkedMapId) : null;
@@ -13452,21 +13499,9 @@ function mpApplySharedState(shared){
         updateActionDockUI();
       }
       if(shared.travel.activeEncounterMonster){
-        const inM = shared.travel.activeEncounterMonster;
-        const exIdx = monsters.findIndex(x => x.id === inM.id);
-        const _mSig = m => m ? JSON.stringify([m.name,m.type,m.hp,m.maxHp,!!m.hpKnown,m.damageTaken||0,!!m.defeated,m.armor,m.weapon,!!m.isBoss]) : '';
-        let _mChanged = false;
-        if(exIdx >= 0){
-          if(_mSig(monsters[exIdx]) !== _mSig(inM)) _mChanged = true;
-          monsters[exIdx] = Object.assign({}, monsters[exIdx], inM, { state: inM.defeated ? 'defeated' : (monsters[exIdx].state || 'active') });
-        } else {
-          _mChanged = true;
-          monsters.push(Object.assign({ state: inM.defeated ? 'defeated' : 'active', alignment: inM.type === 'npc' ? 'neutral' : 'evil', journeyId: travel3DState.id || 'default_journey', specialAttacks: [] }, inM));
-        }
-        if(_mChanged){
-          if(typeof saveMonsters === 'function') saveMonsters();
-          if(typeof renderBestiary === 'function') renderBestiary();
-        }
+        const rawInM = shared.travel.activeEncounterMonster;
+        const inM = Object.assign({ state: rawInM.defeated ? 'defeated' : 'active', alignment: rawInM.type === 'npc' ? 'neutral' : 'evil', ephemeral: rawInM.ephemeral !== undefined ? !!rawInM.ephemeral : true, specialAttacks: [] }, rawInM);
+        travel3DState.activeEncounterMonster = inM;
         travel3DState.activeEncounterMonsterId = inM.id;
         const inArmorKey = String(inM.armor || '') + '|' + String(!!inM.isBoss);
         const needsRebuild = !activeMonsterMesh || activeMonsterMesh.userData.monsterId !== inM.id || (inM.archetype === 'blob' && activeMonsterMesh.userData.armorKey !== inArmorKey);
@@ -13481,6 +13516,7 @@ function mpApplySharedState(shared){
         }
         updateActionDockUI();
       } else if(shared.travel.activeEncounterMonsterId === null || shared.travel.activeEncounterMonster === null){
+        travel3DState.activeEncounterMonster = null;
         if(prevMonsterId !== null || activeMonsterMesh || (roadEncounterGroup && roadEncounterGroup.children.length > 0)){
           travel3DState.activeEncounterMonsterId = null;
           if(roadEncounterGroup){
@@ -13625,7 +13661,7 @@ function mpRefreshHostSharedMaps(){
   else if(travelM)mpShared.map=travelM;
   else mpShared.map=null;
 }
-function mpHostBroadcast(opts){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;mpRefreshHostSharedMaps();const activeDunM=travel3DState.dungeonMapId?savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId)):(mpShared.dungeonMap?savedMaps.find(m=>String(m.id)===String(mpShared.dungeonMap.id)):null);const dunDoneAt=activeDunM&&activeDunM.dungeonCompletedAt?activeDunM.dungeonCompletedAt:null;const activeEncounterMonster=(function(){if(!travel3DState.activeEncounterMonsterId)return null;const m=monsters.find(x=>x.id===travel3DState.activeEncounterMonsterId);if(!m)return null;return{id:m.id,name:m.name,type:m.type||'monster',hp:m.hp,maxHp:m.maxHp,hpKnown:!!m.hpKnown,damageTaken:m.damageTaken||0,defeated:!!m.defeated,archetype:m.archetype||'goblin',weapon:m.weapon||'Attacco (d6)',armor:m.armor||'-d4',desc:m.desc||'',isBoss:!!m.isBoss};})();try{mpShared.travel={id:travel3DState.id,name:travel3DState.name||(travel3DState.origin+' ➔ '+travel3DState.destination),origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:Array.isArray(travel3DState.customPoints)?travel3DState.customPoints:[],linkedMapId:travel3DState.linkedMapId||'none',dungeonMapId:travel3DState.dungeonMapId||null,events:Array.isArray(travel3DState.events)?travel3DState.events:[],dungeonCompletedAt:dunDoneAt,viewMode:travel3DViewSubmode||travel3DState.viewMode||'route',biome:travel3DState.biome||'sarkash',village:travel3DState.village||'galgenbeck',campActive:!!travel3DState.campActive,campFireLit:!!travel3DState.campFireLit,campSleeping:!!travel3DState.campSleeping,activeEncounterMonsterId:travel3DState.activeEncounterMonsterId||null,activeEncounterMonster:activeEncounterMonster,activeRoadEncounter:travel3DState.activeRoadEncounter||null,isRoadWalking:(travel3DState.isRoadWalking!==undefined?!!travel3DState.isRoadWalking:!!isRoadWalking),roadSpeed:(typeof roadSpeed==='number'?roadSpeed:0.04)};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,lockPlayerFog:!!dungeonState.lockPlayerFog,dungeonCompletedAt:dunDoneAt,revealedPoints:dunDoneAt?[{x:.5,y:.5,r:2}]:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};const tRef=mpShared.travelMap?mpMakeMapRef(mpShared.travelMap,false):null;let dRef=mpShared.dungeonMap?mpMakeMapRef(mpShared.dungeonMap,true):null;if(dRef&&dunDoneAt){dRef.dungeonCompletedAt=dunDoneAt;}const mapOut=(dungeonState.active&&dRef)?dRef:(tRef||null);const journeysOut=Array.isArray(savedJourneys)?savedJourneys.map(j=>({id:String(j.id),name:j.name||(j.origin+' ➔ '+j.destination),origin:j.origin,destination:j.destination,totalDays:j.totalDays,currentDay:j.currentDay,currentPhase:j.currentPhase,customPoints:Array.isArray(j.customPoints)?j.customPoints:[],events:Array.isArray(j.events)?j.events:[],linkedMapId:j.linkedMapId||'none',dungeonMapId:j.dungeonMapId||null})):[];const __jHash=JSON.stringify(journeysOut);const sendJourneys=!!(opts&&opts.forceJourneys)||(__jHash!==__mpLastBroadcastJourneysHash);if(sendJourneys)__mpLastBroadcastJourneysHash=__jHash;const sharedPayload={weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,travelMap:tRef,dungeonMap:(dungeonState.active?dRef:null),dungeon:dungeonOut,masterOnly3D:masterOnly3D};if(sendJourneys)sharedPayload.journeys=journeysOut;mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:sharedPayload});mpRenderPlayersList();renderMapTokens();}
+function mpHostBroadcast(opts){if(!mpIsHost()||!mpAuthOk)return;if(mpPlayers[mpMyId])Object.assign(mpPlayers[mpMyId],mpBuildPlayerSnapshot({isHost:true}));mpShared.weather=state.currentWeather||'sereno';mpShared.darknessActive=!!state.darknessActive;mpRefreshHostSharedMaps();const activeDunM=travel3DState.dungeonMapId?savedMaps.find(m=>String(m.id)===String(travel3DState.dungeonMapId)):(mpShared.dungeonMap?savedMaps.find(m=>String(m.id)===String(mpShared.dungeonMap.id)):null);const dunDoneAt=activeDunM&&activeDunM.dungeonCompletedAt?activeDunM.dungeonCompletedAt:null;const activeEncounterMonster=(function(){const m=getActiveScenicEncounterMonster();if(!m)return null;return{id:m.id,name:m.name,type:m.type||'monster',hp:m.hp,maxHp:m.maxHp,hpKnown:!!m.hpKnown,damageTaken:m.damageTaken||0,defeated:!!m.defeated,archetype:m.archetype||'goblin',weapon:m.weapon||'Attacco (d6)',armor:m.armor||'-d4',desc:m.desc||'',isBoss:!!m.isBoss,ephemeral:!!m.ephemeral};})();try{mpShared.travel={id:travel3DState.id,name:travel3DState.name||(travel3DState.origin+' ➔ '+travel3DState.destination),origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:Array.isArray(travel3DState.customPoints)?travel3DState.customPoints:[],linkedMapId:travel3DState.linkedMapId||'none',dungeonMapId:travel3DState.dungeonMapId||null,events:Array.isArray(travel3DState.events)?travel3DState.events:[],dungeonCompletedAt:dunDoneAt,viewMode:travel3DViewSubmode||travel3DState.viewMode||'route',biome:travel3DState.biome||'sarkash',village:travel3DState.village||'galgenbeck',campActive:!!travel3DState.campActive,campFireLit:!!travel3DState.campFireLit,campSleeping:!!travel3DState.campSleeping,activeEncounterMonsterId:travel3DState.activeEncounterMonsterId||null,activeEncounterMonster:activeEncounterMonster,activeRoadEncounter:travel3DState.activeRoadEncounter||null,isRoadWalking:(travel3DState.isRoadWalking!==undefined?!!travel3DState.isRoadWalking:!!isRoadWalking),roadSpeed:(typeof roadSpeed==='number'?roadSpeed:0.04)};}catch(e){}const dungeonOut={active:dungeonState.active,radius:dungeonState.radius,lockPlayerFog:!!dungeonState.lockPlayerFog,dungeonCompletedAt:dunDoneAt,revealedPoints:dunDoneAt?[{x:.5,y:.5,r:2}]:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt};const tRef=mpShared.travelMap?mpMakeMapRef(mpShared.travelMap,false):null;let dRef=mpShared.dungeonMap?mpMakeMapRef(mpShared.dungeonMap,true):null;if(dRef&&dunDoneAt){dRef.dungeonCompletedAt=dunDoneAt;}const mapOut=(dungeonState.active&&dRef)?dRef:(tRef||null);const journeysOut=Array.isArray(savedJourneys)?savedJourneys.map(j=>({id:String(j.id),name:j.name||(j.origin+' ➔ '+j.destination),origin:j.origin,destination:j.destination,totalDays:j.totalDays,currentDay:j.currentDay,currentPhase:j.currentPhase,customPoints:Array.isArray(j.customPoints)?j.customPoints:[],events:Array.isArray(j.events)?j.events:[],linkedMapId:j.linkedMapId||'none',dungeonMapId:j.dungeonMapId||null})):[];const __jHash=JSON.stringify(journeysOut);const sendJourneys=!!(opts&&opts.forceJourneys)||(__jHash!==__mpLastBroadcastJourneysHash);if(sendJourneys)__mpLastBroadcastJourneysHash=__jHash;const sharedPayload={weather:mpShared.weather,darknessActive:mpShared.darknessActive,travel:mpShared.travel,map:mapOut,travelMap:tRef,dungeonMap:(dungeonState.active?dRef:null),dungeon:dungeonOut,masterOnly3D:masterOnly3D};if(sendJourneys)sharedPayload.journeys=journeysOut;mpBroadcastToRoom({type:'sync',players:mpPlayers,shared:sharedPayload});mpRenderPlayersList();renderMapTokens();}
 function mpCompressMapUrl(dataUrl,maxW,quality,cb){
   if(typeof maxW==='function'){cb=maxW;maxW=900;quality=0.58;}
   try{
@@ -14049,7 +14085,7 @@ function mpNotifyStateChange(reason){
 
   mpBroadcastToRoom(payload);
 }function mpExportManualSync(){const payload={v:1,ts:Date.now(),name:state.name,from:mpMyName||state.name||'Master',shared:{weather:state.currentWeather||'sereno',darknessActive:!!state.darknessActive,travel:{origin:travel3DState.origin,destination:travel3DState.destination,currentDay:travel3DState.currentDay,currentPhase:travel3DState.currentPhase,totalDays:travel3DState.totalDays,customPoints:travel3DState.customPoints,events:travel3DState.events,linkedMapId:travel3DState.linkedMapId,dungeonMapId:travel3DState.dungeonMapId},map:null,dungeon:{active:dungeonState.active,radius:dungeonState.radius,revealedPoints:[],encounters:dungeonState.encounters,notes:dungeonState.notes,startedAt:dungeonState.startedAt}}};try{let expMap=(mpShared.map&&mpShared.map.url)?mpShared.map:null;if(!expMap&&mpShared.map&&mpShared.map.id){expMap=savedMaps.find(x=>String(x.id)===String(mpShared.map.id));}if(expMap&&expMap.url&&expMap.url.length<110000)payload.shared.map={id:String(expMap.id),name:expMap.name||'Mappa',url:expMap.url,isDungeon:!!expMap.isDungeon};}catch(e){}const text='MBSYNC:'+btoa(unescape(encodeURIComponent(JSON.stringify(payload))));const cp=()=>{triggerProphecyFlash('📋 STATO COPIATO','fa-copy');alert('Stato copiato negli appunti.');};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(cp).catch(()=>prompt('Copia:',text));else prompt('Copia:',text);}
-function mpImportManualSync(){let raw=(document.getElementById('mpManualSyncInput')&&document.getElementById('mpManualSyncInput').value)||'';raw=raw.trim();if(!raw){alert('Incolla prima il codice.');return;}if(raw.indexOf('MBSYNC:')===0)raw=raw.slice(7);let payload;try{payload=JSON.parse(decodeURIComponent(escape(atob(raw))));}catch(e){try{payload=JSON.parse(atob(raw));}catch(e2){alert('Codice non valido.');return;}}if(!payload||!payload.shared){alert('Formato non riconosciuto.');return;}if(payload.shared.weather){setWeather(payload.shared.weather);}if(typeof payload.shared.darknessActive==='boolean'){state.darknessActive=payload.shared.darknessActive;updateDarknessUI();}if(payload.shared.travel){try{Object.assign(travel3DState,payload.shared.travel);populate3DTravelInputs();rebuild3DRoute();update3DTravelDisplays();save3DTravelState();}catch(e){}}if(payload.shared.map&&payload.shared.map.url)mpApplyReceivedMap(payload.shared.map.id||'sync',payload.shared.map.name||'Mappa',payload.shared.map.url,!!payload.shared.map.isDungeon);if(payload.shared.dungeon){dungeonState.active=!!payload.shared.dungeon.active;dungeonState.radius=payload.shared.dungeon.radius||18;dungeonState.revealedPoints=Array.isArray(payload.shared.dungeon.revealedPoints)?payload.shared.dungeon.revealedPoints:[];dungeonState.encounters=Array.isArray(payload.shared.dungeon.encounters)?payload.shared.dungeon.encounters:[];dungeonState.notes=payload.shared.dungeon.notes||'';dungeonState.startedAt=payload.shared.dungeon.startedAt||null;saveDungeonState();updateDungeonUI();renderMapTokens();}saveState();triggerProphecyFlash('📥 STATO APPLICATO','fa-download');if(document.getElementById('mpManualSyncInput'))document.getElementById('mpManualSyncInput').value='';}
+function mpImportManualSync(){let raw=(document.getElementById('mpManualSyncInput')&&document.getElementById('mpManualSyncInput').value)||'';raw=raw.trim();if(!raw){alert('Incolla prima il codice.');return;}if(raw.indexOf('MBSYNC:')===0)raw=raw.slice(7);let payload;try{payload=JSON.parse(decodeURIComponent(escape(atob(raw))));}catch(e){try{payload=JSON.parse(atob(raw));}catch(e2){alert('Codice non valido.');return;}}if(!payload||!payload.shared){alert('Formato non riconosciuto.');return;}if(payload.shared.weather){setWeather(payload.shared.weather,true);}if(typeof payload.shared.darknessActive==='boolean'){state.darknessActive=payload.shared.darknessActive;updateDarknessUI();}if(payload.shared.travel){try{Object.assign(travel3DState,payload.shared.travel);populate3DTravelInputs();rebuild3DRoute();update3DTravelDisplays();save3DTravelState();}catch(e){}}if(payload.shared.map&&payload.shared.map.url)mpApplyReceivedMap(payload.shared.map.id||'sync',payload.shared.map.name||'Mappa',payload.shared.map.url,!!payload.shared.map.isDungeon);if(payload.shared.dungeon){dungeonState.active=!!payload.shared.dungeon.active;dungeonState.radius=payload.shared.dungeon.radius||18;dungeonState.revealedPoints=Array.isArray(payload.shared.dungeon.revealedPoints)?payload.shared.dungeon.revealedPoints:[];dungeonState.encounters=Array.isArray(payload.shared.dungeon.encounters)?payload.shared.dungeon.encounters:[];dungeonState.notes=payload.shared.dungeon.notes||'';dungeonState.startedAt=payload.shared.dungeon.startedAt||null;saveDungeonState();updateDungeonUI();renderMapTokens();}saveState();triggerProphecyFlash('📥 STATO APPLICATO','fa-download');if(document.getElementById('mpManualSyncInput'))document.getElementById('mpManualSyncInput').value='';}
 
 /* AUTO-RECONNECT: se c'era una sessione salvata, riconnettiti */
 function mpTryAutoReconnect(){
